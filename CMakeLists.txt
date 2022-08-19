@@ -7,10 +7,9 @@ project(palex)
 
 set(PROJECT_SOURCES
     src/util/encoding.cpp
+
+    src/lexer_generator/LexerRuleLexer.cpp
 )
 
-set(PROJECT_HEADERS
-    src/util/encoding.h
-)
-
-add_executable(palex src/palex.cpp ${PROJECT_SOURCES} ${PROJECT_HEADERS})
+add_executable(palex src/palex.cpp ${PROJECT_SOURCES})
+target_include_directories(palex PRIVATE src/)
