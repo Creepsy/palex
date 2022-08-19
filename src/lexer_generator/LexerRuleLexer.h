@@ -12,7 +12,7 @@ namespace lexer_generator {
     };
     
     struct Token {
-        enum TokenType {
+        enum class TokenType {
             UNDEFINED,
             END_OF_FILE,
             IDENTIFER,

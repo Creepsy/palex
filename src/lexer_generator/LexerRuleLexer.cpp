@@ -5,12 +5,12 @@
 using namespace lexer_generator;
 
 const std::map<Token::TokenType, std::string> lexer_generator::Token::TYPE_NAMES = {
-    {Token::UNDEFINED, "undefined"},
-    {Token::END_OF_FILE, "eof"},
-    {Token::IDENTIFER, "identifier"},
-    {Token::EQUALS, "eq"},
-    {Token::REGEX, "regex"},
-    {Token::END_OF_LINE, "eol"}
+    {Token::TokenType::UNDEFINED, "undefined"},
+    {Token::TokenType::END_OF_FILE, "eof"},
+    {Token::TokenType::IDENTIFER, "identifier"},
+    {Token::TokenType::EQUALS, "eq"},
+    {Token::TokenType::REGEX, "regex"},
+    {Token::TokenType::END_OF_LINE, "eol"}
 };
 
 lexer_generator::LexerRuleLexer::LexerRuleLexer(std::istream& input) : input(input) {
