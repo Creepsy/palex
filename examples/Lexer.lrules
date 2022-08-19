@@ -1,0 +1,5 @@
+$WSPACE = "\s+";
+INTEGER = "\d+";
+INT = "int";
+ADD = "\+";
+IDENTIFIER = "\w+";
