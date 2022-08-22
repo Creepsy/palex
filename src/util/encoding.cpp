@@ -36,13 +36,13 @@ char32_t encoding::get_utf8(std::istream& input) {
     return unicode;
 }
 
-std::ostream& operator<<(std::ostream& output, const std::u32string& to_print) {
+std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_print) {
     for(const char32_t c : to_print) output << c;
 
     return output;
 }
 
-std::ostream& operator<<(std::ostream& output, const char32_t to_print) {
+std::ostream& std::operator<<(std::ostream& output, const char32_t to_print) {
     if(to_print <= 0x7f) {
         output << (char)to_print;
     } else if(to_print <= 0x7ff) {
