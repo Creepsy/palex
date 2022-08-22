@@ -1,20 +1,18 @@
 #include <iostream>
-#include <sstream>
+#include <fstream>
 
-#include "util/encoding.h"
+#include "lexer_generator/LexerRuleLexer.h"
 
-int main() {    
-    std::stringstream input{"1reᐁͰ3𐌈a"};
-    std::u32string unicode_str;
+int main() {  
+    std::ifstream input{"../examples/Lexer.lrules"};
+    lexer_generator::LexerRuleLexer lexer(input);
+  
+    lexer_generator::Token token;
 
-    while(true) {
-        char32_t c = encoding::get_utf8(input);
-        if(input.eof()) break;
-
-        unicode_str += c;
-    } 
-
-    std::cout << unicode_str << std::endl;
+    do {
+        token = lexer.next_token();
+        std::cout << token << std::endl; 
+    } while(token.type != lexer_generator::Token::TokenType::END_OF_FILE);
 
     return 0;
 }
