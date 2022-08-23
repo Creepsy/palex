@@ -1,18 +1,23 @@
 #include <iostream>
 #include <fstream>
 
-#include "lexer_generator/LexerRuleLexer.h"
+#include "util/encoding.h"
+#include "lexer_generator/LexerRuleParser.h"
 
 int main() {  
     std::ifstream input{"../examples/Lexer.lrules"};
     lexer_generator::LexerRuleLexer lexer(input);
-  
-    lexer_generator::Token token;
+    lexer_generator::LexerRuleParser parser(lexer);
+
+    std::optional<lexer_generator::TokenRegexRule> token_rule_result;
 
     do {
-        token = lexer.next_token();
-        std::cout << token << std::endl; 
-    } while(token.type != lexer_generator::Token::TokenType::END_OF_FILE);
+        token_rule_result = parser.parse_token_rule();
+        if(token_rule_result.has_value()) {
+            lexer_generator::TokenRegexRule& token_rule = token_rule_result.value();
+            std::cout << (token_rule.ignore_token ? "$" : "") << token_rule.token_name << " = " << token_rule.token_regex << std::endl;
+        } 
+    } while(token_rule_result.has_value());
 
     return 0;
 }

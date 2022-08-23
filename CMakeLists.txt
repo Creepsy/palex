@@ -7,8 +7,10 @@ project(palex)
 
 set(PROJECT_SOURCES
     src/util/encoding.cpp
+    src/util/palex_except.cpp
 
     src/lexer_generator/LexerRuleLexer.cpp
+    src/lexer_generator/LexerRuleParser.cpp
 )
 
 add_executable(palex src/palex.cpp ${PROJECT_SOURCES})
