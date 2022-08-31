@@ -9,6 +9,9 @@ set(PROJECT_SOURCES
     src/util/encoding.cpp
     src/util/palex_except.cpp
 
+    src/util/regex/regex_ast.cpp
+    src/util/regex/RegexParser.cpp
+
     src/lexer_generator/LexerRuleLexer.cpp
     src/lexer_generator/LexerRuleParser.cpp
 )

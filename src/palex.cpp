@@ -2,6 +2,8 @@
 #include <fstream>
 
 #include "util/encoding.h"
+#include "util/regex/RegexParser.h"
+
 #include "lexer_generator/LexerRuleParser.h"
 
 int main() {  
@@ -18,6 +20,11 @@ int main() {
             std::cout << (token_rule.ignore_token ? "$" : "") << token_rule.token_name << " = " << token_rule.token_regex << std::endl;
         } 
     } while(token_rule_result.has_value());
+
+    std::cout << std::endl;
+    
+    regex::RegexParser regex_parser{U"(#|0x)?([\\da-fA-F]{2}){1,3}"};
+    regex_parser.parse_regex()->debug(std::cout);
 
     return 0;
 }

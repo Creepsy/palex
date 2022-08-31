@@ -6,6 +6,7 @@
 #include <cstdint>
 
 namespace encoding {
+    constexpr char32_t LAST_UNICODE_CHAR = 0x10ffff;
     char32_t get_utf8(std::istream& input);
 }
 
