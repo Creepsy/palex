@@ -20,7 +20,7 @@ namespace regex {
         bool is_empty() const;
 
         bool is_subset_of(const CharRange other) const;
-        static CharRange common_subset(const CharRange first, const CharRange second);
+        static CharRange common_subset(const CharRange first, const CharRange second); //currently unused
 
         bool operator==(const CharRange other) const;
     };

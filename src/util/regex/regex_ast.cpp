@@ -143,9 +143,7 @@ RegexCharSet& regex::RegexCharSet::add_char_range(CharRange to_add) {
                 break;
             }
             
-            const CharRange intersection = CharRange::common_subset(to_add, *iter);
-
-            if(!intersection.is_empty() && intersection.end == (*iter).end) { // *iter can be appended to to_add
+            if((*iter).end + 1 >= to_add.start) { // *iter can be appended to to_add
                 to_add.start = (*iter).start;
                 iter = this->ranges.erase(iter);
                 continue;
