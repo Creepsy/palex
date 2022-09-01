@@ -6,7 +6,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 project(palex)
 
 set(PROJECT_SOURCES
-    src/util/encoding.cpp
+    src/util/unicode.cpp
     src/util/palex_except.cpp
 
     src/util/regex/regex_ast.cpp

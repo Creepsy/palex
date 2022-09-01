@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "util/palex_except.h"
-#include "util/encoding.h"
+#include "util/unicode.h"
 
 using namespace lexer_generator;
 
@@ -27,8 +27,7 @@ std::optional<TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule
     }
 
     this->expect(Token::TokenType::IDENTIFER);
-    rule.token_name = this->curr.identifier;
-    this->consume();
+    rule.token_name = this->consume(Token::TokenType::IDENTIFER).identifier;
 
     this->consume(Token::TokenType::EQUALS);
 
@@ -53,21 +52,24 @@ bool lexer_generator::LexerRuleParser::accept(const Token::TokenType type) {
     return this->curr.type == type;
 }
 
-void lexer_generator::LexerRuleParser::consume() {
+lexer_generator::Token lexer_generator::LexerRuleParser::consume() {
+    Token consumed = this->curr;
     this->curr = this->input.next_token();
+
+    return consumed;
 }
 
-void lexer_generator::LexerRuleParser::consume(const Token::TokenType type) {
+lexer_generator::Token lexer_generator::LexerRuleParser::consume(const Token::TokenType type) {
     this->expect(type);
-    this->consume();
+    return this->consume();
 }
 
 void lexer_generator::LexerRuleParser::throw_parsing_err(const Token::TokenType expected) {
     std::stringstream err{};
 
-    err << "Unexpected token while parsing! Expected '" << Token::TYPE_NAMES.at(expected)
-        << "', found '" << Token::TYPE_NAMES.at(this->curr.type) 
+    err << "Unexpected token while parsing! Expected '" << Token::TOKEN_TYPE_NAMES.at((size_t)expected)
+        << "', found '" << Token::TOKEN_TYPE_NAMES.at((size_t)this->curr.type) 
         << "' at " << this->curr.start << " with the identifier \"" << this->curr.identifier << "\"!";
 
-    throw ParserError(err.str().c_str());
+    throw palex_except::ParserError(err.str().c_str());
 }

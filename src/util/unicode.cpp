@@ -1,10 +1,10 @@
-#include "encoding.h"
+#include "unicode.h"
 
 #include <cstddef>
 #include <stdexcept>
 #include <iostream>
 
-char32_t encoding::get_utf8(std::istream& input) {
+char32_t unicode::get_utf8(std::istream& input) {
     //index: first 5 bytes of head_byte
     const static size_t char_lengths[] = {
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -36,6 +36,36 @@ char32_t encoding::get_utf8(std::istream& input) {
     return unicode;
 }
 
+std::string unicode::to_utf8(const char32_t unicode) {
+    std::string utf8_sequence;
+
+    if(unicode <= 0x7f) {
+        utf8_sequence += (char)unicode;
+    } else if(unicode <= 0x7ff) {
+        utf8_sequence = {
+            (char)((unicode >> 6) | 0xc0),
+            (char)((unicode & 0x3f) | 0x80)
+        };
+    } else if(unicode <= 0xffff) {
+        utf8_sequence = {
+            (char)((unicode >> 12) | 0xe0),
+            (char)(((unicode >> 6) & 0x3f) | 0x80),
+            (char)((unicode & 0x3f) | 0x80)
+        };
+    } else if(unicode <= 0x10ffff) {
+        utf8_sequence = {
+            (char)((unicode >> 18) | 0xf0),
+            (char)(((unicode >> 12) & 0x3f) | 0x80),
+            (char)(((unicode >> 6) & 0x3f) | 0x80),
+            (char)((unicode & 0x3f) | 0x80)
+        };
+    } else {
+        throw std::runtime_error("Invalid utf8 character!");
+    }
+
+    return utf8_sequence;
+}
+
 std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_print) {
     for(const char32_t c : to_print) output << c;
 
@@ -43,23 +73,5 @@ std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_pri
 }
 
 std::ostream& std::operator<<(std::ostream& output, const char32_t to_print) {
-    if(to_print <= 0x7f) {
-        output << (char)to_print;
-    } else if(to_print <= 0x7ff) {
-        output << (char)((to_print >> 6) | 0xc0)
-               << (char)((to_print & 0x3f) | 0x80);
-    } else if(to_print <= 0xffff) {
-        output << (char)((to_print >> 12) | 0xe0) 
-               << (char)(((to_print >> 6) & 0x3f) | 0x80) 
-               << (char)((to_print & 0x3f) | 0x80);
-    } else if(to_print <= 0x10ffff) {
-        output << (char)((to_print >> 18) | 0xf0) 
-               << (char)(((to_print >> 12) & 0x3f) | 0x80) 
-               << (char)(((to_print >> 6) & 0x3f) | 0x80) 
-               << (char)((to_print & 0x3f) | 0x80);
-    } else {
-        throw std::runtime_error("Invalid utf8 character!");
-    }
-
-    return output;
+    return output << unicode::to_utf8(to_print);
 }

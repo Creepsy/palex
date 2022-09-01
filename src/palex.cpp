@@ -1,7 +1,8 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
-#include "util/encoding.h"
+#include "util/unicode.h"
 #include "util/regex/RegexParser.h"
 
 #include "lexer_generator/LexerRuleParser.h"

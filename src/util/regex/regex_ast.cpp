@@ -3,12 +3,14 @@
 using namespace regex;
 
 
+// static variables
 
 const size_t regex::RegexQuantifier::INFINITE = (size_t) -1;
 
 
 
 //helper functions
+
 inline const std::string get_indentation(const size_t indentation_level);
 
 inline const std::string get_indentation(const size_t indentation_level) {
@@ -17,7 +19,7 @@ inline const std::string get_indentation(const size_t indentation_level) {
 
 
 
-regex::CharRange::CharRange() : start(1), end(0) { //empty char range
+regex::CharRange::CharRange() : start(1), end(0) { //empty char range (end < start)
 
 }
 
@@ -56,13 +58,9 @@ bool regex::CharRange::operator==(const CharRange other) const {
 
 
 
-regex::RegexBase::RegexBase() {
-}
-
-
-
-regex::RegexBranch::RegexBranch() {
+regex::RegexBranch::RegexBranch() : RegexBase() {
 }   
+
 
 
 // public
@@ -81,7 +79,7 @@ void regex::RegexBranch::debug(std::ostream& output, const size_t indentation_le
 
 
 
-regex::RegexSequence::RegexSequence() {
+regex::RegexSequence::RegexSequence() : RegexBase() {
 }   
 
 
@@ -103,7 +101,7 @@ void regex::RegexSequence::debug(std::ostream& output, const size_t indentation_
 
 
 regex::RegexQuantifier::RegexQuantifier(std::unique_ptr<RegexBase> operand, const size_t min_count, const size_t max_count)
- : operand(std::move(operand)), min_count(min_count), max_count(max_count) {
+ : RegexBase(), operand(std::move(operand)), min_count(min_count), max_count(max_count) {
 }   
 
 
@@ -117,7 +115,7 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 
 
-regex::RegexCharSet::RegexCharSet(const bool negated) : negated(negated) {
+regex::RegexCharSet::RegexCharSet(const bool negated) : RegexBase(), negated(negated) {
 } 
 
 

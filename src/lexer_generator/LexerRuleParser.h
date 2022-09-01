@@ -20,8 +20,8 @@ namespace lexer_generator {
 
             void expect(const Token::TokenType type);
             bool accept(const Token::TokenType type);
-            void consume();
-            void consume(const Token::TokenType type);
+            Token consume();
+            Token consume(const Token::TokenType type);
 
             void throw_parsing_err(const Token::TokenType expected);
         public:

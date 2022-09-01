@@ -4,7 +4,7 @@
 #include <ostream>
 #include <string>
 #include <cstddef>
-#include <map>
+#include <vector>
 
 namespace lexer_generator {
     struct FilePosition {
@@ -26,7 +26,7 @@ namespace lexer_generator {
             END_OF_LINE
         };
 
-        const static std::map<TokenType, std::string> TYPE_NAMES;
+        const static std::vector<std::string> TOKEN_TYPE_NAMES;
 
         TokenType type;
         std::u32string identifier;

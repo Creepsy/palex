@@ -2,18 +2,20 @@
 
 #include <stdexcept>
 
-#include "util/encoding.h"
+#include "util/unicode.h"
 
 using namespace lexer_generator;
 
-const std::map<Token::TokenType, std::string> lexer_generator::Token::TYPE_NAMES = {
-    {Token::TokenType::UNDEFINED, "undefined"},
-    {Token::TokenType::IGNORE, "ignore"},
-    {Token::TokenType::END_OF_FILE, "eof"},
-    {Token::TokenType::IDENTIFER, "identifier"},
-    {Token::TokenType::EQUALS, "eq"},
-    {Token::TokenType::REGEX, "regex"},
-    {Token::TokenType::END_OF_LINE, "eol"}
+// static variables
+
+const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
+    "UNDEFINED",
+    "EOF",
+    "IGNORE",
+    "IDENTIFIER",
+    "EQ",
+    "REGEX",
+    "EOL"
 };
 
 
@@ -90,7 +92,7 @@ char32_t lexer_generator::LexerRuleLexer::next_char() {
         return this->buffer;
     }
 
-    char32_t next = encoding::get_utf8(this->input);
+    char32_t next = unicode::get_utf8(this->input);
     if(this->input.good()) this->curr_pos.advance(next);
 
     return next;
@@ -162,5 +164,5 @@ std::ostream& lexer_generator::operator<<(std::ostream& stream, const FilePositi
 }
 
 std::ostream& lexer_generator::operator<<(std::ostream& stream, const Token& to_print) {
-    return stream << to_print.start << "-" << to_print.end << " (" << Token::TYPE_NAMES.at(to_print.type) << ") " << to_print.identifier;
+    return stream << to_print.start << "-" << to_print.end << " (" << Token::TOKEN_TYPE_NAMES.at((size_t)to_print.type) << ") " << to_print.identifier;
 }

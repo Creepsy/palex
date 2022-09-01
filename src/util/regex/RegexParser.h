@@ -48,12 +48,12 @@ namespace regex {
             CharType get_curr_type();
             char32_t get_curr();
 
-            std::u32string parse_matching_chars(bool(*predicate)(const char32_t));
+            std::u32string parse_matching_chars(bool(*predicate)(const char32_t), const size_t max_count = (size_t) -1);
 
             void expect(const CharType type);
             bool accept(const CharType type);
-            void consume();
-            void consume(const CharType type);
+            char32_t consume();
+            char32_t consume(const CharType type);
 
             bool end();
 

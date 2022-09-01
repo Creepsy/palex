@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "regex_ast.h"
-#include "util/encoding.h"
+#include "util/unicode.h"
 
 namespace regex {
     namespace character_classes {
@@ -13,7 +13,7 @@ namespace regex {
 
         const std::vector<CharRange> NON_DIGIT_CLASS = {
             CharRange{0, '0' - 1},
-            CharRange{'9' + 1, encoding::LAST_UNICODE_CHAR}
+            CharRange{'9' + 1, unicode::LAST_UNICODE_CHAR}
         };
 
         const std::vector<CharRange> WORD_CLASS = {
@@ -28,7 +28,7 @@ namespace regex {
             CharRange{'9' + 1, 'A' - 1},
             CharRange{'Z' + 1, '_' - 1},
             CharRange{'_' + 1, 'a' - 1},
-            CharRange{'z' + 1, encoding::LAST_UNICODE_CHAR}
+            CharRange{'z' + 1, unicode::LAST_UNICODE_CHAR}
         };
 
         const std::vector<CharRange> WHITESPACE_CLASS = {
@@ -55,13 +55,13 @@ namespace regex {
             CharRange{8234, 8238},
             CharRange{8240, 8296},
             CharRange{8298, 12287},
-            CharRange{12289, encoding::LAST_UNICODE_CHAR}
+            CharRange{12289, unicode::LAST_UNICODE_CHAR}
         };
 
         const std::vector<CharRange> DOT_CLASS = {
             CharRange{0, '\n' - 1},
             CharRange{'\n' + 1, '\r' - 1},
-            CharRange{'\r' + 1, encoding::LAST_UNICODE_CHAR}
+            CharRange{'\r' + 1, unicode::LAST_UNICODE_CHAR}
         };
     }
 }
