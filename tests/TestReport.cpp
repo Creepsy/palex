@@ -24,7 +24,7 @@ void tests::TestReport::run() {
 
 int tests::TestReport::report() {
     std::cout << "Latest test report: "
-              << this->tests.size() << " test(s); "
+              << this->tests.size() << " subtest(s); "
               << this->passed << " passed; "
               << (this->tests.size() - this->passed) << " failed"
               << std::endl;
