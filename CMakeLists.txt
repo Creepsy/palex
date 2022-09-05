@@ -5,16 +5,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 project(palex)
 
-set(PROJECT_SOURCES
-    src/util/unicode.cpp
-    src/util/palex_except.cpp
+include(CTest)
 
-    src/util/regex/regex_ast.cpp
-    src/util/regex/RegexParser.cpp
-
-    src/lexer_generator/LexerRuleLexer.cpp
-    src/lexer_generator/LexerRuleParser.cpp
-)
-
-add_executable(palex src/palex.cpp ${PROJECT_SOURCES})
-target_include_directories(palex PRIVATE src/)
+add_subdirectory(src)
+add_subdirectory(tests)
+add_test(NAME UtilTest COMMAND util_test)
