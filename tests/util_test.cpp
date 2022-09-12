@@ -3,6 +3,9 @@
 
 #include "util/unicode.h"
 #include "util/Automaton.h"
+#include "util/palex_except.h"
+
+#include "util/regex/RegexParser.h"
 
 #include "TestReport.h"
 #include "test_utils.h"
@@ -13,6 +16,8 @@ bool test_unicode_output();
 bool test_automaton_add_states();
 bool test_automaton_add_connections();
 
+bool test_regex_errors();
+
 int main() {
     tests::TestReport report;
 
@@ -21,6 +26,8 @@ int main() {
     
     report.add_test("automaton_add_states", test_automaton_add_states);
     report.add_test("automaton_add_connections", test_automaton_add_connections);
+    
+    report.add_test("regex_errors", test_regex_errors);
 
     report.run();
 
@@ -70,6 +77,32 @@ bool test_automaton_add_connections() {
 
     TEST_TRUE(test_automaton.connect_states(0, 1) == 0);
     TEST_TRUE(test_automaton.connect_states(1, 0, 10) == 1);
+
+    return true;
+}
+
+#include <iostream>
+
+bool test_regex_errors() {
+    TEST_EXCEPT(regex::RegexParser(U")").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"()").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"(").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError);
+
+    TEST_EXCEPT(regex::RegexParser(U"").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"a|").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"|").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"|a").parse_regex(), palex_except::ParserError);
+
+    TEST_EXCEPT(regex::RegexParser(U"\\ca").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"\\uAfF").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"\\u24Ga").parse_regex(), palex_except::ParserError);
+
+    TEST_EXCEPT(regex::RegexParser(U"a{3,").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"a{}").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"a{").parse_regex(), palex_except::ParserError);
 
     return true;
 }

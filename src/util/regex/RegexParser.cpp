@@ -42,8 +42,6 @@ regex::RegexParser::RegexParser(const std::u32string& input) : input(input), cur
 // public
 
 std::unique_ptr<RegexBase> regex::RegexParser::parse_regex() {
-    if(this->end()) return nullptr; //we dont have to process empty input
-
     std::unique_ptr<RegexBase> parsed_regex = this->parse_regex_branch();
     if(this->accept(CharType::BRACKET_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
 
@@ -121,7 +119,9 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_quantifier() {
         max = RegexQuantifier::INFINITE;
     } else if(this->accept(CharType::CURLY_OPEN)) {
         this->consume();
+
         std::u32string min_str = this->parse_matching_string(IS_DIGIT);
+        if(min_str.empty()) this->throw_parsing_err("Expected a number!");
         min = std::stoul(std::string(min_str.begin(), min_str.end()));
         max = min;
 
@@ -130,6 +130,9 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_quantifier() {
 
             if(IS_DIGIT(this->get_curr())) {
                 std::u32string max_str = this->parse_matching_string(IS_DIGIT);
+                
+                assert(("Number string empty! Please create an issue on github containing the used regex!", !max_str.empty()));
+
                 max = std::stoul(std::string(max_str.begin(), max_str.end()));
             } else {
                 max = RegexQuantifier::INFINITE;
@@ -285,6 +288,8 @@ char32_t regex::RegexParser::parse_unicode_value() {
         if(unicode_value.length() != 4)
             this->throw_parsing_err("Expected 4 hexadecimal characters, found " + std::to_string(unicode_value.length()) + "!");
     }
+
+    if(unicode_value.empty()) this->throw_parsing_err("Expected a hexadecimal value!");
 
     return std::stoul(std::string(unicode_value.begin(), unicode_value.end()), nullptr, 16);
 }
