@@ -10,11 +10,14 @@ void tests::TestReport::run() {
     this->passed = 0;
     for(const std::pair<std::string, Test_t>& to_run : this->tests) {
         std::cout << "Running test " << to_run.first << "... ";
-
-        if(to_run.second()) {
-            this->passed++;
-            std::cout << "passed!\n";
-        } else {
+        try {
+            if(to_run.second()) {
+                this->passed++;
+                std::cout << "passed!\n";
+            } else {
+                std::cout << "failed!\n";
+            }
+        } catch(...) {
             std::cout << "failed!\n";
         }
     }
