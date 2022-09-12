@@ -5,7 +5,7 @@
 #include "util/Automaton.h"
 
 #include "TestReport.h"
-#include "TestUtils.h"
+#include "test_utils.h"
 
 bool test_unicode_input();
 bool test_unicode_output();
