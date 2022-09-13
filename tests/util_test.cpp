@@ -95,6 +95,8 @@ bool test_regex_errors() {
     TEST_EXCEPT(regex::RegexParser(U"\\ca").parse_regex(), palex_except::ParserError);
     TEST_EXCEPT(regex::RegexParser(U"\\uAfF").parse_regex(), palex_except::ParserError);
     TEST_EXCEPT(regex::RegexParser(U"\\u24Ga").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"\\u{24fffag}").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"\\u{ffffffffff}").parse_regex(), palex_except::ParserError);
 
     TEST_EXCEPT(regex::RegexParser(U"a{3,").parse_regex(), palex_except::ParserError);
     TEST_EXCEPT(regex::RegexParser(U"a{}").parse_regex(), palex_except::ParserError);

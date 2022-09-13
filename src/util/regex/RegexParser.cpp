@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "util/palex_except.h"
+#include "util/unicode.h"
 
 #include "character_classes.h"
 
@@ -291,7 +292,10 @@ char32_t regex::RegexParser::parse_unicode_value() {
 
     if(unicode_value.empty()) this->throw_parsing_err("Expected a hexadecimal value!");
 
-    return std::stoul(std::string(unicode_value.begin(), unicode_value.end()), nullptr, 16);
+    char32_t unicode_char = (char32_t)std::stoul(std::string(unicode_value.begin(), unicode_value.end()), nullptr, 16);
+    if(unicode_char > unicode::LAST_UNICODE_CHAR) this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
+
+    return unicode_char;
 }
 
 regex::RegexParser::CharType regex::RegexParser::get_curr_type() {
