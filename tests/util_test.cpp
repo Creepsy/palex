@@ -81,8 +81,6 @@ bool test_automaton_add_connections() {
     return true;
 }
 
-#include <iostream>
-
 bool test_regex_errors() {
     TEST_EXCEPT(regex::RegexParser(U")").parse_regex(), palex_except::ParserError);
     TEST_EXCEPT(regex::RegexParser(U"()").parse_regex(), palex_except::ParserError);
