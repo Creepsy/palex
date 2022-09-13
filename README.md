@@ -1,4 +1,6 @@
 # PaLex
+![GitHub CI](https://github.com/Creepsy/palex/actions/workflows/tests.yml/badge.svg)
+
 PaLex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers through rule files. The generated code supports ASCII and UTF-8 input. The generator currently supports the following languages: **TODO**
 
 ## Getting started / example

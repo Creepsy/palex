@@ -9,5 +9,8 @@ include(CTest)
 
 add_subdirectory(src)
 add_subdirectory(tests)
+
+enable_testing()
+
 add_test(NAME UtilTest COMMAND util_test)
 add_test(NAME LexerGeneratorTest COMMAND lexer_generator_test)
