@@ -37,10 +37,13 @@ int main() {
 bool test_unicode_input() {
     std::stringstream input("aШᢶ𐅄");
 
-    return unicode::get_utf8(input) == 97 &&   // 1 byte char
-           unicode::get_utf8(input) == 1064 && // 2 byte char
-           unicode::get_utf8(input) == 6326 && // 3 byte char
-           unicode::get_utf8(input) == 65860;   // 4 byte char
+    TEST_TRUE(unicode::get_utf8(input) == 97)       // 1 byte char
+    TEST_TRUE(unicode::get_utf8(input) == 1064)     // 2 byte char
+    TEST_TRUE(unicode::get_utf8(input) == 6326)     // 3 byte char
+    TEST_TRUE(unicode::get_utf8(input) == 65860)    // 4 byte char
+
+
+    return true;   
 }
 
 bool test_unicode_output() {
@@ -54,14 +57,16 @@ bool test_unicode_output() {
     std::stringstream output;
     output << to_print;
 
-    return output.str() == "aШᢶ𐅄";
+    TEST_TRUE(output.str() == "aШᢶ𐅄")
+
+    return true;
 }
 
 bool test_automaton_add_states() {
     sm::Automaton<int, int> test_automaton;
 
-    TEST_TRUE(test_automaton.add_state(10) == 0);
-    TEST_TRUE(test_automaton.add_state(11) == 1);
+    TEST_TRUE(test_automaton.add_state(10) == 0)
+    TEST_TRUE(test_automaton.add_state(11) == 1)
 
     return true;
 }
@@ -72,35 +77,35 @@ bool test_automaton_add_connections() {
     sm::Automaton<int, int>::StateID_t first = test_automaton.add_state(10);
     sm::Automaton<int, int>::StateID_t second = test_automaton.add_state(11);
 
-    TEST_EXCEPT(test_automaton.connect_states(1, 2), std::out_of_range);
-    TEST_EXCEPT(test_automaton.connect_states(2, 0, 10), std::out_of_range);
+    TEST_EXCEPT(test_automaton.connect_states(1, 2), std::out_of_range)
+    TEST_EXCEPT(test_automaton.connect_states(2, 0, 10), std::out_of_range)
 
-    TEST_TRUE(test_automaton.connect_states(0, 1) == 0);
-    TEST_TRUE(test_automaton.connect_states(1, 0, 10) == 1);
+    TEST_TRUE(test_automaton.connect_states(0, 1) == 0)
+    TEST_TRUE(test_automaton.connect_states(1, 0, 10) == 1)
 
     return true;
 }
 
 bool test_regex_errors() {
-    TEST_EXCEPT(regex::RegexParser(U")").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"()").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"(").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U")").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"()").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"(").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError)
 
-    TEST_EXCEPT(regex::RegexParser(U"").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"a|").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"|").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"|a").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"a|").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"|").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"|a").parse_regex(), palex_except::ParserError)
 
-    TEST_EXCEPT(regex::RegexParser(U"\\ca").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"\\uAfF").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"\\u24Ga").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"\\u{24fffag}").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"\\u{ffffffffff}").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"\\ca").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"\\uAfF").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"\\u24Ga").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"\\u{24fffag}").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"\\u{ffffffffff}").parse_regex(), palex_except::ParserError)
 
-    TEST_EXCEPT(regex::RegexParser(U"a{3,").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"a{}").parse_regex(), palex_except::ParserError);
-    TEST_EXCEPT(regex::RegexParser(U"a{").parse_regex(), palex_except::ParserError);
+    TEST_EXCEPT(regex::RegexParser(U"a{3,").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"a{}").parse_regex(), palex_except::ParserError)
+    TEST_EXCEPT(regex::RegexParser(U"a{").parse_regex(), palex_except::ParserError)
 
     return true;
 }
