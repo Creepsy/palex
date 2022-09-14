@@ -14,6 +14,9 @@ namespace lexer_generator {
     };
 
     class LexerRuleParser {
+        public:
+            LexerRuleParser(LexerRuleLexer& input);
+            std::optional<TokenRegexRule> parse_token_rule();
         private:
             LexerRuleLexer& input;
             Token curr;
@@ -24,8 +27,6 @@ namespace lexer_generator {
             Token consume(const Token::TokenType type);
 
             void throw_parsing_err(const Token::TokenType expected);
-        public:
-            LexerRuleParser(LexerRuleLexer& input);
-            std::optional<TokenRegexRule> parse_token_rule();
+
     };
 }

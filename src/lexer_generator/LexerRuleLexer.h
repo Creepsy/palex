@@ -36,6 +36,9 @@ namespace lexer_generator {
     };
     
     class LexerRuleLexer {
+        public:
+            LexerRuleLexer(std::istream& input);
+            Token next_token();
         private:
             std::istream& input;
 
@@ -51,9 +54,6 @@ namespace lexer_generator {
             bool get_identifier(std::u32string& output);
 
             void insert_in_buffer(char32_t to_insert);
-        public:
-            LexerRuleLexer(std::istream& input);
-            Token next_token();
     };
 
     std::ostream& operator<<(std::ostream& stream, const FilePosition& to_print);

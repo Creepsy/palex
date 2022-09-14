@@ -9,6 +9,9 @@
 
 namespace regex {
     class RegexParser {
+        public:
+            RegexParser(const std::u32string& input);
+            std::unique_ptr<RegexBase> parse_regex();
         private:
             enum class CharType {
                 SQUARE_OPEN,
@@ -68,9 +71,6 @@ namespace regex {
 
             void throw_parsing_err(const CharType expected);
             void throw_parsing_err(const std::string& message);
-        public:
-            RegexParser(const std::u32string& input);
-            std::unique_ptr<RegexBase> parse_regex();
     };
 }
 

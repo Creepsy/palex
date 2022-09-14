@@ -6,17 +6,13 @@
 #include "util/palex_except.h"
 #include "util/unicode.h"
 
-using namespace lexer_generator;
-
 lexer_generator::LexerRuleParser::LexerRuleParser(LexerRuleLexer& input) : input(input) {
     this->consume();
 }
 
-
-
 //public
 
-std::optional<TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule() {
+std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule() {
     if(this->accept(Token::TokenType::END_OF_FILE)) return std::nullopt;
 
     TokenRegexRule rule{};
@@ -39,8 +35,6 @@ std::optional<TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule
 
     return rule;
 }
-
-
 
 //private
 
@@ -71,5 +65,5 @@ void lexer_generator::LexerRuleParser::throw_parsing_err(const Token::TokenType 
         << "', found '" << Token::TOKEN_TYPE_NAMES.at((size_t)this->curr.type) 
         << "' at " << this->curr.start << " with the identifier \"" << this->curr.identifier << "\"!";
 
-    throw palex_except::ParserError(err.str().c_str());
+    throw palex_except::ParserError(err.str());
 }

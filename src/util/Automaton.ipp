@@ -19,8 +19,6 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::connect_states(const size_t
     return this->add_connection(Connection{source, target, Connection::ConnectionType::VALUE, value});
 }
 
-
-
 // private
 
 template<class StateValue_T, class ConnectionValue_T>

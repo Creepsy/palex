@@ -1,8 +1,5 @@
 #include "regex_ast.h"
 
-using namespace regex;
-
-
 // static variables
 
 const size_t regex::RegexQuantifier::INFINITE = (size_t) -1;
@@ -41,7 +38,7 @@ bool regex::CharRange::is_subset_of(const CharRange other) const {
     return (this->start >= other.start && this->end <= other.end) || this->is_empty();
 }
 
-CharRange regex::CharRange::common_subset(const CharRange first, const CharRange second) {
+regex::CharRange regex::CharRange::common_subset(const CharRange first, const CharRange second) {
     if(first.end < second.start || second.end < first.start) return CharRange{};
 
     if(first.is_subset_of(second)) return first;
@@ -61,8 +58,6 @@ bool regex::CharRange::operator==(const CharRange other) const {
 regex::RegexBranch::RegexBranch() : RegexBase() {
 }   
 
-
-
 // public
 
 void regex::RegexBranch::add_possibility(std::unique_ptr<RegexBase> possibility) {
@@ -81,8 +76,6 @@ void regex::RegexBranch::debug(std::ostream& output, const size_t indentation_le
 
 regex::RegexSequence::RegexSequence() : RegexBase() {
 }   
-
-
 
 // public
 
@@ -104,8 +97,6 @@ regex::RegexQuantifier::RegexQuantifier(std::unique_ptr<RegexBase> operand, cons
  : RegexBase(), operand(std::move(operand)), min_count(min_count), max_count(max_count) {
 }   
 
-
-
 // public
 
 void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentation_level) const {
@@ -118,11 +109,9 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 regex::RegexCharSet::RegexCharSet(const bool negated) : RegexBase(), negated(negated) {
 } 
 
-
-
 // public
 
-RegexCharSet& regex::RegexCharSet::add_char_range(CharRange to_add) {
+regex::RegexCharSet& regex::RegexCharSet::add_char_range(CharRange to_add) {
     if(!to_add.is_empty()) {
         auto iter = this->ranges.begin();
 

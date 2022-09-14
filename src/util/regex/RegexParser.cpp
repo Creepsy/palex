@@ -8,10 +8,6 @@
 
 #include "character_classes.h"
 
-using namespace regex;
-
-
-
 // static variables
 
 const std::vector<std::string> regex::RegexParser::CHAR_TYPE_NAMES = {
@@ -38,11 +34,9 @@ const std::vector<std::string> regex::RegexParser::CHAR_TYPE_NAMES = {
 regex::RegexParser::RegexParser(const std::u32string& input) : input(input), curr_pos(0) {
 }
 
-
-
 // public
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
     std::unique_ptr<RegexBase> parsed_regex = this->parse_regex_branch();
     if(this->accept(CharType::BRACKET_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
 
@@ -51,11 +45,9 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex() {
     return parsed_regex;
 }
 
-
-
 // private
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_branch() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_branch() {
     std::unique_ptr<RegexBase> sequence = this->parse_regex_sequence();
 
     if(this->accept(CharType::ALTERNATION)) {
@@ -73,7 +65,7 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_branch() {
     return sequence;
 }
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_sequence() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_sequence() {
     std::vector<std::unique_ptr<RegexBase>> sequence_content = this->parse_until<std::unique_ptr<RegexBase>>(
         [](const char32_t c) -> bool {
             return c == ')' || c == '|';
@@ -93,7 +85,7 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_sequence() {
     return sequence;
 }
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_quantifier() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
     const auto IS_DIGIT = [](const char32_t to_check) -> bool { return to_check < 0xff && std::isdigit(to_check); };
     
     std::unique_ptr<RegexBase> operand = nullptr;
@@ -148,7 +140,7 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_quantifier() {
     return std::make_unique<RegexQuantifier>(std::move(operand), min, max);
 }
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_charset() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
     if(this->accept(CharType::SQUARE_OPEN)) {
         this->consume();
 
@@ -177,7 +169,7 @@ std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_charset() {
     return regex_char;
 }
 
-std::unique_ptr<RegexBase> regex::RegexParser::parse_regex_group() {
+std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_group() {
     this->consume(CharType::BRACKET_OPEN);
 
     std::unique_ptr<RegexBase> group = this->parse_regex_branch();

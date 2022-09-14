@@ -4,8 +4,6 @@
 
 #include "util/unicode.h"
 
-using namespace lexer_generator;
-
 // static variables
 
 const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
@@ -20,7 +18,7 @@ const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
 
 
 
-FilePosition& lexer_generator::FilePosition::advance(const char32_t c) {
+lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const char32_t c) {
     if(c == '\n') {
         this->line++;
         this->column = 1;
@@ -31,7 +29,7 @@ FilePosition& lexer_generator::FilePosition::advance(const char32_t c) {
     return *this;
 }
 
-FilePosition& lexer_generator::FilePosition::advance(const std::u32string& text) {
+lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const std::u32string& text) {
     for(const char32_t c : text) {
         this->advance(c);
     }
@@ -44,11 +42,9 @@ FilePosition& lexer_generator::FilePosition::advance(const std::u32string& text)
 lexer_generator::LexerRuleLexer::LexerRuleLexer(std::istream& input) : input(input), curr_pos{}, has_buffered_char(false) {
 }
 
-
-
 //public
 
-Token lexer_generator::LexerRuleLexer::next_token() {
+lexer_generator::Token lexer_generator::LexerRuleLexer::next_token() {
     Token::TokenType type = Token::TokenType::UNDEFINED;
     std::u32string identifier;
 
@@ -80,8 +76,6 @@ Token lexer_generator::LexerRuleLexer::next_token() {
 
     return Token{type, identifier, start, end};
 }
-
-
 
 //private
 
