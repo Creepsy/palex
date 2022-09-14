@@ -64,6 +64,11 @@ void regex::RegexBranch::add_possibility(std::unique_ptr<RegexBase> possibility)
     this->possibilities.push_back(std::move(possibility));
 }
 
+const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexBranch::get_possibilities() const {
+    return this->possibilities;
+}
+
+
 void regex::RegexBranch::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Branch\n";
 
@@ -83,6 +88,10 @@ void regex::RegexSequence::append_element(std::unique_ptr<RegexBase> to_append) 
     this->sequence.push_back(std::move(to_append));
 }
 
+const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexSequence::get_elements() const {
+    return this->sequence;
+}
+
 void regex::RegexSequence::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Sequence\n";
 
@@ -98,6 +107,17 @@ regex::RegexQuantifier::RegexQuantifier(std::unique_ptr<RegexBase> operand, cons
 }   
 
 // public
+
+const std::unique_ptr<regex::RegexBase>& regex::RegexQuantifier::get_operand() const {
+    return this->operand;
+}
+
+size_t regex::RegexQuantifier::get_min() const {
+    return this->min_count;
+}
+size_t regex::RegexQuantifier::get_max() const {
+    return this->max_count;
+}
 
 void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Quantifier(" << this->min_count << "-" << this->max_count << ")\n";
@@ -151,6 +171,14 @@ regex::RegexCharSet& regex::RegexCharSet::add_char_range(CharRange to_add) {
     }
 
     return *this;
+}
+
+const std::list<regex::CharRange>& regex::RegexCharSet::get_characters() const {
+    return this->ranges;
+}
+
+bool regex::RegexCharSet::is_negated() const {
+    return this->negated;
 }
 
 void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_level) const {

@@ -39,6 +39,7 @@ namespace regex {
         public:
             RegexBranch();
             void add_possibility(std::unique_ptr<RegexBase> possibility);
+            const std::vector<std::unique_ptr<RegexBase>>& get_possibilities() const;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
     };
 
@@ -48,6 +49,7 @@ namespace regex {
         public:
             RegexSequence();
             void append_element(std::unique_ptr<RegexBase> to_append);
+            const std::vector<std::unique_ptr<RegexBase>>& get_elements() const;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
     };
 
@@ -61,6 +63,9 @@ namespace regex {
             const static size_t INFINITE;
 
             RegexQuantifier(std::unique_ptr<RegexBase> operand, const size_t min_count, const size_t max_count);
+            const std::unique_ptr<RegexBase>& get_operand() const;
+            size_t get_min() const;
+            size_t get_max() const;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
     };
 
@@ -72,6 +77,8 @@ namespace regex {
         public:
             RegexCharSet(const bool negated);
             RegexCharSet& add_char_range(CharRange to_add);
+            const std::list<CharRange>& get_characters() const;
+            bool is_negated() const;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
     };
 
