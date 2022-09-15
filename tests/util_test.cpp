@@ -1,11 +1,16 @@
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
+#include <vector>
+#include <cstddef>
+#include <utility>
 
 #include "util/unicode.h"
 #include "util/Automaton.h"
 #include "util/palex_except.h"
 
 #include "util/regex/RegexParser.h"
+#include "util/regex/character_classes.h"
 
 #include "TestReport.h"
 #include "test_utils.h"
@@ -17,6 +22,10 @@ bool test_automaton_add_states();
 bool test_automaton_add_connections();
 
 bool test_regex_errors();
+bool test_regex_char_set();
+bool test_regex_branch();
+bool test_regex_sequence();
+bool test_regex_quantifier();
 
 int main() {
     tests::TestReport report;
@@ -28,6 +37,10 @@ int main() {
     report.add_test("automaton_add_connections", test_automaton_add_connections);
     
     report.add_test("regex_errors", test_regex_errors);
+    report.add_test("regex_char_set", test_regex_char_set);
+    report.add_test("regex_branch", test_regex_branch);
+    report.add_test("regex_sequence", test_regex_sequence);
+    report.add_test("regex_quantifier", test_regex_quantifier);
 
     report.run();
 
@@ -87,25 +100,133 @@ bool test_automaton_add_connections() {
 }
 
 bool test_regex_errors() {
-    TEST_EXCEPT(regex::RegexParser(U")").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"()").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"(").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"[").parse_regex(), palex_except::ParserError)
+    const std::vector<std::u32string> TEST_CASES = {
+        U")", U"()", U"(", U"[",
+        U"", U"a|", U"|", U"|a",
+        U"\\ca", U"\\uAfF", U"\\u24Ga", U"\\u{24fffag}", U"\\u{ffffffffff}",
+        U"a{3,", U"a{3,", U"a{}", U"a{", U"a{3, 5}"
+    };
 
-    TEST_EXCEPT(regex::RegexParser(U"").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"a|").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"|").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"|a").parse_regex(), palex_except::ParserError)
+    for(const std::u32string& test : TEST_CASES) {
+        TEST_EXCEPT(regex::RegexParser(test).parse_regex(), palex_except::ParserError)
+    }
 
-    TEST_EXCEPT(regex::RegexParser(U"\\ca").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"\\uAfF").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"\\u24Ga").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"\\u{24fffag}").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"\\u{ffffffffff}").parse_regex(), palex_except::ParserError)
+    return true;
+}
 
-    TEST_EXCEPT(regex::RegexParser(U"a{3,").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"a{}").parse_regex(), palex_except::ParserError)
-    TEST_EXCEPT(regex::RegexParser(U"a{").parse_regex(), palex_except::ParserError)
+bool test_regex_char_set() {
+    struct TestCase {
+        std::u32string input;
+
+        std::vector<regex::CharRange> result;
+        bool negated;
+    };
+
+    const std::vector<TestCase> TEST_CASES = {
+        {U"\\d", regex::character_classes::DIGIT_CLASS, false},
+        {U"\\D", regex::character_classes::NON_DIGIT_CLASS, false},
+        {U"\\w", regex::character_classes::WORD_CLASS, false},
+        {U"\\W", regex::character_classes::NON_WORD_CLASS, false},
+        {U"\\s", regex::character_classes::WHITESPACE_CLASS, false},
+        {U"\\S", regex::character_classes::NON_WHITESPACE_CLASS, false},
+        {U".", regex::character_classes::DOT_CLASS, false},
+        {U"[]", {}, false},
+        {U"[^]", {}, true},
+        {U"[abcd]", {regex::CharRange{'a', 'd'}}, false},
+        {U"[a-z]", {regex::CharRange{'a', 'z'}}, false},
+        {U"[^a-b\\w]", {regex::CharRange{'0', '9'}, regex::CharRange{'A', 'Z'}, regex::CharRange{'_'}, regex::CharRange{'a', 'z'}}, true},
+        {U"[a-dc-fe-j]", {regex::CharRange{'a', 'j'}}, false},
+        {U"[A-Za-z]", {regex::CharRange{'A', 'Z'}, regex::CharRange{'a', 'z'}}, false},
+        {U"[\\W\\w]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, false},
+        {U"[\\w\\W]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, false},
+        {U"[.]", {regex::CharRange{'.'}}, false},
+        {U"[a-]", {regex::CharRange{'-'}, regex::CharRange{'a'}}, false},
+        {U"[---]", {regex::CharRange{'-'}}, false},
+        {U"[-a]", {regex::CharRange{'-'}, regex::CharRange{'a'}}, false},
+        {U"a", {regex::CharRange{'a'}}, false},
+        {U"\\n", {regex::CharRange{'\n'}}, false},
+        {U"\\u55ff", {regex::CharRange{0x55ff}}, false},
+        {U"\\u{13aEF}", {regex::CharRange{0x13aef}}, false},
+        {U"\\cB", {regex::CharRange{2}}, false}
+    };
+
+    for(const TestCase& test : TEST_CASES) {
+        std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.input).parse_regex();
+        TEST_TRUE(dynamic_cast<regex::RegexCharSet*>(base_ast.get()))
+        regex::RegexCharSet* char_set = dynamic_cast<regex::RegexCharSet*>(base_ast.get());
+        TEST_TRUE(test.negated == char_set->is_negated())
+        TEST_TRUE(
+            std::equal(
+                test.result.begin(),
+                test.result.end(),
+                char_set->get_characters().begin(),
+                char_set->get_characters().end()
+            )
+        )
+    }
+
+    return true;
+}
+
+bool test_regex_branch() {
+    const std::vector<std::pair<std::u32string, size_t>> TEST_CASES = {
+        {U"a|b", 2},
+        {U"a|b|c|d", 4},
+        {U"[abc]|ba|cddd|d", 4}
+    };
+
+    for(const auto& test : TEST_CASES) {
+        std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.first).parse_regex();
+        TEST_TRUE(dynamic_cast<regex::RegexBranch*>(base_ast.get()))
+        TEST_TRUE(dynamic_cast<regex::RegexBranch*>(base_ast.get())->get_possibilities().size() == test.second)
+    }
+    
+    return true;
+}
+
+bool test_regex_sequence() {
+    const std::vector<std::pair<std::u32string, size_t>> TEST_CASES = {
+        {U"abbb", 4},
+        {U"a[abc][avb](abg)", 4},
+        {U"(abb)", 3},
+        {U"(abb[aa])([f])", 2},
+        {U"(abb)([f])", 2},
+        {U"(aab)?a", 2}
+    };
+
+    for(const auto& test : TEST_CASES) {
+        std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.first).parse_regex();
+        TEST_TRUE(dynamic_cast<regex::RegexSequence*>(base_ast.get()))
+        TEST_TRUE(dynamic_cast<regex::RegexSequence*>(base_ast.get())->get_elements().size() == test.second)
+    }
+
+    return true;
+}
+
+bool test_regex_quantifier() {
+    struct TestCase {
+        std::u32string input;
+
+        size_t min;
+        size_t max;
+    };
+
+    const std::vector<TestCase> TEST_CASES = {
+        {U"a+", 1, regex::RegexQuantifier::INFINITE},
+        {U"a*", 0, regex::RegexQuantifier::INFINITE},
+        {U"a?", 0, 1},
+        {U"a{7}", 7, 7},
+        {U"a{3,}", 3, regex::RegexQuantifier::INFINITE},
+        {U"a{10,15}", 10, 15}
+    };
+
+    for(const TestCase& test : TEST_CASES) {
+        std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.input).parse_regex();
+        TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(base_ast.get()))
+        regex::RegexQuantifier* quantifier = dynamic_cast<regex::RegexQuantifier*>(base_ast.get());
+        TEST_TRUE(quantifier->get_min() == test.min)
+        TEST_TRUE(quantifier->get_max() == test.max)
+    }
 
     return true;
 }
