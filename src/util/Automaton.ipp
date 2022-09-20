@@ -10,14 +10,53 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::add_state(const StateValue_
 }
 
 template<class StateValue_T, class ConnectionValue_T>
-auto sm::Automaton<StateValue_T, ConnectionValue_T>::connect_states(const size_t source, const size_t target) -> ConnectionID_t {
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::connect_states(const StateID_t source, const StateID_t target) -> ConnectionID_t {
     return this->add_connection(Connection{source, target, Connection::ConnectionType::EPSILON, std::nullopt});
 }
 
 template<class StateValue_T, class ConnectionValue_T>
-auto sm::Automaton<StateValue_T, ConnectionValue_T>::connect_states(const size_t source, const size_t target, const ConnectionValue_T& value) -> ConnectionID_t {
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::connect_states(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) -> ConnectionID_t {
     return this->add_connection(Connection{source, target, Connection::ConnectionType::VALUE, value});
 }
+
+template<class StateValue_T, class ConnectionValue_T>
+bool sm::Automaton<StateValue_T, ConnectionValue_T>::has_connection(const StateID_t source, const StateID_t target) const {
+    if(this->transition_table.find(source) == this->transition_table.end()) return false;
+    if(this->transition_table.at(source).find(target) == this->transition_table.at(source).end()) return false;
+
+    return true;
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_state(const StateID_t id) const -> const StateValue_T& {
+    return this->states.at(id);
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_state(const StateID_t id) -> StateValue_T& {
+    return this->states.at(id);
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection(const ConnectionID_t id) const -> const Connection& {
+    return this->connections.at(id);
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection(const ConnectionID_t id) -> Connection& {
+    return this->connections.at(id);
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connections(const StateID_t source, const StateID_t target) const -> const std::vector<Connection>& {
+    return this->get_connection(this->transition_table.at(source).at(target));
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connections(const StateID_t source, const StateID_t target) -> std::vector<Connection>& {
+    return this->get_connection(this->transition_table.at(source).at(target));
+}
+
 
 // private
 

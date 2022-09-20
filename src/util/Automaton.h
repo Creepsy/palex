@@ -28,8 +28,17 @@ namespace sm {
 
             Automaton();
             StateID_t add_state(const StateValue_T& to_add);
-            ConnectionID_t connect_states(const size_t source, const size_t target);
-            ConnectionID_t connect_states(const size_t source, const size_t target, const ConnectionValue_T& value);
+            ConnectionID_t connect_states(const StateID_t source, const StateID_t target);
+            ConnectionID_t connect_states(const StateID_t source, const StateID_t target, const ConnectionValue_T& value);
+
+            bool has_connection(const StateID_t source, const StateID_t target) const;
+
+            const StateValue_T& get_state(const StateID_t id) const;
+            StateValue_T& get_state(const StateID_t id);
+            const Connection& get_connection(const ConnectionID_t id) const;
+            Connection& get_connection(const ConnectionID_t id);
+            const std::vector<Connection>& get_connections(const StateID_t source, const StateID_t target) const;
+            std::vector<Connection>& get_connections(const StateID_t source, const StateID_t target);
         private:
             ConnectionID_t add_connection(const Connection& to_add);
 
