@@ -28,6 +28,17 @@ bool sm::Automaton<StateValue_T, ConnectionValue_T>::has_connection(const StateI
 }
 
 template<class StateValue_T, class ConnectionValue_T>
+bool sm::Automaton<StateValue_T, ConnectionValue_T>::has_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const {
+    if(!this->has_connection(source, target)) return false;
+
+    for(const Connection& c : this->get_connections(source, target)) {
+        if(c.value == value) return true;
+    }
+
+    return false;
+}
+
+template<class StateValue_T, class ConnectionValue_T>
 auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_state(const StateID_t id) const -> const StateValue_T& {
     return this->states.at(id);
 }
@@ -48,12 +59,30 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection(const Connec
 }
 
 template<class StateValue_T, class ConnectionValue_T>
-auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connections(const StateID_t source, const StateID_t target) const -> const std::vector<Connection>& {
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const -> const Connection& {
+    for(const ConnectionID_t c_id : this->get_connection_ids(source, target)) {
+        if(this->connections.at(c_id).value == value) return this->connections.at(c_id);
+    }
+
+    throw std::runtime_error("No matching connection was found!");
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) -> Connection& {
+    for(const ConnectionID_t c_id : this->get_connection_ids(source, target)) {
+        if(this->connections.at(c_id).value == value) return this->connections.at(c_id);
+    }
+
+    throw std::runtime_error("No matching connection was found!");
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection_ids(const StateID_t source, const StateID_t target) const -> const std::vector<ConnectionID_t>& {
     return this->get_connection(this->transition_table.at(source).at(target));
 }
 
 template<class StateValue_T, class ConnectionValue_T>
-auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connections(const StateID_t source, const StateID_t target) -> std::vector<Connection>& {
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection_ids(const StateID_t source, const StateID_t target) -> std::vector<ConnectionID_t>& {
     return this->get_connection(this->transition_table.at(source).at(target));
 }
 

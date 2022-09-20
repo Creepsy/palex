@@ -32,13 +32,16 @@ namespace sm {
             ConnectionID_t connect_states(const StateID_t source, const StateID_t target, const ConnectionValue_T& value);
 
             bool has_connection(const StateID_t source, const StateID_t target) const;
+            bool has_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const;
 
             const StateValue_T& get_state(const StateID_t id) const;
             StateValue_T& get_state(const StateID_t id);
             const Connection& get_connection(const ConnectionID_t id) const;
             Connection& get_connection(const ConnectionID_t id);
-            const std::vector<Connection>& get_connections(const StateID_t source, const StateID_t target) const;
-            std::vector<Connection>& get_connections(const StateID_t source, const StateID_t target);
+            const Connection& get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const;
+            Connection& get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value);
+            const std::vector<ConnectionID_t>& get_connection_ids(const StateID_t source, const StateID_t target) const;
+            std::vector<ConnectionID_t>& get_connection_ids(const StateID_t source, const StateID_t target);
         private:
             ConnectionID_t add_connection(const Connection& to_add);
 
