@@ -163,7 +163,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
     std::unique_ptr<RegexCharSet> regex_char = std::make_unique<RegexCharSet>(false);
 
     for(const CharRange& range : this->parse_char().first) {
-        regex_char->add_char_range(range);
+        regex_char->insert_char_range(range);
     }
 
     return regex_char;
@@ -250,17 +250,17 @@ void regex::RegexParser::process_charset_contents(const std::vector<MultiRangeCh
     for(size_t i = 0; i < set_contents.size(); i++) {
         switch(set_contents[i].second) {
             case CharType::CHARACTER_CLASS:
-                for(const CharRange range : set_contents[i].first) target.add_char_range(range);
+                for(const CharRange range : set_contents[i].first) target.insert_char_range(range);
                 break;
             default:
                 assert(("Expected native character! Please create an issue on github containing the used regex!", IS_SINGLE_CHAR(set_contents[i])));
                 char32_t start = GET_SINGLE_CHAR(set_contents[i]);
 
                 if(i < set_contents.size() - 2 && set_contents[i + 1].second == CharType::MINUS && IS_SINGLE_CHAR(set_contents[i + 2])) {
-                    target.add_char_range(CharRange{start, GET_SINGLE_CHAR(set_contents[i + 2])});
+                    target.insert_char_range(CharRange{start, GET_SINGLE_CHAR(set_contents[i + 2])});
                     i += 2;
-                } else  {
-                    target.add_char_range(CharRange{start});
+                } else {
+                    target.insert_char_range(CharRange{start});
                 }
                 break;
         }

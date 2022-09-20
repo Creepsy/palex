@@ -18,11 +18,17 @@ namespace regex {
 
         bool is_single_char() const;
         bool is_empty() const;
+        bool can_prepend_to(const CharRange target) const;
+        bool can_append_to(const CharRange target) const;
 
         bool is_subset_of(const CharRange other) const;
-        static CharRange common_subset(const CharRange first, const CharRange second); //currently unused
+        void add_to_list(std::list<CharRange>& target) const;
+        void remove_from_list(std::list<CharRange>& target) const;
 
         bool operator==(const CharRange other) const;
+
+        static CharRange common_subset(const CharRange first, const CharRange second); //currently unused
+
     };
 
     class RegexBase {
@@ -76,7 +82,7 @@ namespace regex {
             std::list<CharRange> ranges;
         public:
             RegexCharSet(const bool negated);
-            RegexCharSet& add_char_range(CharRange to_add);
+            void insert_char_range(CharRange to_add);
             const std::list<CharRange>& get_characters() const;
             bool is_negated() const;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;

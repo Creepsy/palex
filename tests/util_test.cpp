@@ -114,6 +114,8 @@ bool test_regex_errors() {
     return true;
 }
 
+#include <iostream>
+
 bool test_regex_char_set() {
     struct TestCase {
         std::u32string input;
@@ -131,10 +133,16 @@ bool test_regex_char_set() {
         {U"\\S", regex::character_classes::NON_WHITESPACE_CLASS, false},
         {U".", regex::character_classes::DOT_CLASS, false},
         {U"[]", {}, false},
-        {U"[^]", {}, true},
+        {U"[^]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, true},
         {U"[abcd]", {regex::CharRange{'a', 'd'}}, false},
         {U"[a-z]", {regex::CharRange{'a', 'z'}}, false},
-        {U"[^a-b\\w]", {regex::CharRange{'0', '9'}, regex::CharRange{'A', 'Z'}, regex::CharRange{'_'}, regex::CharRange{'a', 'z'}}, true},
+        {U"[^a-b\\w]", {
+            regex::CharRange{0, '0' - 1},
+            regex::CharRange{'9' + 1, 'A' - 1},
+            regex::CharRange{'Z' + 1, '_' - 1},
+            regex::CharRange{'_' + 1, 'a' - 1}, 
+            regex::CharRange{'z' + 1, unicode::LAST_UNICODE_CHAR}
+        }, true},
         {U"[a-dc-fe-j]", {regex::CharRange{'a', 'j'}}, false},
         {U"[A-Za-z]", {regex::CharRange{'A', 'Z'}, regex::CharRange{'a', 'z'}}, false},
         {U"[\\W\\w]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, false},
@@ -155,6 +163,9 @@ bool test_regex_char_set() {
         TEST_TRUE(dynamic_cast<regex::RegexCharSet*>(base_ast.get()))
         regex::RegexCharSet* char_set = dynamic_cast<regex::RegexCharSet*>(base_ast.get());
         TEST_TRUE(test.negated == char_set->is_negated())
+        
+        char_set->debug(std::cout);
+        
         TEST_TRUE(
             std::equal(
                 test.result.begin(),
