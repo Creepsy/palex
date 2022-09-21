@@ -1,5 +1,4 @@
-$WSPACE = "\s+";
-INTEGER = "\d+";
+INTEGER = "[0-9]+";
 INT = "int";
 ADD = "\+";
-IDENTIFIER = "\w+";
+IDENTIFIER = "[_a-zA-Z][\w]*";
