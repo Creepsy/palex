@@ -5,6 +5,7 @@
 #include "util/unicode.h"
 #include "util/regex/RegexParser.h"
 
+#include "lexer_generator/lexer_automaton.h"
 #include "lexer_generator/LexerRuleParser.h"
 
 int main() {  
@@ -13,19 +14,20 @@ int main() {
     lexer_generator::LexerRuleParser parser(lexer);
 
     std::optional<lexer_generator::TokenRegexRule> token_rule_result;
-
+    lexer_generator::LexerAutomaton_t output_nfa{};
+    const lexer_generator::LexerAutomaton_t::StateID_t root_state = output_nfa.add_state(U"");
+    
     do {
         token_rule_result = parser.parse_token_rule();
         if(token_rule_result.has_value()) {
+            lexer_generator::insert_rule_in_nfa(output_nfa, root_state, token_rule_result.value());
             lexer_generator::TokenRegexRule& token_rule = token_rule_result.value();
-            std::cout << (token_rule.ignore_token ? "$" : "") << token_rule.token_name << " = " << token_rule.token_regex << std::endl;
+            // std::cout << (token_rule.ignore_token ? "$" : "") << token_rule.token_name << " = " << token_rule.token_regex << std::endl;
         } 
     } while(token_rule_result.has_value());
 
-    std::cout << std::endl;
-    
-    regex::RegexParser regex_parser{U"(#|0x)?([0-9a-fA-F]{2}){1,3}"};
-    regex_parser.parse_regex()->debug(std::cout);
+    std::cout << output_nfa << std::endl;
+
 
     return 0;
 }

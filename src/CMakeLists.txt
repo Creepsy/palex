@@ -7,6 +7,7 @@ set(PROJECT_SOURCES
 
     lexer_generator/LexerRuleLexer.cpp
     lexer_generator/LexerRuleParser.cpp
+    lexer_generator/lexer_automaton.cpp
 )
 
 add_library(palex_objects ${PROJECT_SOURCES})
