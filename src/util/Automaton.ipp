@@ -86,7 +86,6 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_connection_ids(const St
     return this->get_connection(this->transition_table.at(source).at(target));
 }
 
-
 // private
 
 template<class StateValue_T, class ConnectionValue_T>
@@ -97,4 +96,27 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::add_connection(const Connec
     this->transition_table[to_add.source][to_add.target].push_back(this->connections.size() - 1);
 
     return this->connections.size() - 1;    
+}
+
+// functions
+
+template<class StateValue_T, class ConnectionValue_T>
+std::ostream& sm::operator<<(std::ostream& output, const Automaton<StateValue_T, ConnectionValue_T>& to_print) {
+    output << "digraph {\n";
+
+    for(size_t state = 0; state < to_print.states.size(); state++) {
+        output << "\t" << state << " [label=\"" << to_print.states[state] << "\"];\n";
+    }
+
+    for(const typename Automaton<StateValue_T, ConnectionValue_T>::Connection& c : to_print.connections) {
+        output << "\t" << c.source << " -> " << c.target;
+        if(c.type != Automaton<StateValue_T, ConnectionValue_T>::Connection::ConnectionType::EPSILON) {
+            output << " [label=\"" << c.value.value()<< "\"]";
+        } else {
+            output << " [color=red" << "]";
+        }
+        output << ";\n";
+    }
+
+    return output << "}";
 }

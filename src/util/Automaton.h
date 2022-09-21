@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <optional>
+#include <ostream>
 
 namespace sm {
     template<class StateValue_T, class ConnectionValue_T>
@@ -49,7 +50,13 @@ namespace sm {
             std::vector<Connection> connections;
 
             std::map<StateID_t, std::map<StateID_t, std::vector<ConnectionID_t>>> transition_table;
+
+            template<class FuncStateValue_T, class FuncConnectionValue_T>
+            friend std::ostream& operator<<(std::ostream& output, const Automaton<FuncStateValue_T, FuncConnectionValue_T>& to_print);
     };    
+
+    template<class StateValue_T, class ConnectionValue_T>
+    std::ostream& operator<<(std::ostream& output, const Automaton<StateValue_T, ConnectionValue_T>& to_print); // converts to graphviz description
 }
 
 #include "Automaton.ipp"
