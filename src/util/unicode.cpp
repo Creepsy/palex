@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 char32_t unicode::get_utf8(std::istream& input) {
     //index: first 5 bytes of head_byte
@@ -64,6 +65,13 @@ std::string unicode::to_utf8(const char32_t unicode) {
     }
 
     return utf8_sequence;
+}
+
+std::string unicode::to_utf8(const std::u32string& to_convert) {
+    std::stringstream converted{};
+    converted << to_convert;
+
+    return converted.str(); 
 }
 
 std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_print) {

@@ -9,6 +9,7 @@ namespace unicode {
     constexpr char32_t LAST_UNICODE_CHAR = 0x10ffff;
     char32_t get_utf8(std::istream& input);
     std::string to_utf8(const char32_t unicode);
+    std::string to_utf8(const std::u32string& to_convert);
 }
 
 namespace std {

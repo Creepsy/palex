@@ -2,6 +2,7 @@
 
 #include "lexer_generator/LexerRuleLexer.h"
 #include "lexer_generator/LexerRuleParser.h"
+#include "lexer_generator/validation.h"
 
 #include "util/palex_except.h"
 
@@ -12,12 +13,16 @@ bool test_rule_lexer();
 bool test_rule_parser();
 bool test_rule_parser_errors();
 
+bool test_rule_validation();
+
 int main() {
     tests::TestReport report;
 
     report.add_test("rule_lexer", test_rule_lexer);
     report.add_test("rule_parser", test_rule_parser);
     report.add_test("rule_parser_errors", test_rule_parser_errors);
+
+    report.add_test("rule_validation", test_rule_validation);
 
     report.run();
 
@@ -79,5 +84,54 @@ bool test_rule_parser_errors() {
 
     TEST_FALSE(parser.parse_token_rule().has_value())
     
+    return true;
+}
+
+bool test_rule_validation() {
+    struct TestCase {
+        std::vector<lexer_generator::TokenRegexRule> input;
+
+        bool should_fail;
+    };
+
+    const std::vector<TestCase> TEST_CASES = {
+        {
+            {
+                lexer_generator::TokenRegexRule{false, U"IDENTIFIER", U""},
+                lexer_generator::TokenRegexRule{false, U"INTEGER", U""},
+                lexer_generator::TokenRegexRule{false, U"_INT", U""},
+                lexer_generator::TokenRegexRule{false, U"_123WEIRD_IDENT", U""}
+            },
+            false
+        },
+        {
+            {
+                lexer_generator::TokenRegexRule{false, U"UNDEFINED", U""}
+            },
+            true
+        },
+        {
+            {
+                lexer_generator::TokenRegexRule{false, U"END_OF_FILE", U""}
+            }, 
+            true
+        },
+        {
+            {
+            lexer_generator::TokenRegexRule{false, U"DUP_IDENT", U""},
+            lexer_generator::TokenRegexRule{false, U"DUP_IDENT", U""}
+            }, 
+            true
+        }
+    };
+
+    for(const TestCase& test : TEST_CASES) {
+        if(test.should_fail) {
+            TEST_EXCEPT(lexer_generator::validate_rules(test.input), palex_except::ValidationError);
+        } else {
+            lexer_generator::validate_rules(test.input);
+        }
+    }
+
     return true;
 }
