@@ -111,7 +111,6 @@ void regex::CharRange::remove_from_list(std::list<CharRange>& target) const {
                 const CharRange second_half{intersection.end + 1, (*iter).end};
 
                 assert(("Range remove error! Please create an issue on github containing the used regex!", !(first_half.is_empty() && second_half.is_empty())));
-                std::cout << (ssize_t)second_half.start << ", " << (ssize_t)second_half.end << std::endl;
                 if(first_half.is_empty() || intersection.start == 0) { // edge-case which leads to underflow
                     *iter = second_half;
                 } else if(second_half.is_empty()) {
