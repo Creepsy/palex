@@ -114,8 +114,6 @@ bool test_regex_errors() {
     return true;
 }
 
-#include <iostream>
-
 bool test_regex_char_set() {
     struct TestCase {
         std::u32string input;
@@ -162,10 +160,7 @@ bool test_regex_char_set() {
         std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.input).parse_regex();
         TEST_TRUE(dynamic_cast<regex::RegexCharSet*>(base_ast.get()))
         regex::RegexCharSet* char_set = dynamic_cast<regex::RegexCharSet*>(base_ast.get());
-        TEST_TRUE(test.negated == char_set->is_negated())
-        
-        char_set->debug(std::cout);
-        
+        TEST_TRUE(test.negated == char_set->is_negated())        
         TEST_TRUE(
             std::equal(
                 test.result.begin(),
