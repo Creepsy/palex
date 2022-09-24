@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <optional>
 #include <ostream>
+#include <algorithm>
 
 namespace sm {
     template<class StateValue_T, class ConnectionValue_T>
@@ -28,26 +29,33 @@ namespace sm {
             };
 
             Automaton();
+
             StateID_t add_state(const StateValue_T& to_add);
             ConnectionID_t connect_states(const StateID_t source, const StateID_t target);
             ConnectionID_t connect_states(const StateID_t source, const StateID_t target, const ConnectionValue_T& value);
 
-            bool has_connection(const StateID_t source, const StateID_t target) const;
-            bool has_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const;
+            bool are_connected(const StateID_t source, const StateID_t target) const;
+            bool has_outgoing_connections(const StateID_t source) const;
+            bool has_incoming_connections(const StateID_t target) const;
 
             const StateValue_T& get_state(const StateID_t id) const;
             StateValue_T& get_state(const StateID_t id);
             const Connection& get_connection(const ConnectionID_t id) const;
-            Connection& get_connection(const ConnectionID_t id);
-            const Connection& get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value) const;
-            Connection& get_connection(const StateID_t source, const StateID_t target, const ConnectionValue_T& value);
-            const std::vector<ConnectionID_t>& get_connection_ids(const StateID_t source, const StateID_t target) const;
-            std::vector<ConnectionID_t>& get_connection_ids(const StateID_t source, const StateID_t target);
+            std::vector<ConnectionID_t> get_all_connection_ids(const StateID_t source, const StateID_t target) const;
+            std::vector<ConnectionID_t> get_outgoing_connection_ids(const StateID_t source) const;
+            std::vector<ConnectionID_t> get_incoming_connection_ids(const StateID_t target) const;
+        
+            void remove_state(const StateID_t id);
+            void remove_connection(const ConnectionID_t id);
+
         private:
             ConnectionID_t add_connection(const Connection& to_add);
 
-            std::vector<StateValue_T> states;
-            std::vector<Connection> connections;
+            StateID_t next_state_id;
+            ConnectionID_t next_connection_id;
+
+            std::map<StateID_t, StateValue_T> states;
+            std::map<ConnectionID_t, const Connection> connections;
 
             std::map<StateID_t, std::map<StateID_t, std::vector<ConnectionID_t>>> transition_table;
 

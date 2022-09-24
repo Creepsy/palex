@@ -18,8 +18,8 @@
 bool test_unicode_input();
 bool test_unicode_output();
 
-bool test_automaton_add_states();
-bool test_automaton_add_connections();
+bool test_automaton_states();
+bool test_automaton_connections();
 
 bool test_regex_errors();
 bool test_regex_char_set();
@@ -33,8 +33,8 @@ int main() {
     report.add_test("unicode_input", test_unicode_input);
     report.add_test("unicode_output", test_unicode_output);
     
-    report.add_test("automaton_add_states", test_automaton_add_states);
-    report.add_test("automaton_add_connections", test_automaton_add_connections);
+    report.add_test("automaton_states", test_automaton_states);
+    report.add_test("automaton_connections", test_automaton_connections);
     
     report.add_test("regex_errors", test_regex_errors);
     report.add_test("regex_char_set", test_regex_char_set);
@@ -75,16 +75,22 @@ bool test_unicode_output() {
     return true;
 }
 
-bool test_automaton_add_states() {
+bool test_automaton_states() {
     sm::Automaton<int, int> test_automaton;
 
     TEST_TRUE(test_automaton.add_state(10) == 0)
     TEST_TRUE(test_automaton.add_state(11) == 1)
+    TEST_TRUE(test_automaton.get_state(0) == 10)
+    TEST_TRUE(test_automaton.get_state(1) == 11)
+
+    test_automaton.remove_state(0);
+    TEST_EXCEPT(test_automaton.get_state(0), std::out_of_range)
+    TEST_TRUE(test_automaton.add_state(12) == 2)
 
     return true;
 }
 
-bool test_automaton_add_connections() {
+bool test_automaton_connections() {
     sm::Automaton<int, int> test_automaton;
     
     sm::Automaton<int, int>::StateID_t first = test_automaton.add_state(10);
@@ -94,7 +100,30 @@ bool test_automaton_add_connections() {
     TEST_EXCEPT(test_automaton.connect_states(2, 0, 10), std::out_of_range)
 
     TEST_TRUE(test_automaton.connect_states(0, 1) == 0)
+
+    TEST_TRUE(test_automaton.are_connected(0, 1));
+    TEST_FALSE(test_automaton.are_connected(1, 0));
+    TEST_TRUE(test_automaton.has_outgoing_connections(0))
+    TEST_TRUE(test_automaton.has_incoming_connections(1))
+    TEST_FALSE(test_automaton.has_outgoing_connections(1))
+    TEST_FALSE(test_automaton.has_incoming_connections(0))
+
+    test_automaton.remove_connection(0);
+    
+    TEST_FALSE(test_automaton.are_connected(0, 1))
+    TEST_FALSE(test_automaton.has_incoming_connections(1))
+    TEST_FALSE(test_automaton.has_outgoing_connections(0))
+
     TEST_TRUE(test_automaton.connect_states(1, 0, 10) == 1)
+    TEST_TRUE(test_automaton.connect_states(0, 1) == 2)
+
+    TEST_TRUE(test_automaton.has_incoming_connections(0))
+    TEST_TRUE(test_automaton.has_outgoing_connections(0))
+
+    test_automaton.remove_state(1);
+    
+    TEST_FALSE(test_automaton.has_incoming_connections(0))
+    TEST_FALSE(test_automaton.has_outgoing_connections(0))
 
     return true;
 }
