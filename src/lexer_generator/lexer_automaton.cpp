@@ -9,7 +9,7 @@
 
 void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
     std::unique_ptr<regex::RegexBase> regex_ast = regex::RegexParser(to_insert.token_regex).parse_regex();
-    assert(("Regex is null! Please create an issue on github containing the used regex!", regex_ast));
+    assert(("Regex is null! Please create an issue on github containing the used input!", regex_ast));
 
     const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, regex_ast.get());
     nfa.get_state(leaf_state) = to_insert.token_name;

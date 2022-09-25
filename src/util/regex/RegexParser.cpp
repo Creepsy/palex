@@ -40,7 +40,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
     std::unique_ptr<RegexBase> parsed_regex = this->parse_regex_branch();
     if(this->accept(CharType::BRACKET_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
 
-    assert(("RegexParser terminated before end! Please create an issue on github containing the used regex!", this->end()));
+    assert(("RegexParser terminated before end! Please create an issue on github containing the used input!", this->end()));
 
     return parsed_regex;
 }
@@ -124,7 +124,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
             if(IS_DIGIT(this->get_curr())) {
                 std::u32string max_str = this->parse_matching_string(IS_DIGIT);
                 
-                assert(("Number string empty! Please create an issue on github containing the used regex!", !max_str.empty()));
+                assert(("Number string empty! Please create an issue on github containing the used input!", !max_str.empty()));
 
                 max = std::stoul(std::string(max_str.begin(), max_str.end()));
             } else {
@@ -253,7 +253,7 @@ void regex::RegexParser::process_charset_contents(const std::vector<MultiRangeCh
                 for(const CharRange range : set_contents[i].first) target.insert_char_range(range);
                 break;
             default:
-                assert(("Expected native character! Please create an issue on github containing the used regex!", IS_SINGLE_CHAR(set_contents[i])));
+                assert(("Expected native character! Please create an issue on github containing the used input!", IS_SINGLE_CHAR(set_contents[i])));
                 char32_t start = GET_SINGLE_CHAR(set_contents[i]);
 
                 if(i < set_contents.size() - 2 && set_contents[i + 1].second == CharType::MINUS && IS_SINGLE_CHAR(set_contents[i + 2])) {

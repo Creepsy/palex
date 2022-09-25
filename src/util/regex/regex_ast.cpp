@@ -125,7 +125,7 @@ regex::CharRangeSet& regex::CharRangeSet::remove_char_range(const CharRange to_r
                 const CharRange first_half{(*iter).start, intersection.start - 1}; 
                 const CharRange second_half{intersection.end + 1, (*iter).end};
 
-                assert(("Range remove error! Please create an issue on github containing the used regex!", !(first_half.empty() && second_half.empty())));
+                assert(("Range remove error! Please create an issue on github containing the used input!", !(first_half.empty() && second_half.empty())));
                 if(first_half.empty() || intersection.start == 0) { // edge-case which leads to underflow
                     *iter = second_half;
                 } else if(second_half.empty()) {
@@ -320,7 +320,7 @@ std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print)
 
 std::ostream& regex::operator<<(std::ostream& output, const regex::CharRangeSet& to_print) {
     for(const CharRange range : to_print.get_ranges()) {
-        assert(("CharRangeSet contains empty range! Please create an issue on github containing the used regex!", !range.empty()));
+        assert(("CharRangeSet contains empty range! Please create an issue on github containing the used input!", !range.empty()));
         output << range;
     }
 

@@ -16,8 +16,8 @@ int main() {
     lexer_generator::LexerRuleParser parser(lexer);
 
     std::optional<lexer_generator::TokenRegexRule> token_rule_result;
-    lexer_generator::LexerAutomaton_t output_nfa{};
-    const lexer_generator::LexerAutomaton_t::StateID_t root_state = output_nfa.add_state(U"");
+    lexer_generator::LexerAutomaton_t lexer_nfa{};
+    const lexer_generator::LexerAutomaton_t::StateID_t root_state = lexer_nfa.add_state(U"");
     
     std::vector<lexer_generator::TokenRegexRule> lexer_rules;
 
@@ -32,7 +32,7 @@ int main() {
     lexer_generator::validate_rules(lexer_rules);
 
     for(const lexer_generator::TokenRegexRule& rule : lexer_rules) {
-        lexer_generator::insert_rule_in_nfa(output_nfa, root_state, rule);
+        lexer_generator::insert_rule_in_nfa(lexer_nfa, root_state, rule);
     }
 
     const auto merge_states = [](const std::vector<std::u32string>& to_merge) -> std::u32string {
@@ -48,9 +48,6 @@ int main() {
         return output;
     };
 
-    //custom charset type -> intersection methods etc.; replacement of CharRangeSetWrapper
-
-    //TODO intersection handling
     const auto resolve_connection_collisions = [](
         const lexer_generator::LexerAutomaton_t::Connection& to_add,
         std::vector<std::pair<regex::CharRangeSet, std::set<size_t>>>& new_connections
@@ -84,9 +81,9 @@ int main() {
         new_connections.push_back(std::make_pair(to_add.value.value(), std::set<size_t>{to_add.target}));
     };
 
-    lexer_generator::LexerAutomaton_t dfa = output_nfa.convert_to_dfa<std::u32string>(root_state, merge_states, resolve_connection_collisions);
+    lexer_generator::LexerAutomaton_t lexer_dfa = lexer_nfa.convert_to_dfa<std::u32string>(root_state, merge_states, resolve_connection_collisions);
 
-    std::cout << dfa << std::endl;
+    std::cout << lexer_dfa << std::endl;
 
 
     return 0;
