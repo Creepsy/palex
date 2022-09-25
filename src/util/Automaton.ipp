@@ -107,6 +107,21 @@ void sm::Automaton<StateValue_T, ConnectionValue_T>::remove_connection(const Con
     this->connections.erase(id);
 }
 
+template<class StateValue_T, class ConnectionValue_T>
+template<class StateValueOut_T>
+sm::Automaton<StateValueOut_T, ConnectionValue_T> sm::Automaton<StateValue_T, ConnectionValue_T>::convert_to_dfa(
+    const StateID_t root_state,
+    merge_states_t<StateValueOut_T> merge_states,
+    resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions
+) const {
+    sm::Automaton<StateValueOut_T, ConnectionValue_T> dfa;
+    std::map<std::set<StateID_t>, StateID_t> merged_states_mappings;
+
+    this->insert_nodes_as_node_in_dfa(dfa, std::set<StateID_t>{root_state}, merge_states, resolve_connection_collisions, merged_states_mappings);
+
+    return dfa;
+}
+
 // private
 
 template<class StateValue_T, class ConnectionValue_T>
@@ -119,6 +134,72 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::add_connection(const Connec
     this->transition_table[to_add.source][to_add.target].push_back(connection_id);
 
     return connection_id;    
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_mergeable_states(const StateID_t source) const -> std::set<StateID_t> {
+    std::set<StateID_t> mergeable_states = {source};
+
+    for(const ConnectionID_t connection_id : this->get_outgoing_connection_ids(source)) {
+        const Connection& connection = this->get_connection(connection_id);
+
+        if(connection.type == Connection::ConnectionType::EPSILON && mergeable_states.find(connection.target) == mergeable_states.end()) {
+            mergeable_states.merge(this->get_mergeable_states(connection.target));
+        }
+    }
+
+    return mergeable_states;
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_mergeable_states(const std::set<StateID_t> sources) const -> std::set<StateID_t> {
+    std::set<StateID_t> mergeable_states;
+
+    for(const StateID_t source : sources) {
+        mergeable_states.merge(this->get_mergeable_states(source));
+    }
+
+    return mergeable_states;
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+template<class StateValueOut_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::insert_nodes_as_node_in_dfa(
+    Automaton<StateValueOut_T, ConnectionValue_T>& dfa,
+    const std::set<StateID_t> to_insert,
+    merge_states_t<StateValueOut_T> merge_states,
+    resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions,
+    std::map<std::set<StateID_t>, StateID_t>& merged_states_mappings
+) const -> StateID_t {
+    std::set<StateID_t> mergeable_states = this->get_mergeable_states(to_insert);
+    
+    if(merged_states_mappings.find(mergeable_states) != merged_states_mappings.end()) return merged_states_mappings.at(mergeable_states);
+
+    std::vector<StateValue_T> state_values;
+    std::transform(mergeable_states.begin(), mergeable_states.end(), std::back_inserter(state_values), 
+        [this](const StateID_t state) -> StateValue_T {
+            return this->get_state(state);
+        }
+    );
+
+    const size_t dfa_source_id = dfa.add_state(merge_states(state_values));
+    merged_states_mappings[mergeable_states] = dfa_source_id;
+
+    std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> new_outgoing_connections;
+    for(const StateID_t state_id : mergeable_states) {
+        for(const ConnectionID_t connection_id : this->get_outgoing_connection_ids(state_id)) {
+            if(this->get_connection(connection_id).type != Connection::ConnectionType::EPSILON) {
+                resolve_connection_collisions(this->get_connection(connection_id), new_outgoing_connections);
+            }
+        }
+    }
+
+    for(const std::pair<ConnectionValue_T, std::set<StateID_t>> connection : new_outgoing_connections) {
+        const StateID_t dfa_target_id = this->insert_nodes_as_node_in_dfa(dfa, connection.second, merge_states, resolve_connection_collisions, merged_states_mappings); 
+        dfa.connect_states(dfa_source_id, dfa_target_id, connection.first);
+    }
+
+    return dfa_source_id;
 }
 
 // functions

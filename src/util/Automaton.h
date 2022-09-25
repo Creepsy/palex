@@ -2,7 +2,9 @@
 
 #include <cstddef>
 #include <map>
+#include <set>
 #include <vector>
+#include <iterator>
 #include <stdexcept>
 #include <optional>
 #include <ostream>
@@ -27,6 +29,12 @@ namespace sm {
                 ConnectionType type;
                 std::optional<ConnectionValue_T> value;
             };
+            
+            template<class StateValueOut_T>
+            using merge_states_t = StateValueOut_T(*)(const std::vector<StateValue_T>&);
+
+            template<class StateValueOut_T>
+            using resolve_connection_collisions_t = void(*)(const Connection&, std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>>&);
 
             Automaton();
 
@@ -48,8 +56,25 @@ namespace sm {
             void remove_state(const StateID_t id);
             void remove_connection(const ConnectionID_t id);
 
+            template<class StateValueOut_T>
+            Automaton<StateValueOut_T, ConnectionValue_T> convert_to_dfa(
+                const StateID_t root_state,
+                merge_states_t<StateValueOut_T> merge_states,
+                resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions
+            ) const;
         private:
             ConnectionID_t add_connection(const Connection& to_add);
+            std::set<StateID_t> get_mergeable_states(const StateID_t source) const;
+            std::set<StateID_t> get_mergeable_states(const std::set<StateID_t> sources) const;
+            
+            template<class StateValueOut_T>
+            StateID_t insert_nodes_as_node_in_dfa(
+                Automaton<StateValueOut_T, ConnectionValue_T>& dfa,
+                const std::set<StateID_t> to_insert,
+                merge_states_t<StateValueOut_T> merge_states,
+                resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions,
+                std::map<std::set<StateID_t>, StateID_t>& merged_states_mappings
+            ) const;
 
             StateID_t next_state_id;
             ConnectionID_t next_connection_id;

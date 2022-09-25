@@ -7,20 +7,6 @@
 
 #include "util/unicode.h"
 
-std::ostream& lexer_generator::operator<<(std::ostream& output, const CharRangeSetWrapper& to_print) {
-    for(const regex::CharRange range : to_print.ranges) {
-        if(!range.is_empty()) {
-            if(range.is_single_char()) {
-                output << (char32_t)range.start;
-            } else {
-                output << (char32_t)range.start << "-" << (char32_t)range.end;
-            }
-        }
-    }
-
-    return output;
-}
-
 void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
     std::unique_ptr<regex::RegexBase> regex_ast = regex::RegexParser(to_insert.token_regex).parse_regex();
     assert(("Regex is null! Please create an issue on github containing the used regex!", regex_ast));
@@ -68,7 +54,7 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_char_
 ) {
     const LexerAutomaton_t::StateID_t target_state = nfa.add_state(U"");
 
-    nfa.connect_states(root_state, target_state, CharRangeSetWrapper{to_insert->get_characters()});
+    nfa.connect_states(root_state, target_state, to_insert->get_range_set());
 
     return target_state;
 }

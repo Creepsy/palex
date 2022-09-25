@@ -34,101 +34,24 @@ bool regex::CharRange::is_single_char() const {
     return this->start == this->end;
 }
 
-bool regex::CharRange::is_empty() const {
+bool regex::CharRange::empty() const {
     return this->end < this->start;
 }
 
 bool regex::CharRange::can_prepend_to(const CharRange target) const {
-    return !this->is_empty() && !target.is_empty() && this->end + 1 >= target.start && this->start <= target.start;
+    return !this->empty() && !target.empty() && this->end + 1 >= target.start && this->start <= target.start;
 }
 
 bool regex::CharRange::can_append_to(const CharRange target) const {
-    return !this->is_empty() && !target.is_empty() && target.can_prepend_to(*this);
+    return !this->empty() && !target.empty() && target.can_prepend_to(*this);
 }
 
 bool regex::CharRange::is_subset_of(const CharRange other) const {
-    return (this->start >= other.start && this->end <= other.end) || this->is_empty();
-}
-
-void regex::CharRange::add_to_list(std::list<CharRange>& target) const {
-    CharRange insert_copy = *this;
-
-    if(!this->is_empty()) {
-        auto iter = target.begin();
-
-        while(iter != target.end()) {
-            //subset checks
-            if(insert_copy.is_subset_of(*iter)) break;
-            if((*iter).is_subset_of(insert_copy)) {
-                iter = target.erase(iter);
-                continue;
-            }
-
-            if(insert_copy.end < (*iter).end) { // element has to be inserted here
-                if(insert_copy.can_prepend_to(*iter)) {
-                    (*iter).start = insert_copy.start;
-                } else {
-                    target.insert(iter, insert_copy);
-                }
-                break;
-            }
-            
-            if((*iter).can_prepend_to(insert_copy)) {
-                insert_copy.start = (*iter).start;
-                iter = target.erase(iter);
-                continue;
-            }
-
-            iter++;
-        }    
-
-        if(iter == target.end()) {
-            if(!target.empty() && insert_copy.can_append_to(target.back())) {
-                target.back().end = insert_copy.end;
-            } else {
-                target.push_back(insert_copy);
-            }
-        }
-    }
-}
-
-#include <iostream>
-
-void regex::CharRange::remove_from_list(std::list<CharRange>& target) const {
-    if(!this->is_empty()) {
-        auto iter = target.begin();
-
-        while(iter != target.end()) {
-            const CharRange intersection = CharRange::common_subset(*this, *iter);
-
-            if(!intersection.is_empty()) {
-                if(*iter == intersection) {
-                    iter = target.erase(iter);
-                    continue;
-                }
-
-                const CharRange first_half{(*iter).start, intersection.start - 1}; 
-                const CharRange second_half{intersection.end + 1, (*iter).end};
-
-                assert(("Range remove error! Please create an issue on github containing the used regex!", !(first_half.is_empty() && second_half.is_empty())));
-                if(first_half.is_empty() || intersection.start == 0) { // edge-case which leads to underflow
-                    *iter = second_half;
-                } else if(second_half.is_empty()) {
-                    *iter = first_half;
-                } else {
-                    *iter = second_half;
-                    iter = target.insert(iter, first_half);
-                    iter++;
-                }
-            }
-
-            iter++;
-        }
-    }
+    return (this->start >= other.start && this->end <= other.end) || this->empty();
 }
 
 bool regex::CharRange::operator==(const CharRange other) const {
-    return (this->is_empty() && other.is_empty()) || (this->start == other.start && this->end == other.end);
+    return (this->empty() && other.empty()) || (this->start == other.start && this->end == other.end);
 }
 
 // static
@@ -142,6 +65,140 @@ regex::CharRange regex::CharRange::common_subset(const CharRange first, const Ch
     if(first.start <= second.end && first.start >= second.start) return CharRange(first.start, second.end);
 
     return CharRange(second.start, first.end); // first.start < second.start < first.end
+}
+
+
+
+regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
+    if(!to_add.empty()) {
+        auto iter = this->ranges.begin();
+
+        while(iter != this->ranges.end()) {
+            //subset checks
+            if(to_add.is_subset_of(*iter)) return *this;
+            if((*iter).is_subset_of(to_add)) {
+                iter = this->ranges.erase(iter);
+                continue;
+            }
+
+            if(to_add.end < (*iter).end) { // element has to be inserted here
+                if(to_add.can_prepend_to(*iter)) {
+                    (*iter).start = to_add.start;
+                } else {
+                    this->ranges.insert(iter, to_add);
+                }
+                return *this;
+            }
+            
+            if((*iter).can_prepend_to(to_add)) {
+                to_add.start = (*iter).start;
+                iter = this->ranges.erase(iter);
+                continue;
+            }
+
+            iter++;
+        }    
+
+        if(!this->ranges.empty() && to_add.can_append_to(this->ranges.back())) {
+            this->ranges.back().end = to_add.end;
+        } else {
+            this->ranges.push_back(to_add);
+        }
+    }
+
+    return *this;
+}
+
+regex::CharRangeSet& regex::CharRangeSet::remove_char_range(const CharRange to_remove) {
+    if(!to_remove.empty()) {
+        auto iter = this->ranges.begin();
+
+        while(iter != this->ranges.end()) {
+            const CharRange intersection = CharRange::common_subset(to_remove, *iter);
+
+            if(!intersection.empty()) {
+                if(*iter == intersection) {
+                    iter = this->ranges.erase(iter);
+                    continue;
+                }
+
+                const CharRange first_half{(*iter).start, intersection.start - 1}; 
+                const CharRange second_half{intersection.end + 1, (*iter).end};
+
+                assert(("Range remove error! Please create an issue on github containing the used regex!", !(first_half.empty() && second_half.empty())));
+                if(first_half.empty() || intersection.start == 0) { // edge-case which leads to underflow
+                    *iter = second_half;
+                } else if(second_half.empty()) {
+                    *iter = first_half;
+                } else {
+                    *iter = second_half;
+                    iter = this->ranges.insert(iter, first_half);
+                    iter++;
+                }
+            }
+
+            iter++;
+        }
+    }
+
+    return *this;
+}
+
+bool regex::CharRangeSet::empty() const {
+    return this->ranges.empty();
+}
+
+regex::CharRangeSet regex::CharRangeSet::get_intersection(const CharRangeSet& other) const {
+    CharRangeSet intersection;
+
+    for(const CharRange& own_range : this->ranges) {
+        for(const CharRange& other_range : other.ranges) {
+            CharRange range_intersection = CharRange::common_subset(own_range, other_range);
+
+            if(!range_intersection.empty()) {
+                intersection.insert_char_range(range_intersection);
+            }
+        }
+    }
+
+    return intersection;
+}
+
+std::list<regex::CharRange>& regex::CharRangeSet::get_ranges() {
+    return this->ranges;
+}
+
+const std::list<regex::CharRange>& regex::CharRangeSet::get_ranges() const {
+    return this->ranges;
+}
+
+regex::CharRangeSet regex::CharRangeSet::operator-(const CharRangeSet& to_subtract) const {
+    CharRangeSet subtracted = *this;
+
+    for(const CharRange range : to_subtract.ranges) {
+        subtracted.remove_char_range(range);
+    }
+    
+    return subtracted;
+}
+
+regex::CharRangeSet regex::CharRangeSet::operator+(const CharRangeSet to_add) const {
+    CharRangeSet combined = *this;
+
+    for(const CharRange range : to_add.ranges) {
+        combined.insert_char_range(range);
+    }
+
+    return combined;
+}
+
+
+bool regex::CharRangeSet::operator==(const CharRangeSet& other) const {
+    return this->ranges == other.ranges;
+}
+
+bool regex::CharRangeSet::operator!=(const CharRangeSet& other) const {
+    return this->ranges != other.ranges;
 }
 
 
@@ -219,22 +276,22 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 regex::RegexCharSet::RegexCharSet(const bool negated) : RegexBase(), negated(negated) {
     if(this->negated) {
-        CharRange{0, unicode::LAST_UNICODE_CHAR}.add_to_list(this->ranges);
+        this->range_set.insert_char_range(CharRange{0, unicode::LAST_UNICODE_CHAR});
     }
 } 
 
 // public
 
-void regex::RegexCharSet::insert_char_range(CharRange to_add) {
+void regex::RegexCharSet::insert_char_range(CharRange to_insert) {
     if(this->negated) {
-        to_add.remove_from_list(this->ranges);
+        this->range_set.remove_char_range(to_insert);
     } else {
-        to_add.add_to_list(this->ranges);
+        this->range_set.insert_char_range(to_insert);
     }
 }
 
-const std::list<regex::CharRange>& regex::RegexCharSet::get_characters() const {
-    return this->ranges;
+const regex::CharRangeSet& regex::RegexCharSet::get_range_set() const {
+    return this->range_set;
 }
 
 bool regex::RegexCharSet::is_negated() const {
@@ -245,9 +302,8 @@ void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_l
     output << get_indentation(indentation_level) << "CharSet(";
     if(this->negated) output << "^";
 
-    for(const CharRange& range : this->ranges) output << range;
+    output << this->range_set << ")\n";
 
-    output << ")\n";
 }
 
 
@@ -255,9 +311,18 @@ void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_l
 // namespace functions
 
 std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print) {
-    if(to_print.start == to_print.end) {
-        return output << '[' << (size_t)to_print.start << ']';
+    if(to_print.is_single_char()) {
+        return output << (char32_t)to_print.start;
     } else {
-        return output << '[' << (size_t)to_print.start << "-" << (size_t)to_print.end << ']';
+        return output << (char32_t)to_print.start << "-" << (char32_t)to_print.end;
     }
+}
+
+std::ostream& regex::operator<<(std::ostream& output, const regex::CharRangeSet& to_print) {
+    for(const CharRange range : to_print.get_ranges()) {
+        assert(("CharRangeSet contains empty range! Please create an issue on github containing the used regex!", !range.empty()));
+        output << range;
+    }
+
+    return output;
 }

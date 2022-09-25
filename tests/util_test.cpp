@@ -194,8 +194,8 @@ bool test_regex_char_set() {
             std::equal(
                 test.result.begin(),
                 test.result.end(),
-                char_set->get_characters().begin(),
-                char_set->get_characters().end()
+                char_set->get_range_set().get_ranges().begin(),
+                char_set->get_range_set().get_ranges().end()
             )
         )
     }
