@@ -1,4 +1,4 @@
-INTEGER = "[0-9]+";
 INT = "int";
-ADD = "\+";
-IDENTIFIER = "[_a-zA-Z][\w]*";
+KWIF = "if";
+KWITER = "iterator";
+SOMETHINGWITHI = "i[a-z]*";

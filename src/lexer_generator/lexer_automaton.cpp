@@ -11,27 +11,23 @@ void lexer_generator::resolve_connection_collisions(
     const LexerAutomaton_t::Connection& to_add, 
     std::vector<std::pair<regex::CharRangeSet, std::set<LexerAutomaton_t::StateID_t>>>& dfa_connections
 ) {
-    for(auto iter = dfa_connections.begin(); iter != dfa_connections.end(); iter++) {
-        if(to_add.value.value() == (*iter).first) {
-            (*iter).second.insert(to_add.target);
-        } else {
-            regex::CharRangeSet intersection = to_add.value.value().get_intersection((*iter).first);
-            if(intersection.empty()) continue;
+    regex::CharRangeSet remaining_value = to_add.value.value();
 
-            if(intersection != (*iter).first) {
-                iter = dfa_connections.insert(iter, std::make_pair(intersection, (*iter).second));
-            }
-            (*iter).second.insert(to_add.target);
+    for(auto iter = dfa_connections.begin(); iter != dfa_connections.end(); iter++) {     
+        regex::CharRangeSet intersection = remaining_value.get_intersection((*iter).first);
+        if(intersection.empty()) continue;
 
-            regex::CharRangeSet non_intersecting = to_add.value.value() - intersection;
-            if(!non_intersecting.empty()) {
-                iter = dfa_connections.insert(iter, std::make_pair(non_intersecting, std::set<LexerAutomaton_t::StateID_t>{to_add.target}));
-            }
+        if(intersection != (*iter).first) {
+            iter = dfa_connections.insert(iter, std::make_pair(intersection, (*iter).second));
         }
-        return;
+        (*iter).second.insert(to_add.target);
+
+        remaining_value = remaining_value - intersection;
     }
 
-    dfa_connections.push_back(std::make_pair(to_add.value.value(), std::set<size_t>{to_add.target}));
+    if(!remaining_value.empty()) {
+        dfa_connections.push_back(std::make_pair(remaining_value, std::set<size_t>{to_add.target}));
+    }
 }
 
 std::vector<std::u32string> lexer_generator::merge_states_to_vector(const std::vector<std::u32string>& to_merge) {
