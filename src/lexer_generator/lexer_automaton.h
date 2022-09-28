@@ -3,6 +3,8 @@
 #include <memory>
 #include <list>
 #include <ostream>
+#include <vector>
+#include <set>
 
 #include "util/Automaton.h"
 
@@ -11,13 +13,14 @@
 #include "LexerRuleParser.h"
 
 namespace lexer_generator {
-    // struct CharRangeSetWrapper { // Wrapper to overwrite operator<< -> graphviz output
-    //     std::list<regex::CharRange> ranges;
-    // };
-
     typedef sm::Automaton<std::u32string, regex::CharRangeSet> LexerAutomaton_t;
 
-    // std::ostream& operator<<(std::ostream& output, const CharRangeSetWrapper& to_print);
+    void resolve_connection_collisions(
+        const LexerAutomaton_t::Connection& to_add, 
+        std::vector<std::pair<regex::CharRangeSet, std::set<LexerAutomaton_t::StateID_t>>>& dfa_connections
+    );
+
+    std::vector<std::u32string> merge_states_to_vector(const std::vector<std::u32string>& to_merge);
     
     void insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert);
 
