@@ -6,6 +6,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 project(palex)
 
 include(CTest)
+include_directories(${CMAKE_SOURCE_DIR}/vendor)
 
 add_subdirectory(src)
 add_subdirectory(tests)
