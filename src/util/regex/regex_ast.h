@@ -56,6 +56,7 @@ namespace regex {
         public:
             RegexBase() = default;
             virtual ~RegexBase() = default;
+            virtual size_t get_priority() const = 0;
             virtual void debug(std::ostream& output, const size_t indentation_level = 0) const = 0;
     };
 
@@ -64,6 +65,7 @@ namespace regex {
             RegexBranch();
             void add_possibility(std::unique_ptr<RegexBase> possibility);
             const std::vector<std::unique_ptr<RegexBase>>& get_possibilities() const;
+            size_t get_priority() const override;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
         private:
             std::vector<std::unique_ptr<RegexBase>> possibilities;
@@ -74,6 +76,7 @@ namespace regex {
             RegexSequence();
             void append_element(std::unique_ptr<RegexBase> to_append);
             const std::vector<std::unique_ptr<RegexBase>>& get_elements() const;
+            size_t get_priority() const override;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
         private:
             std::vector<std::unique_ptr<RegexBase>> sequence;
@@ -87,6 +90,7 @@ namespace regex {
             const std::unique_ptr<RegexBase>& get_operand() const;
             size_t get_min() const;
             size_t get_max() const;
+            size_t get_priority() const override;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
         private:
             size_t min_count;
@@ -101,6 +105,7 @@ namespace regex {
             void insert_char_range(CharRange to_insert);
             const CharRangeSet& get_range_set() const;
             bool is_negated() const;
+            size_t get_priority() const override;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
         private:
             const bool negated;
