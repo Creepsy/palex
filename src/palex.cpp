@@ -38,20 +38,7 @@ int main() {
         lexer_generator::insert_rule_in_nfa(lexer_nfa, root_state, rule);
     }
 
-    const auto merge_states_debug = [](const std::vector<std::u32string>& to_merge) -> std::u32string {
-        std::u32string output = U"";
-
-        for(const std::u32string& state_value : to_merge) {
-            if(!state_value.empty()) {
-                if(!output.empty()) output += U", ";
-                output += state_value;
-            }
-        }
-
-        return output;
-    };
-
-    std::map<std::u32string, size_t> token_priorities = lexer_generator::get_token_prioritites(lexer_rules);
+    std::map<std::u32string, size_t> token_priorities = lexer_generator::get_token_priorities(lexer_rules);
     auto merge_states = std::bind(lexer_generator::merge_states_by_priority, token_priorities, _1);
 
     lexer_generator::LexerAutomaton_t lexer_dfa = lexer_nfa.convert_to_dfa<std::u32string>(
@@ -61,7 +48,6 @@ int main() {
     );
 
     std::cout << lexer_dfa << std::endl;
-
 
     return 0;
 }

@@ -52,7 +52,7 @@ void lexer_generator::resolve_connection_collisions(
     }
 }
 
-std::map<std::u32string, size_t> lexer_generator::get_token_prioritites(const std::vector<TokenRegexRule>& rules) {
+std::map<std::u32string, size_t> lexer_generator::get_token_priorities(const std::vector<TokenRegexRule>& rules) {
     std::map<std::u32string, size_t> token_prioritites;
 
     for(const TokenRegexRule& rule : rules) {
@@ -64,6 +64,7 @@ std::map<std::u32string, size_t> lexer_generator::get_token_prioritites(const st
 
     return token_prioritites;
 }
+
 std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32string, size_t>& token_priorities, const std::vector<std::u32string>& to_merge) {
     size_t highest_priority = 0;
     std::vector<std::u32string> hp_tokens;
