@@ -9,13 +9,14 @@
 #include <optional>
 #include <ostream>
 #include <algorithm>
+#include <functional>
 
 namespace sm {
     template<class StateValue_T, class ConnectionValue_T>
     class Automaton {
         public:
-            typedef size_t ConnectionID_t;
-            typedef size_t StateID_t;
+            using ConnectionID_t = size_t;
+            using StateID_t = size_t;
 
             struct Connection {
                 enum class ConnectionType {
@@ -23,18 +24,18 @@ namespace sm {
                     EPSILON
                 };
                 
-                size_t source;
-                size_t target;
+                StateID_t source;
+                StateID_t target;
 
                 ConnectionType type;
                 std::optional<ConnectionValue_T> value;
             };
             
             template<class StateValueOut_T>
-            using merge_states_t = StateValueOut_T(*)(const std::vector<StateValue_T>&);
+            using merge_states_t = std::function<StateValueOut_T (const std::vector<StateValue_T>&)>;
 
             template<class StateValueOut_T>
-            using resolve_connection_collisions_t = void(*)(const Connection&, std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>>&);
+            using resolve_connection_collisions_t = std::function<void (const Connection&, std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>>&)>;
 
             Automaton();
 
