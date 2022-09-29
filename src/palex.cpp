@@ -2,6 +2,7 @@
 #include <sstream>
 #include <numeric>
 #include <fstream>
+#include <functional>
 
 #include "util/unicode.h"
 #include "util/regex/RegexParser.h"
@@ -11,6 +12,8 @@
 #include "lexer_generator/validation.h"
 
 int main() {  
+    using namespace std::placeholders;
+
     std::ifstream input{"../examples/Lexer.lrules"};
     lexer_generator::LexerRuleLexer lexer(input);
     lexer_generator::LexerRuleParser parser(lexer);
@@ -48,9 +51,12 @@ int main() {
         return output;
     };
 
+    std::map<std::u32string, size_t> token_priorities = lexer_generator::get_token_prioritites(lexer_rules);
+    auto merge_states = std::bind(lexer_generator::merge_states_by_priority, token_priorities, _1);
+
     lexer_generator::LexerAutomaton_t lexer_dfa = lexer_nfa.convert_to_dfa<std::u32string>(
         root_state,
-        merge_states_debug,
+        merge_states,
         lexer_generator::resolve_connection_collisions
     );
 
