@@ -2,10 +2,32 @@
 
 #include <cassert>
 #include <vector>
+#include <algorithm>
+#include <sstream>
+
+#include "util/unicode.h"
+
+#include "util/palex_except.h"
 
 #include "util/regex/RegexParser.h"
 
-#include "util/unicode.h"
+// helper functions
+
+void throw_ambiguous_priority_err(const std::vector<std::u32string>& ambiguous_tokens, const size_t priority);
+
+void throw_ambiguous_priority_err(const std::vector<std::u32string>& ambiguous_tokens, const size_t priority) {
+    std::stringstream err_msg{};
+    err_msg << "Tokens with ambiguous priority in the same state! The tokens ";
+
+    for(size_t i = 0; i < ambiguous_tokens.size(); i++) {
+        if(i != 0) err_msg << ", ";
+        err_msg << ambiguous_tokens[i];
+    }
+
+    err_msg << " have the same priority of " << priority;
+
+    throw palex_except::ValidationError(err_msg.str());
+}
 
 void lexer_generator::resolve_connection_collisions(
     const LexerAutomaton_t::Connection& to_add, 
@@ -30,15 +52,41 @@ void lexer_generator::resolve_connection_collisions(
     }
 }
 
-std::vector<std::u32string> lexer_generator::merge_states_to_vector(const std::vector<std::u32string>& to_merge) {
-    return to_merge;
+std::map<std::u32string, size_t> lexer_generator::get_token_priorities(const std::vector<TokenRegexRule>& rules) {
+    std::map<std::u32string, size_t> token_prioritites;
+
+    for(const TokenRegexRule& rule : rules) {
+        token_prioritites.insert(std::make_pair(rule.token_name, rule.priority));
+    }    
+
+    return token_prioritites;
+}
+
+std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32string, size_t>& token_priorities, const std::vector<std::u32string>& to_merge) {
+    size_t highest_priority = 0;
+    std::vector<std::u32string> hp_tokens;
+
+
+    for(const std::u32string token : to_merge) {
+        if(!token.empty()) {
+            const size_t token_priority = token_priorities.at(token);
+            
+            if(hp_tokens.empty() || token_priority > highest_priority) {
+                highest_priority = token_priority;
+                hp_tokens = {token};
+            } else if(token_priority == highest_priority) {
+                hp_tokens.push_back(token);
+            }
+        }
+    }
+
+    if(hp_tokens.size() > 1) throw_ambiguous_priority_err(hp_tokens, highest_priority);
+
+    return (hp_tokens.empty()) ? U"" : hp_tokens.front();
 }
 
 void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
-    std::unique_ptr<regex::RegexBase> regex_ast = regex::RegexParser(to_insert.token_regex).parse_regex();
-    assert(("Regex is null! Please create an issue on github containing the used input!", regex_ast));
-
-    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, regex_ast.get());
+    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.token_regex.get());
     nfa.get_state(leaf_state) = to_insert.token_name;
 }
 

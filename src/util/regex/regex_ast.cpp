@@ -1,6 +1,7 @@
 #include "regex_ast.h"
 
 #include <cassert>
+#include <cmath>
 
 #include "util/unicode.h"
 
@@ -216,6 +217,15 @@ const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexBranch::get_po
     return this->possibilities;
 }
 
+size_t regex::RegexBranch::get_priority() const {
+    size_t shortest = (size_t)-1;
+
+    for(const std::unique_ptr<RegexBase>& possibility : this->possibilities) {
+        shortest = std::min(shortest, possibility->get_priority());
+    }
+
+    return shortest;
+}
 
 void regex::RegexBranch::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Branch\n";
@@ -238,6 +248,16 @@ void regex::RegexSequence::append_element(std::unique_ptr<RegexBase> to_append) 
 
 const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexSequence::get_elements() const {
     return this->sequence;
+}
+
+size_t regex::RegexSequence::get_priority() const {
+    size_t priority_sum = 0;
+
+    for(const std::unique_ptr<RegexBase>& element : this->sequence) {
+        priority_sum += element->get_priority();
+    }
+
+    return priority_sum;
 }
 
 void regex::RegexSequence::debug(std::ostream& output, const size_t indentation_level) const {
@@ -265,6 +285,10 @@ size_t regex::RegexQuantifier::get_min() const {
 }
 size_t regex::RegexQuantifier::get_max() const {
     return this->max_count;
+}
+
+size_t regex::RegexQuantifier::get_priority() const {
+    return this->min_count * this->operand->get_priority();
 }
 
 void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentation_level) const {
@@ -296,6 +320,13 @@ const regex::CharRangeSet& regex::RegexCharSet::get_range_set() const {
 
 bool regex::RegexCharSet::is_negated() const {
     return this->negated;
+}
+
+size_t regex::RegexCharSet::get_priority() const {
+    if(this->range_set.empty()) return 0;
+    if(this->range_set.get_ranges().size() == 1 && this->range_set.get_ranges().front().is_single_char()) return 2;
+
+    return 1;
 }
 
 void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_level) const {

@@ -4,6 +4,7 @@
 #include <list>
 #include <ostream>
 #include <vector>
+#include <map>
 #include <set>
 
 #include "util/Automaton.h"
@@ -20,8 +21,9 @@ namespace lexer_generator {
         std::vector<std::pair<regex::CharRangeSet, std::set<LexerAutomaton_t::StateID_t>>>& dfa_connections
     );
 
-    std::vector<std::u32string> merge_states_to_vector(const std::vector<std::u32string>& to_merge);
-    
+    std::map<std::u32string, size_t> get_token_priorities(const std::vector<TokenRegexRule>& rules);
+    std::u32string merge_states_by_priority(const std::map<std::u32string, size_t>& token_priorities, const std::vector<std::u32string>& to_merge);
+
     void insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert);
 
     LexerAutomaton_t::StateID_t insert_regex_ast_in_nfa(

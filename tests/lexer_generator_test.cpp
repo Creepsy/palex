@@ -29,8 +29,10 @@ int main() {
     return report.report();
 }
 
+#include <iostream>
+
 bool test_rule_lexer() {
-    std::stringstream input("$ IDENT iDEnT _iden1 \"regex\" \"\\\"with quote\" = ; \"undefined\n\"\" 6ust");
+    std::stringstream input("$ IDENT iDEnT _iden1 \"regex\" \"\\\"with quote\" = ; \"undefined\n\"\" ^<>6ust");
 
     lexer_generator::LexerRuleLexer lexer(input);
 
@@ -45,8 +47,11 @@ bool test_rule_lexer() {
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::UNDEFINED)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::REGEX)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::UNDEFINED)
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_BRACKET_OPEN)
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_BRACKET_CLOSE)
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::INTEGER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IDENTIFER)
-    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::END_OF_FILE);
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::END_OF_FILE)
 
     return true;
 }
@@ -60,12 +65,12 @@ bool test_rule_parser() {
     const lexer_generator::TokenRegexRule rule_wspace = parser.parse_token_rule().value();
     TEST_TRUE(rule_wspace.ignore_token)
     TEST_TRUE(rule_wspace.token_name == U"WSPACE")
-    TEST_TRUE(rule_wspace.token_regex == U"\\s+")
+    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_wspace.token_regex.get()));
 
     const lexer_generator::TokenRegexRule rule_ident = parser.parse_token_rule().value();
     TEST_FALSE(rule_ident.ignore_token)
     TEST_TRUE(rule_ident.token_name == U"_IDE_NT2")
-    TEST_TRUE(rule_ident.token_regex == U"\\w+")
+    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_ident.token_regex.get()));
 
     TEST_FALSE(parser.parse_token_rule().has_value())
     
@@ -89,47 +94,29 @@ bool test_rule_parser_errors() {
 
 bool test_rule_validation() {
     struct TestCase {
-        std::vector<lexer_generator::TokenRegexRule> input;
+        std::string input;
 
         bool should_fail;
     };
 
     const std::vector<TestCase> TEST_CASES = {
-        {
-            {
-                lexer_generator::TokenRegexRule{false, U"IDENTIFIER", U""},
-                lexer_generator::TokenRegexRule{false, U"INTEGER", U""},
-                lexer_generator::TokenRegexRule{false, U"_INT", U""},
-                lexer_generator::TokenRegexRule{false, U"_123WEIRD_IDENT", U""}
-            },
-            false
-        },
-        {
-            {
-                lexer_generator::TokenRegexRule{false, U"UNDEFINED", U""}
-            },
-            true
-        },
-        {
-            {
-                lexer_generator::TokenRegexRule{false, U"END_OF_FILE", U""}
-            }, 
-            true
-        },
-        {
-            {
-            lexer_generator::TokenRegexRule{false, U"DUP_IDENT", U""},
-            lexer_generator::TokenRegexRule{false, U"DUP_IDENT", U""}
-            }, 
-            true
-        }
+        {"IDENTIFIER = \"a\"; INTEGER = \"a\"; _INT = \"a\"; _123WEIRD_IDENT = \"a\";", false},
+        {"UNDEFINED = \"a\";", true},
+        {"END_OF_FILE = \"a\";", true},
+        {"DUP_IDENT = \"a\"; DUP_IDENT = \"a\";", true}
     };
 
     for(const TestCase& test : TEST_CASES) {
+        std::stringstream input(test.input);
+        lexer_generator::LexerRuleLexer lexer(input);
+        lexer_generator::LexerRuleParser parser(lexer);
+        
+        std::vector<lexer_generator::TokenRegexRule> rules = parser.parse_all_rules();
+
         if(test.should_fail) {
-            TEST_EXCEPT(lexer_generator::validate_rules(test.input), palex_except::ValidationError);
+            TEST_EXCEPT(lexer_generator::validate_rules(rules), palex_except::ValidationError);
         } else {
-            lexer_generator::validate_rules(test.input);
+            lexer_generator::validate_rules(rules);
         }
     }
 

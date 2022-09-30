@@ -13,6 +13,9 @@ const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
     "IDENTIFIER",
     "EQ",
     "REGEX",
+    "ANGLE_BRACKET_OPEN",
+    "ANGLE_BRACKET_CLOSE",
+    "INTEGER",
     "EOL"
 };
 
@@ -65,11 +68,18 @@ lexer_generator::Token lexer_generator::LexerRuleLexer::next_token() {
         type = Token::TokenType::END_OF_LINE;
     } else if(next_char == '$') {
         type = Token::TokenType::IGNORE;
+    } else if(next_char == '<') {
+        type = Token::TokenType::ANGLE_BRACKET_OPEN;
+    } else if(next_char == '>') {
+        type = Token::TokenType::ANGLE_BRACKET_CLOSE;
     } else if(next_char == '"') {
         if(this->get_regex(identifier)) type = Token::TokenType::REGEX;
-        
     } else if(std::isalpha(next_char) | next_char == '_') {
-        if(this->get_identifier(identifier)) type = Token::TokenType::IDENTIFER; 
+        type = Token::TokenType::IDENTIFER;
+        this->get_identifier(identifier);
+    } else if(std::isdigit(next_char)) {
+        type = Token::TokenType::INTEGER;
+        this->get_integer(identifier);
     }
 
     FilePosition end = FilePosition{start}.advance(identifier);
@@ -127,19 +137,34 @@ bool lexer_generator::LexerRuleLexer::get_regex(std::u32string& output) {
     return true;
 }
 
-bool lexer_generator::LexerRuleLexer::get_identifier(std::u32string& output) {
+void lexer_generator::LexerRuleLexer::get_identifier(std::u32string& output) {
+    output += this->get_matching_sequence([](const char32_t c) -> bool {
+        return std::isalnum(c) || c == '_';
+    });
+}
+
+void lexer_generator::LexerRuleLexer::get_integer(std::u32string& output) {
+    output += this->get_matching_sequence([](const char32_t c) -> bool {
+        return std::isdigit(c);
+    });
+
+}
+
+std::u32string lexer_generator::LexerRuleLexer::get_matching_sequence(bool(*predicate)(const char32_t)) {
+    std::u32string output;
+
     while(this->input.good()) {
         char32_t next = this->next_char();
 
-        if(std::isalnum(next) || next == '_') {
+        if(predicate(next)) {
             output += next;
         } else {
-            this->insert_in_buffer(next); //char is part of the next token
+            this->insert_in_buffer(next);
             break;
         }
     }
 
-    return true;
+    return output;
 }
 
 void lexer_generator::LexerRuleLexer::insert_in_buffer(char32_t to_insert) {

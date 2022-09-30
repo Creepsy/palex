@@ -23,6 +23,9 @@ namespace lexer_generator {
             IDENTIFER,
             EQUALS,
             REGEX,
+            ANGLE_BRACKET_OPEN,
+            ANGLE_BRACKET_CLOSE,
+            INTEGER,
             END_OF_LINE
         };
 
@@ -51,8 +54,10 @@ namespace lexer_generator {
             char32_t consume_wspace();
             
             bool get_regex(std::u32string& output);
-            bool get_identifier(std::u32string& output);
+            void get_identifier(std::u32string& output);
+            void get_integer(std::u32string& output);
 
+            std::u32string get_matching_sequence(bool(*predicate)(const char32_t));
             void insert_in_buffer(char32_t to_insert);
     };
 

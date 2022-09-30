@@ -41,6 +41,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
     if(this->accept(CharType::BRACKET_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
 
     assert(("RegexParser terminated before end! Please create an issue on github containing the used input!", this->end()));
+    assert(("Regex is null! Please create an issue on github containing the used input!", parsed_regex));
 
     return parsed_regex;
 }
