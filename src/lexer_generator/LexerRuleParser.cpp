@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "util/regex/RegexParser.h"
+
 #include "util/palex_except.h"
 #include "util/unicode.h"
 
@@ -22,18 +24,50 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
         rule.ignore_token = true;
     }
 
+    const bool user_defined_priority = this->accept(Token::TokenType::ANGLE_BRACKET_OPEN);
+    if(user_defined_priority) {
+        this->consume();
+        
+        this->expect(Token::TokenType::INTEGER);
+        rule.priority = std::stoull(unicode::to_utf8(this->curr.identifier));
+        this->consume();
+
+        this->consume(Token::TokenType::ANGLE_BRACKET_CLOSE);
+    } 
+
     this->expect(Token::TokenType::IDENTIFER);
     rule.token_name = this->consume(Token::TokenType::IDENTIFER).identifier;
 
     this->consume(Token::TokenType::EQUALS);
 
     this->expect(Token::TokenType::REGEX);
-    rule.token_regex = this->curr.identifier.substr(1, this->curr.identifier.length() - 2); // remove " enclosing regex
+    const std::u32string regex_str = this->curr.identifier.substr(1, this->curr.identifier.length() - 2); // remove " enclosing regex
+    rule.token_regex = std::move(regex::RegexParser(regex_str).parse_regex());
     this->consume();
 
     this->consume(Token::TokenType::END_OF_LINE);
 
+    if(!user_defined_priority) {
+        rule.priority = rule.token_regex->get_priority();
+    }
+
     return rule;
+}
+
+std::vector<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::parse_all_rules() {
+    std::vector<TokenRegexRule> all_rules;
+
+    while(true) {
+        std::optional<lexer_generator::TokenRegexRule> token_rule_result = this->parse_token_rule();
+
+        if(!token_rule_result.has_value()) {
+            break;
+        }
+
+        all_rules.push_back(std::move(token_rule_result.value()));
+    }
+
+    return std::move(all_rules);
 }
 
 //private

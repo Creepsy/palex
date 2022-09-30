@@ -18,19 +18,10 @@ int main() {
     lexer_generator::LexerRuleLexer lexer(input);
     lexer_generator::LexerRuleParser parser(lexer);
 
-    std::optional<lexer_generator::TokenRegexRule> token_rule_result;
     lexer_generator::LexerAutomaton_t lexer_nfa{};
     const lexer_generator::LexerAutomaton_t::StateID_t root_state = lexer_nfa.add_state(U"");
     
-    std::vector<lexer_generator::TokenRegexRule> lexer_rules;
-
-    do {
-        token_rule_result = parser.parse_token_rule();
-        if(token_rule_result.has_value()) {
-            lexer_rules.push_back(token_rule_result.value());
-            lexer_generator::TokenRegexRule& token_rule = token_rule_result.value();
-        } 
-    } while(token_rule_result.has_value());
+    std::vector<lexer_generator::TokenRegexRule> lexer_rules = parser.parse_all_rules();
 
     lexer_generator::validate_rules(lexer_rules);
 

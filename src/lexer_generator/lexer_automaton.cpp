@@ -56,10 +56,7 @@ std::map<std::u32string, size_t> lexer_generator::get_token_priorities(const std
     std::map<std::u32string, size_t> token_prioritites;
 
     for(const TokenRegexRule& rule : rules) {
-        std::unique_ptr<regex::RegexBase> regex_ast = regex::RegexParser(rule.token_regex).parse_regex();
-        assert(("Regex is null! Please create an issue on github containing the used input!", regex_ast));
-
-        token_prioritites.insert(std::make_pair(rule.token_name, regex_ast->get_priority()));
+        token_prioritites.insert(std::make_pair(rule.token_name, rule.priority));
     }    
 
     return token_prioritites;
@@ -89,10 +86,7 @@ std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32
 }
 
 void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
-    std::unique_ptr<regex::RegexBase> regex_ast = regex::RegexParser(to_insert.token_regex).parse_regex();
-    assert(("Regex is null! Please create an issue on github containing the used input!", regex_ast));
-
-    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, regex_ast.get());
+    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.token_regex.get());
     nfa.get_state(leaf_state) = to_insert.token_name;
 }
 
