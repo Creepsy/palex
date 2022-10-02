@@ -15,3 +15,4 @@ enable_testing()
 
 add_test(NAME UtilTest COMMAND util_test)
 add_test(NAME LexerGeneratorTest COMMAND lexer_generator_test)
+add_test(NAME RegexTest COMMAND regex_test)
