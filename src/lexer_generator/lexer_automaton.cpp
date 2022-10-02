@@ -9,7 +9,7 @@
 
 #include "util/palex_except.h"
 
-#include "util/regex/RegexParser.h"
+#include "regex/RegexParser.h"
 
 // helper functions
 
@@ -56,7 +56,7 @@ std::map<std::u32string, size_t> lexer_generator::get_token_priorities(const std
     std::map<std::u32string, size_t> token_prioritites;
 
     for(const TokenRegexRule& rule : rules) {
-        token_prioritites.insert(std::make_pair(rule.token_name, rule.priority));
+        token_prioritites.insert(std::make_pair(rule.name, rule.priority));
     }    
 
     return token_prioritites;
@@ -86,8 +86,8 @@ std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32
 }
 
 void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
-    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.token_regex.get());
-    nfa.get_state(leaf_state) = to_insert.token_name;
+    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.regex_ast.get());
+    nfa.get_state(leaf_state) = to_insert.name;
 }
 
 lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_ast_in_nfa(
@@ -95,8 +95,8 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_ast_i
     const LexerAutomaton_t::StateID_t root_state, 
     const regex::RegexBase* const to_insert
 ) {
-    if(dynamic_cast<const regex::RegexBranch*>(to_insert)) {
-        return insert_regex_branch_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexBranch*>(to_insert));
+    if(dynamic_cast<const regex::RegexAlternation*>(to_insert)) {
+        return insert_regex_branch_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexAlternation*>(to_insert));
     } else if(dynamic_cast<const regex::RegexCharSet*>(to_insert)) {
         return insert_regex_char_set_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexCharSet*>(to_insert));
     } else if(dynamic_cast<const regex::RegexQuantifier*>(to_insert)) {
@@ -111,12 +111,12 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_ast_i
 lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_branch_in_nfa(
     LexerAutomaton_t& nfa,
     const LexerAutomaton_t::StateID_t root_state,
-    const regex::RegexBranch* const to_insert
+    const regex::RegexAlternation* const to_insert
 ) {
     const LexerAutomaton_t::StateID_t collect_state = nfa.add_state(U"");
 
-    for(const std::unique_ptr<regex::RegexBase>& possibility : to_insert->get_possibilities()) {
-        nfa.connect_states(insert_regex_ast_in_nfa(nfa, root_state, possibility.get()), collect_state);
+    for(const std::unique_ptr<regex::RegexBase>& branch : to_insert->get_branches()) {
+        nfa.connect_states(insert_regex_ast_in_nfa(nfa, root_state, branch.get()), collect_state);
     }
 
     return collect_state;

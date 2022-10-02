@@ -60,15 +60,15 @@ namespace regex {
             virtual void debug(std::ostream& output, const size_t indentation_level = 0) const = 0;
     };
 
-    class RegexBranch : public RegexBase {
+    class RegexAlternation : public RegexBase {
         public:
-            RegexBranch();
-            void add_possibility(std::unique_ptr<RegexBase> possibility);
-            const std::vector<std::unique_ptr<RegexBase>>& get_possibilities() const;
+            RegexAlternation();
+            void add_branch(std::unique_ptr<RegexBase> branch);
+            const std::vector<std::unique_ptr<RegexBase>>& get_branches() const;
             size_t get_priority() const override;
             void debug(std::ostream& output, const size_t indentation_level = 0) const override;
         private:
-            std::vector<std::unique_ptr<RegexBase>> possibilities;
+            std::vector<std::unique_ptr<RegexBase>> branches;
     };
 
     class RegexSequence : public RegexBase {

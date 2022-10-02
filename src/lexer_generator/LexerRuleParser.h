@@ -6,7 +6,7 @@
 #include <memory>
 #include <cstddef>
 
-#include "util/regex/regex_ast.h"
+#include "regex/regex_ast.h"
 
 #include "LexerRuleLexer.h"
 
@@ -15,8 +15,8 @@ namespace lexer_generator {
         bool ignore_token;
         size_t priority;
 
-        std::u32string token_name;
-        std::unique_ptr<regex::RegexBase> token_regex;
+        std::u32string name;
+        std::unique_ptr<regex::RegexBase> regex_ast;
     };
 
     class LexerRuleParser {

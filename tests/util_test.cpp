@@ -9,8 +9,8 @@
 #include "util/Automaton.h"
 #include "util/palex_except.h"
 
-#include "util/regex/RegexParser.h"
-#include "util/regex/character_classes.h"
+#include "regex/RegexParser.h"
+#include "regex/character_classes.h"
 
 #include "TestReport.h"
 #include "test_utils.h"
@@ -212,8 +212,8 @@ bool test_regex_branch() {
 
     for(const auto& test : TEST_CASES) {
         std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.first).parse_regex();
-        TEST_TRUE(dynamic_cast<regex::RegexBranch*>(base_ast.get()))
-        TEST_TRUE(dynamic_cast<regex::RegexBranch*>(base_ast.get())->get_possibilities().size() == test.second)
+        TEST_TRUE(dynamic_cast<regex::RegexAlternation*>(base_ast.get()))
+        TEST_TRUE(dynamic_cast<regex::RegexAlternation*>(base_ast.get())->get_branches().size() == test.second)
     }
     
     return true;

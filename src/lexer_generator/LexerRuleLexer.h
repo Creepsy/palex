@@ -23,8 +23,8 @@ namespace lexer_generator {
             IDENTIFER,
             EQUALS,
             REGEX,
-            ANGLE_BRACKET_OPEN,
-            ANGLE_BRACKET_CLOSE,
+            ANGLE_PARENTHESIS_OPEN,
+            ANGLE_PARENTHESIS_CLOSE,
             INTEGER,
             END_OF_LINE
         };

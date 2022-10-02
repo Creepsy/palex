@@ -2,8 +2,8 @@ set(PROJECT_SOURCES
     util/unicode.cpp
     util/palex_except.cpp
 
-    util/regex/regex_ast.cpp
-    util/regex/RegexParser.cpp
+    regex/regex_ast.cpp
+    regex/RegexParser.cpp
 
     lexer_generator/LexerRuleLexer.cpp
     lexer_generator/LexerRuleParser.cpp

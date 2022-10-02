@@ -11,18 +11,18 @@
 // static variables
 
 const std::vector<std::string> regex::RegexParser::CHAR_TYPE_NAMES = {
-    "SQUARE_OPEN",
-    "SQUARE_CLOSE",
+    "BRACKET_OPEN",
+    "BRACKET_CLOSE",
     "NEGATION",
     "ESCAPE",
     "MINUS",
     "DOT",
-    "BRACKET_OPEN",
-    "BRACKET_CLOSE",
+    "PARENTHESIS_OPEN",
+    "PARENTHESIS_CLOSE",
     "PLUS",
     "STAR",
-    "CURLY_OPEN",
-    "CURLY_CLOSE",
+    "BRACE_OPEN",
+    "BRACE_CLOSE",
     "COMMA",
     "ALTERNATION",
     "OPTIONAL",
@@ -38,7 +38,7 @@ regex::RegexParser::RegexParser(const std::u32string& input) : input(input), cur
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
     std::unique_ptr<RegexBase> parsed_regex = this->parse_regex_branch();
-    if(this->accept(CharType::BRACKET_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
+    if(this->accept(CharType::PARENTHESIS_CLOSE)) this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
 
     assert(("RegexParser terminated before end! Please create an issue on github containing the used input!", this->end()));
     assert(("Regex is null! Please create an issue on github containing the used input!", parsed_regex));
@@ -52,12 +52,12 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_branch() {
     std::unique_ptr<RegexBase> sequence = this->parse_regex_sequence();
 
     if(this->accept(CharType::ALTERNATION)) {
-        std::unique_ptr<RegexBranch> branch = std::make_unique<RegexBranch>();
-        branch->add_possibility(std::move(sequence));
+        std::unique_ptr<RegexAlternation> branch = std::make_unique<RegexAlternation>();
+        branch->add_branch(std::move(sequence));
 
         while(this->accept(CharType::ALTERNATION)) {
             this->consume();
-            branch->add_possibility(this->parse_regex_sequence());
+            branch->add_branch(this->parse_regex_sequence());
         }
 
         return branch;
@@ -91,7 +91,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
     
     std::unique_ptr<RegexBase> operand = nullptr;
 
-    if(this->accept(CharType::BRACKET_OPEN)) {
+    if(this->accept(CharType::PARENTHESIS_OPEN)) {
         operand = this->parse_regex_group();
     } else {
         operand = this->parse_regex_charset();
@@ -111,12 +111,12 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
         this->consume();
         min = 0;
         max = RegexQuantifier::INFINITE;
-    } else if(this->accept(CharType::CURLY_OPEN)) {
+    } else if(this->accept(CharType::BRACE_OPEN)) {
         this->consume();
 
         std::u32string min_str = this->parse_matching_string(IS_DIGIT);
         if(min_str.empty()) this->throw_parsing_err("Expected a number!");
-        min = std::stoul(std::string(min_str.begin(), min_str.end()));
+        min = std::stoul(unicode::to_utf8(min_str));
         max = min;
 
         if(this->accept(CharType::COMMA)) {
@@ -127,13 +127,13 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
                 
                 assert(("Number string empty! Please create an issue on github containing the used input!", !max_str.empty()));
 
-                max = std::stoul(std::string(max_str.begin(), max_str.end()));
+                max = std::stoul(unicode::to_utf8(max_str));
             } else {
                 max = RegexQuantifier::INFINITE;
             }
         }
 
-        this->consume(CharType::CURLY_CLOSE);
+        this->consume(CharType::BRACE_CLOSE);
     } else {
         return operand;
     }
@@ -142,7 +142,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
 }
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
-    if(this->accept(CharType::SQUARE_OPEN)) {
+    if(this->accept(CharType::BRACKET_OPEN)) {
         this->consume();
 
         std::unique_ptr<RegexCharSet> char_set = std::make_unique<RegexCharSet>(this->accept(CharType::NEGATION));
@@ -154,7 +154,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
             },
             &RegexParser::parse_char
         );
-        this->consume(CharType::SQUARE_CLOSE);
+        this->consume(CharType::BRACKET_CLOSE);
 
         process_charset_contents(set_contents, *char_set);
 
@@ -171,11 +171,11 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
 }
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_group() {
-    this->consume(CharType::BRACKET_OPEN);
+    this->consume(CharType::PARENTHESIS_OPEN);
 
     std::unique_ptr<RegexBase> group = this->parse_regex_branch();
 
-    this->consume(CharType::BRACKET_CLOSE);
+    this->consume(CharType::PARENTHESIS_CLOSE);
 
     return group;
 }
@@ -273,10 +273,10 @@ char32_t regex::RegexParser::parse_unicode_value() {
     
     std::u32string unicode_value;
 
-    if(this->accept(CharType::CURLY_OPEN)) {
+    if(this->accept(CharType::BRACE_OPEN)) {
         this->consume();
         unicode_value = this->parse_matching_string(IS_HEX_DIGIT);
-        this->consume(CharType::CURLY_CLOSE);
+        this->consume(CharType::BRACE_CLOSE);
     } else {
         unicode_value = this->parse_matching_string(IS_HEX_DIGIT, 4);
         if(unicode_value.length() != 4)
@@ -285,7 +285,7 @@ char32_t regex::RegexParser::parse_unicode_value() {
 
     if(unicode_value.empty()) this->throw_parsing_err("Expected a hexadecimal value!");
 
-    char32_t unicode_char = (char32_t)std::stoul(std::string(unicode_value.begin(), unicode_value.end()), nullptr, 16);
+    char32_t unicode_char = (char32_t)std::stoul(unicode::to_utf8(unicode_value), nullptr, 16);
     if(unicode_char > unicode::LAST_UNICODE_CHAR) this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
 
     return unicode_char;
@@ -294,9 +294,9 @@ char32_t regex::RegexParser::parse_unicode_value() {
 regex::RegexParser::CharType regex::RegexParser::get_curr_type() {
     switch(this->get_curr()) {
         case '[':
-            return CharType::SQUARE_OPEN;
+            return CharType::BRACKET_OPEN;
         case ']':
-            return CharType::SQUARE_CLOSE;
+            return CharType::BRACKET_CLOSE;
         case '^':
             return CharType::NEGATION;
         case '\\':
@@ -306,17 +306,17 @@ regex::RegexParser::CharType regex::RegexParser::get_curr_type() {
         case '.':
             return CharType::DOT;
         case '(':
-            return CharType::BRACKET_OPEN;
+            return CharType::PARENTHESIS_OPEN;
         case ')':
-            return CharType::BRACKET_CLOSE;
+            return CharType::PARENTHESIS_CLOSE;
         case '+':
             return CharType::PLUS;
         case '*':
             return CharType::STAR;
         case '{':
-            return CharType::CURLY_OPEN;
+            return CharType::BRACE_OPEN;
         case '}':
-            return CharType::CURLY_CLOSE;
+            return CharType::BRACE_CLOSE;
         case ',':
             return CharType::COMMA;
         case '|':

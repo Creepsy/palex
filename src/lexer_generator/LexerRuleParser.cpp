@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "util/regex/RegexParser.h"
+#include "regex/RegexParser.h"
 
 #include "util/palex_except.h"
 #include "util/unicode.h"
@@ -24,7 +24,7 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
         rule.ignore_token = true;
     }
 
-    const bool user_defined_priority = this->accept(Token::TokenType::ANGLE_BRACKET_OPEN);
+    const bool user_defined_priority = this->accept(Token::TokenType::ANGLE_PARENTHESIS_OPEN);
     if(user_defined_priority) {
         this->consume();
         
@@ -32,23 +32,23 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
         rule.priority = std::stoull(unicode::to_utf8(this->curr.identifier));
         this->consume();
 
-        this->consume(Token::TokenType::ANGLE_BRACKET_CLOSE);
+        this->consume(Token::TokenType::ANGLE_PARENTHESIS_CLOSE);
     } 
 
     this->expect(Token::TokenType::IDENTIFER);
-    rule.token_name = this->consume(Token::TokenType::IDENTIFER).identifier;
+    rule.name = this->consume(Token::TokenType::IDENTIFER).identifier;
 
     this->consume(Token::TokenType::EQUALS);
 
     this->expect(Token::TokenType::REGEX);
     const std::u32string regex_str = this->curr.identifier.substr(1, this->curr.identifier.length() - 2); // remove " enclosing regex
-    rule.token_regex = std::move(regex::RegexParser(regex_str).parse_regex());
+    rule.regex_ast = std::move(regex::RegexParser(regex_str).parse_regex());
     this->consume();
 
     this->consume(Token::TokenType::END_OF_LINE);
 
     if(!user_defined_priority) {
-        rule.priority = rule.token_regex->get_priority();
+        rule.priority = rule.regex_ast->get_priority();
     }
 
     return rule;

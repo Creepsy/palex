@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "util/unicode.h"
-#include "util/regex/RegexParser.h"
+#include "regex/RegexParser.h"
 
 #include "lexer_generator/lexer_automaton.h"
 #include "lexer_generator/LexerRuleParser.h"

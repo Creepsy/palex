@@ -204,34 +204,34 @@ bool regex::CharRangeSet::operator!=(const CharRangeSet& other) const {
 
 
 
-regex::RegexBranch::RegexBranch() : RegexBase() {
+regex::RegexAlternation::RegexAlternation() : RegexBase() {
 }   
 
 // public
 
-void regex::RegexBranch::add_possibility(std::unique_ptr<RegexBase> possibility) {
-    this->possibilities.push_back(std::move(possibility));
+void regex::RegexAlternation::add_branch(std::unique_ptr<RegexBase> branch) {
+    this->branches.push_back(std::move(branch));
 }
 
-const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexBranch::get_possibilities() const {
-    return this->possibilities;
+const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexAlternation::get_branches() const {
+    return this->branches;
 }
 
-size_t regex::RegexBranch::get_priority() const {
+size_t regex::RegexAlternation::get_priority() const {
     size_t shortest = (size_t)-1;
 
-    for(const std::unique_ptr<RegexBase>& possibility : this->possibilities) {
-        shortest = std::min(shortest, possibility->get_priority());
+    for(const std::unique_ptr<RegexBase>& branch : this->branches) {
+        shortest = std::min(shortest, branch->get_priority());
     }
 
     return shortest;
 }
 
-void regex::RegexBranch::debug(std::ostream& output, const size_t indentation_level) const {
+void regex::RegexAlternation::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Branch\n";
 
-    for(const std::unique_ptr<RegexBase>& possibility : this->possibilities) {
-        possibility->debug(output, indentation_level + 1);
+    for(const std::unique_ptr<RegexBase>& branch : this->branches) {
+        branch->debug(output, indentation_level + 1);
     }
 }
 

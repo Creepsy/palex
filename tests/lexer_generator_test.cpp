@@ -47,8 +47,8 @@ bool test_rule_lexer() {
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::UNDEFINED)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::REGEX)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::UNDEFINED)
-    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_BRACKET_OPEN)
-    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_BRACKET_CLOSE)
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_PARENTHESIS_OPEN)
+    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::ANGLE_PARENTHESIS_CLOSE)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::INTEGER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IDENTIFER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::END_OF_FILE)
@@ -64,13 +64,13 @@ bool test_rule_parser() {
     
     const lexer_generator::TokenRegexRule rule_wspace = parser.parse_token_rule().value();
     TEST_TRUE(rule_wspace.ignore_token)
-    TEST_TRUE(rule_wspace.token_name == U"WSPACE")
-    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_wspace.token_regex.get()));
+    TEST_TRUE(rule_wspace.name == U"WSPACE")
+    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_wspace.regex_ast.get()));
 
     const lexer_generator::TokenRegexRule rule_ident = parser.parse_token_rule().value();
     TEST_FALSE(rule_ident.ignore_token)
-    TEST_TRUE(rule_ident.token_name == U"_IDE_NT2")
-    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_ident.token_regex.get()));
+    TEST_TRUE(rule_ident.name == U"_IDE_NT2")
+    TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(rule_ident.regex_ast.get()));
 
     TEST_FALSE(parser.parse_token_rule().has_value())
     

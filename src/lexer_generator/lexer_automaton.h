@@ -9,7 +9,7 @@
 
 #include "util/Automaton.h"
 
-#include "util/regex/regex_ast.h"
+#include "regex/regex_ast.h"
 
 #include "LexerRuleParser.h"
 
@@ -34,7 +34,7 @@ namespace lexer_generator {
     LexerAutomaton_t::StateID_t insert_regex_branch_in_nfa(
         LexerAutomaton_t& nfa, 
         const LexerAutomaton_t::StateID_t root_state, 
-        const regex::RegexBranch* const to_insert
+        const regex::RegexAlternation* const to_insert
     );
     LexerAutomaton_t::StateID_t insert_regex_char_set_in_nfa(
         LexerAutomaton_t& nfa, 

@@ -13,8 +13,8 @@ const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
     "IDENTIFIER",
     "EQ",
     "REGEX",
-    "ANGLE_BRACKET_OPEN",
-    "ANGLE_BRACKET_CLOSE",
+    "ANGLE_PARENTHESIS_OPEN",
+    "ANGLE_PARENTHESIS_CLOSE",
     "INTEGER",
     "EOL"
 };
@@ -69,9 +69,9 @@ lexer_generator::Token lexer_generator::LexerRuleLexer::next_token() {
     } else if(next_char == '$') {
         type = Token::TokenType::IGNORE;
     } else if(next_char == '<') {
-        type = Token::TokenType::ANGLE_BRACKET_OPEN;
+        type = Token::TokenType::ANGLE_PARENTHESIS_OPEN;
     } else if(next_char == '>') {
-        type = Token::TokenType::ANGLE_BRACKET_CLOSE;
+        type = Token::TokenType::ANGLE_PARENTHESIS_CLOSE;
     } else if(next_char == '"') {
         if(this->get_regex(identifier)) type = Token::TokenType::REGEX;
     } else if(std::isalpha(next_char) | next_char == '_') {
