@@ -11,6 +11,8 @@ set(PROJECT_SOURCES
     lexer_generator/validation.cpp
 )
 
+include(templates/all_template_headers.cmake)
+
 add_library(palex_objects ${PROJECT_SOURCES})
 target_include_directories(palex_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
