@@ -2,7 +2,12 @@ set(TEST_UTILS_SOURCES
     TestReport.cpp
 )
 
-add_library(test_utils ${TEST_UTILS_SOURCES})
+set(TEST_UTILS_HEADERS
+    test_utils.h
+    TestReport.h
+)
+
+add_library(test_utils ${TEST_UTILS_SOURCES} ${TEST_UTILS_HEADERS})
 target_include_directories(test_utils PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 add_executable(util_test util_test.cpp)
