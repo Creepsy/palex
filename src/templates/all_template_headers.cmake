@@ -12,6 +12,6 @@ foreach(template_file ${TEMPLATE_FILES})
             -DTEMPLATE_NAME=${name}
             -P ${CMAKE_SOURCE_DIR}/src/templates/template_generator.cmake
         COMMENT "Generating ${CMAKE_BINARY_DIR}/${name}.h"
-        DEPENDS ${TEMPLATE_DIR}/${name}.tpl
+        DEPENDS ${TEMPLATE_DIR}/${name}.template
     )
 endforeach()
