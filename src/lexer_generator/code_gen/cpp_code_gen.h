@@ -14,19 +14,23 @@
 namespace code_gen {
     namespace cpp {
         struct CppLexerConfig {
-            std::string output_path = ".";
+            std::string lexer_path = ".";
+            std::string utf8_lib_path = ".";
+
             std::string lexer_name = "Lexer";
             std::string lexer_namespace = "palex";
+
+            bool create_utf8_lib = true;
         };
 
         CppLexerConfig create_lexer_config_from_json(const nlohmann::json& json_config); 
 
         void generate_lexer_files(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens);
         void generate_lexer_header(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens);
-        void generate_lexer_source(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config);
-        void generate_unicode_lib();
+        void generate_lexer_source(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens);
+        void generate_utf8_lib(const CppLexerConfig& config);
 
         void complete_lexer_header(std::ostream& output, const std::string_view tag, const CppLexerConfig& config, const TokenInfos& tokens);
-        void complete_lexer_source(std::ostream& output, const std::string_view tag);
+        void complete_lexer_source(std::ostream& output, const std::string_view tag, const CppLexerConfig& config, const TokenInfos& tokens);
     }
 }

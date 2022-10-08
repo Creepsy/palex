@@ -37,6 +37,8 @@ set(PROJECT_HEADERS
 
     ${CMAKE_BINARY_DIR}/cpp_lexer_source.h
     ${CMAKE_BINARY_DIR}/cpp_lexer_header.h
+    ${CMAKE_BINARY_DIR}/cpp_utf8_header.h
+    ${CMAKE_BINARY_DIR}/cpp_utf8_source.h
     
     ${CMAKE_SOURCE_DIR}/vendor/json.h
 )
