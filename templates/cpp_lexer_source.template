@@ -1,4 +1,4 @@
-#include "%LEXER_FILE%.h"
+#include "%LEXER_NAME%.h"
 
 #include <array>
 
@@ -7,7 +7,7 @@ std::array<std::string, %TOKEN_TYPE_COUNT%> TOKEN_TYPE_TO_STRING {
 };
 
 bool %LEXER_NAMESPACE%::Token::is_ignored() const {
-    //TODO
+    return this->type > TokenType::%LAST_NORMAL_TOKEN%;
 }
 
 %LEXER_NAMESPACE%::%LEXER_NAME%::%LEXER_NAME%(std::istream& input) : input{input}, curr{} {
@@ -27,8 +27,8 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
     return unignored;
 }
 
-bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() {
-    return this->input.end();
+bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() const {
+    return this->input.eof();
 }
 
 std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const CharacterPosition& to_print) {
