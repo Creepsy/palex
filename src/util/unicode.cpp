@@ -68,7 +68,13 @@ std::string unicode::to_utf8(const char32_t unicode) {
 }
 
 std::string unicode::to_utf8(const std::u32string& to_convert) {
-    return std::string(to_convert.begin(), to_convert.end()); 
+    std::string utf8_string;
+
+    for(const char32_t c : to_convert) {
+        utf8_string += to_utf8(c);
+    }
+
+    return utf8_string;
 }
 
 std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_print) {
