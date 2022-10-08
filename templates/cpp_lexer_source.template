@@ -1,0 +1,40 @@
+#include "%LEXER_FILE%.h"
+
+#include <array>
+
+std::array<std::string, %TOKEN_TYPE_COUNT%> TOKEN_TYPE_TO_STRING {
+    %TOKEN_TYPE_STRINGS%
+};
+
+bool %LEXER_NAMESPACE%::Token::is_ignored() const {
+    //TODO
+}
+
+%LEXER_NAMESPACE%::%LEXER_NAME%::%LEXER_NAME%(std::istream& input) : input{input}, curr{} {
+}
+
+%LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::next_token() {
+    //TODO
+}
+
+%LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::next_unignored_token() {
+    Token unignored{};
+
+    do {
+        unignored = this->next_token();
+    } while(unignored.is_ignored());
+
+    return unignored;
+}
+
+bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() {
+    return this->input.end();
+}
+
+std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const CharacterPosition& to_print) {
+    output << "[Ln " << to_print.line << ", Col " << to_print.column << "]";
+}
+
+std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Token& to_print) {
+    output << to_print.position << " " << TOKEN_TYPE_TO_STRING.at((size_t)to_print.type) << " " << to_print.identifier;
+}

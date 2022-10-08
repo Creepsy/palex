@@ -11,6 +11,10 @@
 #include "lexer_generator/LexerRuleParser.h"
 #include "lexer_generator/validation.h"
 
+#include "cpp_lexer_source.h"
+
+#include "lexer_generator/code_gen/cpp_code_gen.h"
+
 int main() {  
     using namespace std::placeholders;
 
@@ -39,6 +43,8 @@ int main() {
     );
 
     std::cout << lexer_dfa << std::endl;
+
+    code_gen::cpp::generate_lexer_files(lexer_dfa, code_gen::cpp::CppLexerConfig{}, code_gen::conv_rules_to_generation_info(lexer_rules));
 
     return 0;
 }

@@ -1,0 +1,42 @@
+#pragma once
+
+#include <cstddef>
+#include <string>
+#include <istream>
+#include <stack>
+
+namespace %LEXER_NAMESPACE% {
+    struct CharacterPosition {
+        size_t line;
+        size_t column;
+    };
+
+    struct Token {
+        enum class TokenType {
+            %TOKEN_TYPE_ENUM%
+        };
+
+        TokenType type;
+        std::u32string identifier;
+        CharacterPosition position;
+
+        bool is_ignored() const;
+    };
+
+    class %LEXER_NAME% {
+        public:
+            %LEXER_NAME%(std::istream& input);
+            Token next_token();
+            Token next_unignored_token();
+            bool end() const;
+        private:
+            std::istream& input;
+            CharacterPosition curr;
+            std::u32string curr_identifier;
+            std::stack<char32_t> cache;
+            %FALLBACK%
+    };
+
+    std::ostream& operator<<(std::ostream& output, const CharacterPosition& to_print);
+    std::ostream& operator<<(std::ostream& output, const Token& to_print);
+}
