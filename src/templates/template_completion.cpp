@@ -6,6 +6,8 @@
 
 #include "util/palex_except.h"
 
+templates::TemplateCompleter_t templates::EMPTY_COMPLETER = [](std::ostream& output, const std::string_view tag) -> void {};
+
 void templates::write_template_to_stream(const char* const to_write, std::ostream& output, TemplateCompleter_t completer) {
     const char* const to_write_end = to_write + strlen(to_write);
 
