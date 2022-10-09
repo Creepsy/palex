@@ -20,6 +20,7 @@ namespace code_gen {
             std::string lexer_namespace = "palex";
 
             bool create_utf8_lib = true;
+            bool token_fallback = true;
         };
 
         CppLexerConfig create_lexer_config_from_json(const nlohmann::json& json_config); 
@@ -38,8 +39,13 @@ namespace code_gen {
             const lexer_generator::LexerAutomaton_t& dfa
         );
 
-        void write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa);
-        void write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa);
-        void write_state(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const lexer_generator::LexerAutomaton_t::StateID_t to_write);
+        void write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config);
+        void write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config);
+        void write_state(
+            std::ostream& output, 
+            const lexer_generator::LexerAutomaton_t& dfa, 
+            const CppLexerConfig& config, 
+            const lexer_generator::LexerAutomaton_t::StateID_t to_write
+        );
     }
 }

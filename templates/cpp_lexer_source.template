@@ -42,7 +42,7 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
 }
 
 bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() const {
-    return this->input.eof();
+    return this->input.eof() && this->cache.empty();
 }
 
 char32_t %LEXER_NAMESPACE%::%LEXER_NAME%::get_char() {
@@ -55,6 +55,8 @@ char32_t %LEXER_NAMESPACE%::%LEXER_NAME%::get_char() {
 
     return utf8::get_unicode_char(this->input);
 }
+
+%RESTORE_FALLBACK_FUNC%
 
 std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const CharacterPosition& to_print) {
     return output << "[Ln " << to_print.line << ", Col " << to_print.column << "]";

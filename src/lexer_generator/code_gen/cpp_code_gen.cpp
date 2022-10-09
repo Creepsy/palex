@@ -92,8 +92,18 @@ void code_gen::cpp::complete_lexer_header(std::ostream& output, const std::strin
         for(const std::u32string& ignored_token : tokens.ignored_tokens) {
             output << ",\n\t\t\t" << ignored_token;
         }
-    } else if(tag == "FALLBACK") {
-        //TODO: currently unimplemented
+    } else if(tag == "FALLBACK_CACHE" && config.token_fallback) {
+        output << "std::optional<Fallback> fallback;";
+    } else if(tag == "FALLBACK_INCLUDES" && config.token_fallback) {
+        output << "#include <optional>\n"
+               << "#include <utility>";
+    } else if(tag == "FALLBACK_TYPES" && config.token_fallback) {
+        output << "struct Fallback {\n"
+               << "\t\t\t\tsize_t token_length;\n"
+               << "\t\t\t\tCharacterPosition next_token_position;\n"
+               << "\t\t\t\tToken::TokenType type;\n"
+               << "\t\t\t};\n\n"
+               << "\t\t\tToken try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start);";
     }
 }
 
@@ -129,8 +139,12 @@ void code_gen::cpp::complete_lexer_source(
             output << tokens.tokens.back();
         }
     } else if(tag == "STATE_MACHINE") {
-        write_state_machine(output, dfa);
+        write_state_machine(output, dfa, config);
     } else if(tag == "PRE_STATE_MACHINE") {
+        if(config.token_fallback) {
+            output << "this->fallback = std::nullopt;\n\t";
+        }
+
         output << "const CharacterPosition token_start = this->curr_position;\n"
                << "\tsize_t state = 0;\n"
                << "\tstd::u32string identifier = U\"\";\n"
@@ -140,20 +154,36 @@ void code_gen::cpp::complete_lexer_source(
                << "\t}";
     } else if(tag == "UTF8_LIB_PATH") {
         output << config.utf8_lib_path;
+    } else if(tag == "RESTORE_FALLBACK_FUNC" && config.token_fallback) {
+        output << config.lexer_namespace << "::Token " << config.lexer_namespace << "::" << config.lexer_name
+               << "::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {\n"
+               << "\tif(!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};\n\n"
+               << "\twhile(token_identifier.size() > this->fallback.value().token_length) {\n"
+               << "\t\tthis->cache.push(token_identifier.back());\n"
+               << "\t\ttoken_identifier.pop_back();\n"
+               << "\t}\n\n"
+               << "\tthis->curr_position = this->fallback.value().next_token_position;\n\n"
+               << "\treturn Token{this->fallback.value().type, token_identifier, token_start};\n"
+               << "}";
     }
 }
 
-void code_gen::cpp::write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa) {
+void code_gen::cpp::write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config) {
     output << "while(true) {\n"
            << "\t\tthis->cache.push(curr);\n\n"
            << "\t\tswitch(state) {\n";
         
-    write_states(output, dfa);
+    write_states(output, dfa, config);
 
-    //TODO: move large code blocks into template!!!
-    output << "\t\t\tcase (size_t)-1: // error state\n"
-           << "\t\t\t\treturn Token{Token::TokenType::UNDEFINED, identifier, token_start};\n"
-           << "\t\t}\n\n"
+    output << "\t\t\tcase (size_t)-1: // error state\n";
+    
+    if(config.token_fallback) {
+        output << "\t\t\t\treturn this->try_restore_fallback(identifier, token_start);\n";
+    } else {
+        output << "\t\t\t\treturn Token{Token::TokenType::UNDEFINED, identifier, token_start};\n";   
+    }
+    
+    output << "\t\t}\n\n"
            << "\t\tidentifier += this->cache.top();\n"
            << "\t\tthis->curr_position.advance(this->cache.top());\n"
            << "\t\tthis->cache.pop();\n"
@@ -161,15 +191,20 @@ void code_gen::cpp::write_state_machine(std::ostream& output, const lexer_genera
            << "\t}";
 }
 
-void code_gen::cpp::write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa) {
+void code_gen::cpp::write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config) {
     for(const auto& state : dfa.get_states()) {
         output << "\t\t\tcase " << state.first << ":\n";
-        write_state(output, dfa, state.first);
+        write_state(output, dfa, config, state.first);
         output << "\t\t\t\tbreak;\n";
     }
 }
 
-void code_gen::cpp::write_state(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const lexer_generator::LexerAutomaton_t::StateID_t to_write) {
+void code_gen::cpp::write_state(
+    std::ostream& output, 
+    const lexer_generator::LexerAutomaton_t& dfa, 
+    const CppLexerConfig& config,
+    const lexer_generator::LexerAutomaton_t::StateID_t to_write
+) {
     const std::vector<lexer_generator::LexerAutomaton_t::ConnectionID_t> outgoing_connections = dfa.get_outgoing_connection_ids(to_write);
 
     if(outgoing_connections.empty()) {
@@ -177,6 +212,10 @@ void code_gen::cpp::write_state(std::ostream& output, const lexer_generator::Lex
         
         output << "\t\t\t\treturn Token{Token::TokenType::" << dfa.get_state(to_write) << ", identifier, token_start};\n";
     } else {
+        if(!dfa.get_state(to_write).empty() && config.token_fallback) {
+            output << "\t\t\t\tthis->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::" << dfa.get_state(to_write) << "};\n";
+        }
+
         output << "\t\t\t\tswitch(curr) {\n";
 
         for(const lexer_generator::LexerAutomaton_t::ConnectionID_t conn : outgoing_connections) {

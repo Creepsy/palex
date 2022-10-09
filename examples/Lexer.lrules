@@ -1,5 +1,5 @@
 <7>INT = "int";
 INF = "int";
+INTEGER = "integer";
 KWIF = "if";
 KWITER = "iterator";
-SOMETHINGWITHI = "i[a-z]*";

@@ -4,6 +4,7 @@
 #include <string>
 #include <istream>
 #include <stack>
+%FALLBACK_INCLUDES%
 
 namespace %LEXER_NAMESPACE% {
     struct CharacterPosition {
@@ -32,12 +33,13 @@ namespace %LEXER_NAMESPACE% {
             Token next_unignored_token();
             bool end() const;
         private:
+            %FALLBACK_TYPES%
             char32_t get_char();
 
             std::istream& input;
             CharacterPosition curr_position;
             std::stack<char32_t> cache;
-            %FALLBACK%
+            %FALLBACK_CACHE%
     };
 
     std::ostream& operator<<(std::ostream& output, const CharacterPosition& to_print);
