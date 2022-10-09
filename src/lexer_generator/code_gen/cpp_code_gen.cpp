@@ -3,6 +3,8 @@
 #include <functional>
 #include <fstream>
 #include <stdexcept>
+#include <vector>
+#include <cassert>
 
 #include "templates/template_completion.h"
 
@@ -18,15 +20,15 @@ code_gen::cpp::CppLexerConfig code_gen::cpp::create_lexer_config_from_json(const
 }
 
 void code_gen::cpp::generate_lexer_files(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens) {
-    generate_lexer_header(dfa, config, tokens);
-    generate_lexer_source(dfa, config, tokens);
+    generate_lexer_header(config, tokens);
+    generate_lexer_source(config, tokens, dfa);
 
     if(config.create_utf8_lib) {
         generate_utf8_lib(config);
     }
 }
 
-void code_gen::cpp::generate_lexer_header(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens) {
+void code_gen::cpp::generate_lexer_header(const CppLexerConfig& config, const TokenInfos& tokens) {
     using namespace std::placeholders;
 
     const std::string header_file_path = config.lexer_path + "/" + config.lexer_name + ".h";
@@ -44,7 +46,7 @@ void code_gen::cpp::generate_lexer_header(const lexer_generator::LexerAutomaton_
     header_file.close();
 }
 
-void code_gen::cpp::generate_lexer_source(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens) {
+void code_gen::cpp::generate_lexer_source(const CppLexerConfig& config, const TokenInfos& tokens, const lexer_generator::LexerAutomaton_t& dfa) {
     using namespace std::placeholders;
 
     const std::string source_file_path = config.lexer_path + "/" + config.lexer_name + ".cpp";
@@ -55,7 +57,7 @@ void code_gen::cpp::generate_lexer_source(const lexer_generator::LexerAutomaton_
         throw std::runtime_error("Unable to open file '" + source_file_path + "'!");
     }
 
-    templates::TemplateCompleter_t completer = std::bind(complete_lexer_source, _1, _2, config, tokens);
+    templates::TemplateCompleter_t completer = std::bind(complete_lexer_source, _1, _2, config, tokens, dfa);
 
     templates::write_template_to_stream(cpp_lexer_source, source_file, completer);
 
@@ -84,18 +86,24 @@ void code_gen::cpp::complete_lexer_header(std::ostream& output, const std::strin
                << "\t\t\tEND_OF_FILE";
 
         for(const std::u32string& token : tokens.tokens) {
-            output << ",\n\t\t\t" << unicode::to_utf8(token);
+            output << ",\n\t\t\t" << token;
         }
 
         for(const std::u32string& ignored_token : tokens.ignored_tokens) {
-            output << ",\n\t\t\t" << unicode::to_utf8(ignored_token);
+            output << ",\n\t\t\t" << ignored_token;
         }
     } else if(tag == "FALLBACK") {
         //TODO: currently unimplemented
     }
 }
 
-void code_gen::cpp::complete_lexer_source(std::ostream& output, const std::string_view tag, const CppLexerConfig& config, const TokenInfos& tokens) {
+void code_gen::cpp::complete_lexer_source(
+    std::ostream& output, 
+    const std::string_view tag, 
+    const CppLexerConfig& config, 
+    const TokenInfos& tokens, 
+    const lexer_generator::LexerAutomaton_t& dfa
+) {
     if(tag == "LEXER_NAME") {
         output << config.lexer_name;
     } else if(tag == "TOKEN_TYPE_COUNT") {
@@ -106,11 +114,11 @@ void code_gen::cpp::complete_lexer_source(std::ostream& output, const std::strin
                << "\t\"END_OF_FILE\"";
 
         for(const std::u32string& token : tokens.tokens) {
-            output << ",\n\t\"" << unicode::to_utf8(token) << '"';
+            output << ",\n\t\"" << token << '"';
         }
 
         for(const std::u32string& ignored_token : tokens.ignored_tokens) {
-            output << ",\n\t\"" << unicode::to_utf8(ignored_token) << '"';
+            output << ",\n\t\"" << ignored_token << '"';
         }
     } else if(tag == "LEXER_NAMESPACE") {
         output << config.lexer_namespace;
@@ -118,7 +126,86 @@ void code_gen::cpp::complete_lexer_source(std::ostream& output, const std::strin
         if(tokens.tokens.empty()) {
             output << "END_OF_FILE";
         } else {
-            output << unicode::to_utf8(tokens.tokens.back());
+            output << tokens.tokens.back();
         }
+    } else if(tag == "STATE_MACHINE") {
+        write_state_machine(output, dfa);
+    } else if(tag == "PRE_STATE_MACHINE") {
+        output << "const CharacterPosition token_start = this->curr_position;\n"
+               << "\tsize_t state = 0;\n"
+               << "\tstd::u32string identifier = U\"\";\n"
+               << "\tchar32_t curr = this->get_char();\n\n"
+               << "\tif(this->end()) {\n"
+               << "\t\treturn Token{Token::TokenType::END_OF_FILE, U\"\", token_start};\n"
+               << "\t}";
+    } else if(tag == "UTF8_LIB_PATH") {
+        output << config.utf8_lib_path;
+    }
+}
+
+void code_gen::cpp::write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa) {
+    output << "while(true) {\n"
+           << "\t\tthis->cache.push(curr);\n\n"
+           << "\t\tswitch(state) {\n";
+        
+    write_states(output, dfa);
+
+    //TODO: move large code blocks into template!!!
+    output << "\t\t\tcase (size_t)-1: // error state\n"
+           << "\t\t\t\treturn Token{Token::TokenType::UNDEFINED, identifier, token_start};\n"
+           << "\t\t}\n\n"
+           << "\t\tidentifier += this->cache.top();\n"
+           << "\t\tthis->curr_position.advance(this->cache.top());\n"
+           << "\t\tthis->cache.pop();\n"
+           << "\t\tcurr = this->get_char();\n"
+           << "\t}";
+}
+
+void code_gen::cpp::write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa) {
+    for(const auto& state : dfa.get_states()) {
+        output << "\t\t\tcase " << state.first << ":\n";
+        write_state(output, dfa, state.first);
+        output << "\t\t\t\tbreak;\n";
+    }
+}
+
+void code_gen::cpp::write_state(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const lexer_generator::LexerAutomaton_t::StateID_t to_write) {
+    const std::vector<lexer_generator::LexerAutomaton_t::ConnectionID_t> outgoing_connections = dfa.get_outgoing_connection_ids(to_write);
+
+    if(outgoing_connections.empty()) {
+        assert(!dfa.get_state(to_write).empty() && "Found DFA with empty leaf node!");
+        
+        output << "\t\t\t\treturn Token{Token::TokenType::" << dfa.get_state(to_write) << ", identifier, token_start};\n";
+    } else {
+        output << "\t\t\t\tswitch(curr) {\n";
+
+        for(const lexer_generator::LexerAutomaton_t::ConnectionID_t conn : outgoing_connections) {
+            assert(dfa.get_connection(conn).value.has_value() && "Found epsilon connection in DFA!");
+
+            for(const regex::CharRange& range : dfa.get_connection(conn).value.value().get_ranges()) {
+                output << "\t\t\t\t\tcase " << (size_t)range.start;
+                
+                if(!range.is_single_char()) {
+                    output << " ... " << (size_t)range.end;
+                }
+
+                output << ":\n";
+            }
+
+            output << "\t\t\t\t\t\tstate = " << dfa.get_connection(conn).target << ";\n"
+                   << "\t\t\t\t\t\tbreak;\n";
+        }
+
+        output << "\t\t\t\t\tdefault:\n";
+
+        if(dfa.get_state(to_write).empty()) {
+            output << "\t\t\t\t\t\tstate = (size_t)-1;\n"
+                   << "\t\t\t\t\t\tbreak;\n";
+
+        } else {
+            output << "\t\t\t\t\t\treturn Token{Token::TokenType::" << dfa.get_state(to_write) << ", identifier, token_start};\n";
+        }
+
+        output << "\t\t\t\t}\n";
     }
 }

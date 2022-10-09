@@ -10,6 +10,7 @@
 #include <ostream>
 #include <algorithm>
 #include <functional>
+#include <cassert>
 
 namespace sm {
     template<class StateValue_T, class ConnectionValue_T>
@@ -47,6 +48,7 @@ namespace sm {
             bool has_outgoing_connections(const StateID_t source) const;
             bool has_incoming_connections(const StateID_t target) const;
 
+            const std::map<StateID_t, StateValue_T>& get_states() const;
             const StateValue_T& get_state(const StateID_t id) const;
             StateValue_T& get_state(const StateID_t id);
             const Connection& get_connection(const ConnectionID_t id) const;

@@ -9,6 +9,8 @@ namespace %LEXER_NAMESPACE% {
     struct CharacterPosition {
         size_t line;
         size_t column;
+
+        void advance(const char32_t consumed);
     };
 
     struct Token {
@@ -30,9 +32,10 @@ namespace %LEXER_NAMESPACE% {
             Token next_unignored_token();
             bool end() const;
         private:
+            char32_t get_char();
+
             std::istream& input;
-            CharacterPosition curr;
-            std::u32string curr_identifier;
+            CharacterPosition curr_position;
             std::stack<char32_t> cache;
             %FALLBACK%
     };

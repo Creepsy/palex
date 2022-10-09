@@ -36,6 +36,11 @@ bool sm::Automaton<StateValue_T, ConnectionValue_T>::has_incoming_connections(co
 }
 
 template<class StateValue_T, class ConnectionValue_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_states() const -> const std::map<StateID_t, StateValue_T>& {
+    return this->states;
+}
+
+template<class StateValue_T, class ConnectionValue_T>
 auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_state(const StateID_t id) const -> const StateValue_T& {
     return this->states.at(id);
 }
@@ -117,7 +122,15 @@ sm::Automaton<StateValueOut_T, ConnectionValue_T> sm::Automaton<StateValue_T, Co
     sm::Automaton<StateValueOut_T, ConnectionValue_T> dfa;
     std::map<std::set<StateID_t>, StateID_t> merged_states_mappings;
 
-    this->insert_nodes_as_node_in_dfa(dfa, std::set<StateID_t>{root_state}, merge_states, resolve_connection_collisions, merged_states_mappings);
+    const StateID_t dfa_root_state = this->insert_nodes_as_node_in_dfa(
+        dfa,
+        std::set<StateID_t>{root_state}, 
+        merge_states, 
+        resolve_connection_collisions, 
+        merged_states_mappings
+    );
+
+    assert(dfa_root_state == 0 && "Root state is not the first state in the dfa (id 0)!");
 
     return dfa;
 }
