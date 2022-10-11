@@ -4,6 +4,8 @@
 
 #include "%UTF8_LIB_PATH%/utf8.h"
 
+constexpr size_t ERROR_STATE = (size_t)-1;
+
 void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
     if(consumed == (char32_t)'\n') {
         this->line++;
@@ -26,6 +28,7 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
 }
 
 %LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::next_token() {
+    %PRE_STATE_MACHINE_FALLBACK%
     %PRE_STATE_MACHINE%
 
     %STATE_MACHINE%

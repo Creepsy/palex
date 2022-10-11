@@ -40,11 +40,16 @@ namespace code_gen {
         );
 
         void write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config);
-        void write_states(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config);
         void write_state(
             std::ostream& output, 
             const lexer_generator::LexerAutomaton_t& dfa, 
             const CppLexerConfig& config, 
+            const lexer_generator::LexerAutomaton_t::StateID_t to_write
+        );
+        void write_error_state(std::ostream& output, const CppLexerConfig& config);
+        void write_state_transition_table(
+            std::ostream& output, 
+            const lexer_generator::LexerAutomaton_t& dfa, 
             const lexer_generator::LexerAutomaton_t::StateID_t to_write
         );
     }

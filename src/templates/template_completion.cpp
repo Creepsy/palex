@@ -3,6 +3,8 @@
 #include <cstring>
 #include <algorithm>
 #include <cstddef>
+#include <fstream>
+#include <stdexcept>
 
 #include "util/palex_except.h"
 
@@ -32,4 +34,22 @@ void templates::write_template_to_stream(const char* const to_write, std::ostrea
             output << to_write[i];
         }
     }
+}
+
+void templates::write_template_to_file(const char* const to_write, const std::string& output_path, TemplateCompleter_t completer) {
+    std::ofstream output_file(output_path);
+
+    if(!output_file.is_open()) {
+        throw std::runtime_error("Unable to open the file '" + output_path + "'!");
+    }
+
+    try {
+        write_template_to_stream(to_write, output_file, completer);
+    } catch(...) {
+        output_file.close();
+        
+        throw;
+    }
+
+    output_file.close();
 }
