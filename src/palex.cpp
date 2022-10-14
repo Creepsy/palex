@@ -4,7 +4,7 @@
 #include <fstream>
 #include <functional>
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 #include "regex/RegexParser.h"
 
 #include "lexer_generator/lexer_automaton.h"

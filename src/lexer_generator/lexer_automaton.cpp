@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <sstream>
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 #include "util/palex_except.h"
 

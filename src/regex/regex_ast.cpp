@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 // static variables
 
@@ -300,7 +300,7 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 regex::RegexCharSet::RegexCharSet(const bool negated) : RegexBase(), negated(negated) {
     if(this->negated) {
-        this->range_set.insert_char_range(CharRange{0, unicode::LAST_UNICODE_CHAR});
+        this->range_set.insert_char_range(CharRange{0, utf8::LAST_UNICODE_CHAR});
     }
 } 
 

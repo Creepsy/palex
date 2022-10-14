@@ -7,7 +7,7 @@
 
 #include "templates/template_completion.h"
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 #include "cpp_lexer_source.h"
 #include "cpp_lexer_header.h"

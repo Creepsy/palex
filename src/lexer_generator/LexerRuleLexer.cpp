@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 // static variables
 
@@ -96,7 +96,7 @@ char32_t lexer_generator::LexerRuleLexer::next_char() {
         return this->buffer;
     }
 
-    char32_t next = unicode::get_utf8(this->input);
+    char32_t next = utf8::get_unicode_char(this->input);
     if(this->input.good()) this->curr_pos.advance(next);
 
     return next;

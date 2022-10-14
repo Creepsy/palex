@@ -65,7 +65,7 @@ bool test_regex_char_set() {
         {U"\\S", regex::character_classes::NON_WHITESPACE_CLASS, false},
         {U".", regex::character_classes::DOT_CLASS, false},
         {U"[]", {}, false},
-        {U"[^]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, true},
+        {U"[^]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, true},
         {U"[abcd]", {regex::CharRange{'a', 'd'}}, false},
         {U"[a-z]", {regex::CharRange{'a', 'z'}}, false},
         {U"[^a-b\\w]", {
@@ -73,12 +73,12 @@ bool test_regex_char_set() {
             regex::CharRange{'9' + 1, 'A' - 1},
             regex::CharRange{'Z' + 1, '_' - 1},
             regex::CharRange{'_' + 1, 'a' - 1}, 
-            regex::CharRange{'z' + 1, unicode::LAST_UNICODE_CHAR}
+            regex::CharRange{'z' + 1, utf8::LAST_UNICODE_CHAR}
         }, true},
         {U"[a-dc-fe-j]", {regex::CharRange{'a', 'j'}}, false},
         {U"[A-Za-z]", {regex::CharRange{'A', 'Z'}, regex::CharRange{'a', 'z'}}, false},
-        {U"[\\W\\w]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, false},
-        {U"[\\w\\W]", {regex::CharRange{0, unicode::LAST_UNICODE_CHAR}}, false},
+        {U"[\\W\\w]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, false},
+        {U"[\\w\\W]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, false},
         {U"[.]", {regex::CharRange{'.'}}, false},
         {U"[a-]", {regex::CharRange{'-'}, regex::CharRange{'a'}}, false},
         {U"[---]", {regex::CharRange{'-'}}, false},

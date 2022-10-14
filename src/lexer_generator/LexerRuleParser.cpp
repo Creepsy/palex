@@ -6,7 +6,7 @@
 #include "regex/RegexParser.h"
 
 #include "util/palex_except.h"
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 lexer_generator::LexerRuleParser::LexerRuleParser(LexerRuleLexer& input) : input(input) {
     this->consume();
@@ -29,7 +29,7 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
         this->consume();
         
         this->expect(Token::TokenType::INTEGER);
-        rule.priority = std::stoull(unicode::to_utf8(this->curr.identifier));
+        rule.priority = std::stoull(utf8::unicode_to_utf8(this->curr.identifier));
         this->consume();
 
         this->consume(Token::TokenType::ANGLE_PARENTHESIS_CLOSE);

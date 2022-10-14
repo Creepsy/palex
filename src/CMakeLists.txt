@@ -1,5 +1,5 @@
 set(PROJECT_SOURCES
-    util/unicode.cpp
+    util/utf8.cpp
     util/palex_except.cpp
 
     regex/regex_ast.cpp
@@ -18,7 +18,7 @@ set(PROJECT_SOURCES
 
 set(PROJECT_HEADERS
     util/Automaton.h
-    util/unicode.h
+    util/utf8.h
     util/palex_except.h
 
     regex/character_classes.h

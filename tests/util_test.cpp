@@ -5,15 +5,15 @@
 #include <cstddef>
 #include <utility>
 
-#include "util/unicode.h"
+#include "util/utf8.h"
 #include "util/Automaton.h"
 #include "util/palex_except.h"
 
 #include "TestReport.h"
 #include "test_utils.h"
 
-bool test_unicode_input();
-bool test_unicode_output();
+bool test_utf8_input();
+bool test_utf8_output();
 
 bool test_automaton_states();
 bool test_automaton_connections();
@@ -21,8 +21,8 @@ bool test_automaton_connections();
 int main() {
     tests::TestReport report;
 
-    report.add_test("unicode_input", test_unicode_input);
-    report.add_test("unicode_output", test_unicode_output);
+    report.add_test("utf8_input", test_utf8_input);
+    report.add_test("utf8_output", test_utf8_output);
     
     report.add_test("automaton_states", test_automaton_states);
     report.add_test("automaton_connections", test_automaton_connections);
@@ -32,19 +32,19 @@ int main() {
     return report.report();
 }
 
-bool test_unicode_input() {
+bool test_utf8_input() {
     std::stringstream input("aШᢶ𐅄");
 
-    TEST_TRUE(unicode::get_utf8(input) == 97)       // 1 byte char
-    TEST_TRUE(unicode::get_utf8(input) == 1064)     // 2 byte char
-    TEST_TRUE(unicode::get_utf8(input) == 6326)     // 3 byte char
-    TEST_TRUE(unicode::get_utf8(input) == 65860)    // 4 byte char
+    TEST_TRUE(utf8::get_unicode_char(input) == 97)       // 1 byte char
+    TEST_TRUE(utf8::get_unicode_char(input) == 1064)     // 2 byte char
+    TEST_TRUE(utf8::get_unicode_char(input) == 6326)     // 3 byte char
+    TEST_TRUE(utf8::get_unicode_char(input) == 65860)    // 4 byte char
 
 
     return true;   
 }
 
-bool test_unicode_output() {
+bool test_utf8_output() {
     std::u32string to_print = {
         97,     // 1 byte char
         1064,   // 2 byte char

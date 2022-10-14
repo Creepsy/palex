@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "util/palex_except.h"
-#include "util/unicode.h"
+#include "util/utf8.h"
 
 #include "character_classes.h"
 
@@ -116,7 +116,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
 
         std::u32string min_str = this->parse_matching_string(IS_DIGIT);
         if(min_str.empty()) this->throw_parsing_err("Expected a number!");
-        min = std::stoul(unicode::to_utf8(min_str));
+        min = std::stoul(utf8::unicode_to_utf8(min_str));
         max = min;
 
         if(this->accept(CharType::COMMA)) {
@@ -127,7 +127,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
                 
                 assert(("Number string empty! Please create an issue on github containing the used input!", !max_str.empty()));
 
-                max = std::stoul(unicode::to_utf8(max_str));
+                max = std::stoul(utf8::unicode_to_utf8(max_str));
             } else {
                 max = RegexQuantifier::INFINITE;
             }
@@ -285,8 +285,8 @@ char32_t regex::RegexParser::parse_unicode_value() {
 
     if(unicode_value.empty()) this->throw_parsing_err("Expected a hexadecimal value!");
 
-    char32_t unicode_char = (char32_t)std::stoul(unicode::to_utf8(unicode_value), nullptr, 16);
-    if(unicode_char > unicode::LAST_UNICODE_CHAR) this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
+    char32_t unicode_char = (char32_t)std::stoul(utf8::unicode_to_utf8(unicode_value), nullptr, 16);
+    if(unicode_char > utf8::LAST_UNICODE_CHAR) this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
 
     return unicode_char;
 }
