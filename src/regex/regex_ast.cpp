@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cctype>
 
 #include "util/utf8.h"
 
@@ -14,9 +15,18 @@ const size_t regex::RegexQuantifier::INFINITE = (size_t) -1;
 //helper functions
 
 inline const std::string get_indentation(const size_t indentation_level);
+void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print);
 
 inline const std::string get_indentation(const size_t indentation_level) {
     return std::string(indentation_level, '\t');
+}
+
+void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print) {
+    if(to_print <= 127 && std::isgraph(to_print)) {
+        output << to_print;
+    } else {
+        output << "<U0x" << std::hex << (size_t)to_print << std::dec << ">";
+    }
 }
 
 
@@ -341,12 +351,15 @@ void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_l
 
 // namespace functions
 
-std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print) {
-    if(to_print.is_single_char()) {
-        return output << (char32_t)to_print.start;
-    } else {
-        return output << (char32_t)to_print.start << "-" << (char32_t)to_print.end;
+std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print) {    
+    print_graphical_unicode_representation(output, to_print.start);
+
+    if(!to_print.is_single_char()) {
+        output << "-";
+        print_graphical_unicode_representation(output, to_print.end);
     }
+
+    return output;
 }
 
 std::ostream& regex::operator<<(std::ostream& output, const regex::CharRangeSet& to_print) {
