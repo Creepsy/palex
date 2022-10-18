@@ -67,7 +67,7 @@ namespace sm {
             ) const;
         private:
             ConnectionID_t add_connection(const Connection& to_add);
-            std::set<StateID_t> get_mergeable_states(const StateID_t source) const;
+            void insert_mergeable_states(const StateID_t source, std::set<StateID_t>& mergeable_states) const;
             std::set<StateID_t> get_mergeable_states(const std::set<StateID_t> sources) const;
             
             template<class StateValueOut_T>

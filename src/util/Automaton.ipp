@@ -150,18 +150,17 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::add_connection(const Connec
 }
 
 template<class StateValue_T, class ConnectionValue_T>
-auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_mergeable_states(const StateID_t source) const -> std::set<StateID_t> {
-    std::set<StateID_t> mergeable_states = {source};
+void sm::Automaton<StateValue_T, ConnectionValue_T>::insert_mergeable_states(const StateID_t source, std::set<StateID_t>& mergeable_states) const {
+    if(mergeable_states.find(source) != mergeable_states.end()) return;
+    mergeable_states.insert(source);
 
     for(const ConnectionID_t connection_id : this->get_outgoing_connection_ids(source)) {
         const Connection& connection = this->get_connection(connection_id);
 
-        if(connection.type == Connection::ConnectionType::EPSILON && mergeable_states.find(connection.target) == mergeable_states.end()) {
-            mergeable_states.merge(this->get_mergeable_states(connection.target));
+        if(connection.type == Connection::ConnectionType::EPSILON) {
+            this->insert_mergeable_states(connection.target, mergeable_states);
         }
     }
-
-    return mergeable_states;
 }
 
 template<class StateValue_T, class ConnectionValue_T>
@@ -169,7 +168,7 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_mergeable_states(const 
     std::set<StateID_t> mergeable_states;
 
     for(const StateID_t source : sources) {
-        mergeable_states.merge(this->get_mergeable_states(source));
+        this->insert_mergeable_states(source, mergeable_states);
     }
 
     return mergeable_states;
