@@ -22,6 +22,8 @@ bool test_regex_branch();
 bool test_regex_sequence();
 bool test_regex_quantifier();
 
+bool test_regex_priority();
+
 int main() {
     tests::TestReport report;
 
@@ -33,6 +35,8 @@ int main() {
     report.add_test("regex_branch", test_regex_branch);
     report.add_test("regex_sequence", test_regex_sequence);
     report.add_test("regex_quantifier", test_regex_quantifier);
+
+    report.add_test("regex_priority", test_regex_priority);
 
     report.run();
 
@@ -248,6 +252,25 @@ bool test_regex_quantifier() {
         regex::RegexQuantifier* quantifier = dynamic_cast<regex::RegexQuantifier*>(base_ast.get());
         TEST_TRUE(quantifier->get_min() == test.min)
         TEST_TRUE(quantifier->get_max() == test.max)
+    }
+
+    return true;
+}
+
+bool test_regex_priority() {
+    const std::vector<std::pair<std::u32string, size_t>> TEST_CASES = {
+        {U"int", 6},
+        {U"integer", 14},
+        {U"[a-z]", 1},
+        {U"[a-z]b", 3},
+        {U"bc|def|[a-z]", 1},
+        {U"ib*", 2},
+        {U"(abc)+", 6},
+        {U"(abc){2,10}", 12}
+    };
+
+    for(const std::pair<std::u32string, size_t>& test : TEST_CASES) {
+        TEST_TRUE(regex::RegexParser(test.first).parse_regex()->get_priority() == test.second)
     }
 
     return true;
