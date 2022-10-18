@@ -169,5 +169,17 @@ bool test_automaton_dfa_conversion() {
 
     TEST_TRUE(test_dfa.get_states().size() == 3);
     
+    TEST_TRUE(test_dfa.are_connected(0, 1))
+    TEST_TRUE(test_dfa.are_connected(1, 2))
+    TEST_FALSE(test_dfa.are_connected(0, 2))
+    
+    TEST_TRUE(test_dfa.get_connection(1).source == 0)
+    TEST_TRUE(test_dfa.get_connection(1).target == 1)
+    TEST_TRUE(test_dfa.get_connection(1).value.has_value() && test_dfa.get_connection(1).value.value() == 20)
+
+    TEST_TRUE(test_dfa.get_connection(0).source == 1)
+    TEST_TRUE(test_dfa.get_connection(0).target == 2)
+    TEST_TRUE(test_dfa.get_connection(0).value.has_value() && test_dfa.get_connection(0).value.value() == 21)
+
     return true;
 }
