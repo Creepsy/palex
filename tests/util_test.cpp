@@ -4,10 +4,14 @@
 #include <vector>
 #include <cstddef>
 #include <utility>
+#include <string>
+
+#include <json.h>
 
 #include "util/utf8.h"
 #include "util/Automaton.h"
 #include "util/palex_except.h"
+#include "util/config_getters.h"
 
 #include "TestReport.h"
 #include "test_utils.h"
@@ -19,6 +23,8 @@ bool test_automaton_states();
 bool test_automaton_connections();
 bool test_automaton_dfa_conversion();
 
+bool test_config_getters();
+
 int main() {
     tests::TestReport report;
 
@@ -27,7 +33,9 @@ int main() {
     
     report.add_test("automaton_states", test_automaton_states);
     report.add_test("automaton_connections", test_automaton_connections);
-    report.add_test("test_automaton_dfa_conversion", test_automaton_dfa_conversion);
+    report.add_test("automaton_dfa_conversion", test_automaton_dfa_conversion);
+
+    report.add_test("config_getters", test_config_getters);
 
     report.run();
 
@@ -181,5 +189,35 @@ bool test_automaton_dfa_conversion() {
     TEST_TRUE(test_dfa.get_connection(0).target == 2)
     TEST_TRUE(test_dfa.get_connection(0).value.has_value() && test_dfa.get_connection(0).value.value() == 21)
 
+    return true;
+}
+
+bool test_config_getters() {
+    const nlohmann::json INPUT = nlohmann::json::parse(R"(
+        {
+            "abool": true,
+            "notabool": 24,
+            "astring": "abc",
+            "notastring": false
+        }
+    )");
+
+    bool bool_storage = false;
+    std::string string_storage;
+
+    TEST_TRUE(config::optional_bool(INPUT, "abool", bool_storage))
+    TEST_TRUE(bool_storage)
+    TEST_FALSE(config::optional_bool(INPUT, "notabool", bool_storage))
+    TEST_TRUE(bool_storage)
+
+    TEST_EXCEPT(config::require_bool(INPUT, "notabool", bool_storage, "test_input"), palex_except::ParserError)
+
+    TEST_TRUE(config::optional_string(INPUT, "astring", string_storage))
+    TEST_TRUE(string_storage == "abc")
+    TEST_FALSE(config::optional_string(INPUT, "notastring", string_storage))
+    TEST_TRUE(string_storage == "abc")
+    
+    TEST_EXCEPT(config::require_string(INPUT, "notastring", string_storage, "test_input"), palex_except::ParserError)
+    
     return true;
 }
