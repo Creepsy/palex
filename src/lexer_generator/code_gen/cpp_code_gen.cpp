@@ -4,10 +4,13 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include <stdexcept>
 
 #include "templates/template_completion.h"
 
 #include "util/utf8.h"
+#include "util/palex_except.h"
+#include "util/config_getters.h"
 
 #include "cpp_lexer_source.h"
 #include "cpp_lexer_header.h"
@@ -74,8 +77,46 @@ bool complete_generic_lexer_tags(std::ostream& output, const std::string_view ta
 
 
 
-code_gen::cpp::CppLexerConfig code_gen::cpp::create_lexer_config_from_json(const nlohmann::json& json_config) {
-    return CppLexerConfig{}; //TODO
+bool code_gen::cpp::generate_cpp_lexer_files(
+    const std::vector<lexer_generator::TokenRegexRule>& lexer_rules, 
+    const lexer_generator::LexerAutomaton_t& lexer_dfa, 
+    const std::string& lexer_name, 
+    const nlohmann::json& json_config
+) {
+    code_gen::cpp::CppLexerConfig lexer_config{};
+
+    try {
+        lexer_config = code_gen::cpp::create_lexer_config_from_json(lexer_name, json_config);
+    } catch(const palex_except::ParserError& e) {
+        std::cerr << "Invalid lexer config for lexer '" << lexer_name << "': " << e.what() << std::endl;
+
+        return false;
+    }  
+    
+    try {
+        code_gen::cpp::generate_lexer_files(lexer_dfa, lexer_config, code_gen::conv_rules_to_generation_info(lexer_rules));
+    } catch(const std::exception& e) {
+        std::cerr << "Failed to generate (some) lexer files: " << e.what() << std::endl;
+
+        return false;
+    }
+
+    return true;
+}
+
+code_gen::cpp::CppLexerConfig code_gen::cpp::create_lexer_config_from_json(const std::string& lexer_name, const nlohmann::json& json_config) {
+    CppLexerConfig lexer_config{};
+
+    lexer_config.lexer_name = lexer_name;
+
+    config::optional_string(json_config, "lexer_path", lexer_config.lexer_path);
+    config::optional_string(json_config, "utf8_lib_path", lexer_config.utf8_lib_path);
+    config::optional_string(json_config, "lexer_namespace", lexer_config.lexer_namespace);
+
+    config::optional_bool(json_config, "create_utf8_lib", lexer_config.create_utf8_lib);
+    config::optional_bool(json_config, "token_fallback", lexer_config.token_fallback);
+    
+    return lexer_config;
 }
 
 void code_gen::cpp::generate_lexer_files(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens) {

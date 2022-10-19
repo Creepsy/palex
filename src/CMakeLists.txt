@@ -1,6 +1,7 @@
 set(PROJECT_SOURCES
     util/utf8.cpp
     util/palex_except.cpp
+    util/config_getters.cpp
 
     regex/regex_ast.cpp
     regex/RegexParser.cpp
@@ -11,6 +12,7 @@ set(PROJECT_SOURCES
     lexer_generator/validation.cpp
 
     lexer_generator/code_gen/cpp_code_gen.cpp
+    lexer_generator/code_gen/lexer_generation.cpp
     lexer_generator/code_gen/code_gen_data.cpp
 
     templates/template_completion.cpp
@@ -20,6 +22,7 @@ set(PROJECT_HEADERS
     util/Automaton.h
     util/utf8.h
     util/palex_except.h
+    util/config_getters.h
 
     regex/character_classes.h
     regex/regex_ast.cpp
@@ -31,6 +34,7 @@ set(PROJECT_HEADERS
     lexer_generator/validation.h
 
     lexer_generator/code_gen/cpp_code_gen.h
+    lexer_generator/code_gen/lexer_generation.h
     lexer_generator/code_gen/code_gen_data.h
 
     templates/template_completion.h

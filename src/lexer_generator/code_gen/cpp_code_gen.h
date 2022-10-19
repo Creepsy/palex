@@ -7,6 +7,7 @@
 #include <json.h>
 
 #include "lexer_generator/lexer_automaton.h"
+#include "lexer_generator/LexerRuleParser.h"
 
 #include "code_gen_data.h"
 
@@ -23,7 +24,14 @@ namespace code_gen {
             bool token_fallback = true;
         };
 
-        CppLexerConfig create_lexer_config_from_json(const nlohmann::json& json_config); 
+        bool generate_cpp_lexer_files(
+            const std::vector<lexer_generator::TokenRegexRule>& lexer_rules,
+            const lexer_generator::LexerAutomaton_t& lexer_dfa, 
+            const std::string& lexer_name, 
+            const nlohmann::json& json_config
+        );
+
+        CppLexerConfig create_lexer_config_from_json(const std::string& lexer_name, const nlohmann::json& json_config); 
 
         void generate_lexer_files(const lexer_generator::LexerAutomaton_t& dfa, const CppLexerConfig& config, const TokenInfos& tokens);
         void generate_lexer_header(const CppLexerConfig& config, const TokenInfos& tokens);

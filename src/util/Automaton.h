@@ -12,6 +12,8 @@
 #include <functional>
 #include <cassert>
 
+#include "util/utf8.h"
+
 namespace sm {
     template<class StateValue_T, class ConnectionValue_T>
     class Automaton {
