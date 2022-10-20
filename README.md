@@ -17,13 +17,14 @@ PaLex is a parser and lexer generator written in C++. It allows the creation of 
     - [Lexer Configurations](#lexer-configurations)
       - [General Configurations](#general-configurations)
       - [Configurations for C++ projects](#configurations-for-c-projects)
-  - [Lexer Generation](#lexer-generation)
+  - [Lexer Rules](#lexer-rules)
     - [Naming of the rule file](#naming-of-the-rule-file)
     - [Token rule syntax](#token-rule-syntax)
     - [Naming limitations](#naming-limitations)
     - [Regex limitations](#regex-limitations)
     - [Token ignore list](#token-ignore-list)
     - [Special tokens](#special-tokens)
+    - [Token priority](#token-priority)
 ## Getting Started
 
 In order to clone the repository and build PaLex run: 
@@ -130,27 +131,27 @@ Here are all options to further customize C++ lexers for reference:
 | `utf8_lib_path`   | No       | String |  `.`           | Folder where the utf8 library is located |
 | `create_utf8_lib` | No       | Bool   | `true`           | Specifies whether the utf8 library should also be generated |
 
-## Lexer Generation
+## Lexer Rules
 
 ### Naming of the rule file
-In order the be recognized by the parser, a lexer rule file has to have the file extension ".lrules". The file name specifies the name of the generated lexer.
+In order the be recognized by the parser, a lexer rule file has to have the file extension ".lrules". It has to be placed on the same level as the `palex.cfg` file. The file name is the same as the one of the lexer.
 
 ### Token rule syntax
-A token is defined through the token name followed by an equal sign and the corresponding regex. Every token definition ends with a semicolon. A few valid examples for rule definitions are:
+A token is defined through the token name followed by an equal sign and the corresponding regex. Every token definition ends with a semicolon. A few valid examples for token definitions are:
 
 ```
 INTEGER = "\d+";
 INT = "int";
 ```
 
-Token names should always be written with upper-case and underscores. Please note that some names are reserved by the generator itself (For further information see "Naming limitations"). Rules are allowed to use unicode characters, as long as the rule files is stored in UTF-8 format.
-As the lexer isn't able to skip characters, all characters from the input stream have to be processed. However, there exists an option to ignore specific tokens (For further information see "Token ignore list").
+Token names should always be written with upper-case letters and underscores (upper snake-case). Please note that [some names are reserved](#naming-limitations) by the generator itself. Rules are allowed to use unicode characters, as long as the rule file is stored in UTF-8 format.
+As the lexer isn't able to skip characters, all characters from the input stream have to be processed. However, there exists an option to [ignore specific tokens](#token-ignore-list).
 
 ### Naming limitations
 Some token names are reserved by the generator itself, and therefore can't be used. These are: UNDEFINED, END_OF_FILE
 
 ### Regex limitations
-Not the whole regex standard is supported by this generator. The following features are currently not supported:
+This generator supports most of the commonly used regex features. Please note however, that the following widely used features are currently not supported:
 - anchors
 - backreferences
 - lookaheads
@@ -163,3 +164,30 @@ $WSPACE = "\s+";
 
 ### Special tokens
 When an invalid input sequence is recognized by the lexer, a token with the type of UNDEFINED is returned by the lexer. The invalid tokens get consumed which allows the user to continue with parsing tokens from the input stream. A token of the type END_OF_FILE is returned when the input stream contains no more characters to read.
+
+### Token priority
+The generator has an automatic priority system for token:
+
+- The priority of an alternation is the smallest priority of its branches
+- The priority of a character set is always 1
+- The priority of a normal character is always 2
+- The priority of a quantifier is the minimal matching count multiplied with the priority of the operand
+- The priority of a sequence is sum of all priorities of its elements
+
+Thereby a token with a higher priority is choosen over one with a lower priority.
+
+Even though most conflicts can can already be resolved by the generator itself, some cases still require the user to resolve the conflict by hand:
+
+```
+ALPHA_NUM = "[a-z0-9]+";
+NUM = "[0-9]+";
+```
+
+In this case both token rules have a priority of 1. Therefore, the generator can not decide which type a numeric string should have. To resolve this, the user can set the priority of a token manually by putting the priority level encased in `<>` on front of the token name:
+
+```
+ALPHA_NUM = "[a-z0-9]+";
+<2>NUM = "[0-9]+";
+```
+
+Keep in mind, that **priority levels always have to be >= 0**. In case you want to set the priority of an ignored token, the **ignore tag `$` has to stand before the priority tag**. 
