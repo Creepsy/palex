@@ -67,7 +67,7 @@ In order to add a custom lexer to your PaLex project, create a new entry called 
 }
 ```
 
-This config file registers a lexer called `ExampleLexer`. The generator expects a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the default settings instead (**TODO** link to default config).
+This config file registers a lexer called `ExampleLexer`. The generator expects a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the [default settings](#config-files) instead.
 
 Here is a simple rule file for a lexer that we will use for this example:
 ```
