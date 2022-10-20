@@ -12,6 +12,7 @@ PaLex is a parser and lexer generator written in C++. It allows the creation of 
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Creating a custom PaLex project](#creating-a-custom-palex-project)
+  - [Contributing](#contributing)
   - [Config Files](#config-files)
     - [Language tags](#language-tags)
     - [Lexer Configurations](#lexer-configurations)
@@ -25,8 +26,8 @@ PaLex is a parser and lexer generator written in C++. It allows the creation of 
     - [Token ignore list](#token-ignore-list)
     - [Special tokens](#special-tokens)
     - [Token priority](#token-priority)
-## Getting Started
 
+## Getting Started
 In order to clone the repository and build PaLex run: 
 ```
 git clone https://github.com/Creepsy/palex.git
@@ -44,7 +45,7 @@ In case you want to try out the example or you already have a palex project, pas
 In case of the example project, the generated files can be found in the build folder.
 
 ### Creating a custom PaLex project
-A PaLex project consists out of a folder containing a palex config file and the corresponding rule files. To get started with creating a custom PaLex project, create a folder containing a `palex.cfg` file. This file is **mandatory** and the generator won't work when provided with a path to a folder that doesn't contain such file on the top level directory.
+A PaLex project consists of a folder containing a palex config file and the corresponding rule files. To get started with creating a custom PaLex project, create a folder containing a `palex.cfg` file. This file is **mandatory** and the generator won't work when provided with a path to a folder that doesn't contain such file in the top level directory.
 
 This is the bare minimum a config file needs to contain in order to be recognized as valid by the program:
 
@@ -81,7 +82,7 @@ Your folder structure should now look like this:
   - palex.cfg
   - ExampleLexer.lrules
 
-When supplying the project folder to the generator you should see four files popping up in your project folder:
+When supplying the project folder to the generator you should see four files popping:
 - project_folder
   - palex.cfg
   - ExampleLexer.lrules
@@ -91,6 +92,12 @@ When supplying the project folder to the generator you should see four files pop
   - **utf8.cpp**        
 
 Congrats! You just created your first lexer with PaLex!
+
+## Contributing
+You are always welcome to add support for new languages or extend the regex parser of this project.
+To submit a contribution, open a pull request on the project page.
+
+Please **follow** the naming conventions of this project, or you contribution might get **rejected**. 
 
 ## Config Files
 Every PaLex project needs a config file. This file **always** needs to be named `palex.cfg` and has to be located at the top level of the project folder.
@@ -109,7 +116,7 @@ All possible values for the `language` field:
 | C++      | C++, c++, CPP, cpp |
 
 ### Lexer Configurations
-The name of a lexer is specified through it's entry key in `lexers`. The lexer configuration itself is also a JSON-Object. It's entries are the corresponding configurations for that specific lexer only. When a configuration is not defined, default settings are applied by default. However, some languages may require some fields to be explicitly specified.
+The name of a lexer is specified through it's entry key in `lexers`. The lexer configuration itself is also a JSON-Object. It's entries are the corresponding configurations for that specific lexer only. When a configuration is not defined, default settings are applied. However, some languages may require some fields to be specified by the user.
 
 Note, that the name of the lexer also defines the name of the corresponding rule file. The generator expects a file named like the lexer with the file extension `.lrules` in the same folder as the `palex.cfg` is. Otherwise the lexer will be skipped during generation. The generated files will also be named after the lexer.
 
@@ -166,7 +173,7 @@ $WSPACE = "\s+";
 When an invalid input sequence is recognized by the lexer, a token with the type of UNDEFINED is returned by the lexer. The invalid tokens get consumed which allows the user to continue with parsing tokens from the input stream. A token of the type END_OF_FILE is returned when the input stream contains no more characters to read.
 
 ### Token priority
-The generator has an automatic priority system for token:
+The generator has an automatic priority system for tokens:
 
 - The priority of an alternation is the smallest priority of its branches
 - The priority of a character set is always 1
