@@ -13,6 +13,10 @@ PaLex is a parser and lexer generator written in C++. It allows the creation of 
   - [Getting Started](#getting-started)
     - [Creating a custom PaLex project](#creating-a-custom-palex-project)
   - [Config Files](#config-files)
+    - [Language tags](#language-tags)
+    - [Lexer Configurations](#lexer-configurations)
+      - [General Configurations](#general-configurations)
+      - [Configurations for C++ projects](#configurations-for-c-projects)
   - [Lexer Generation](#lexer-generation)
     - [Naming of the rule file](#naming-of-the-rule-file)
     - [Token rule syntax](#token-rule-syntax)
@@ -88,8 +92,43 @@ When supplying the project folder to the generator you should see four files pop
 Congrats! You just created your first lexer with PaLex!
 
 ## Config Files
-**TODO**
+Every PaLex project needs a config file. This file **always** needs to be named `palex.cfg` and has to be located at the top level of the project folder.
 
+Every config consists of a JSON-object that contains multiple fields:
+
+| Field Name | Required | Type   | Usage |
+| :--------: | :------: | :----: |:----- |
+| `language` | Yes      | String | This tag specifies the programming language of the generated files. You can find a list of all supported language tags [here](#language-tags). |
+| `lexers`   | No       | Object | This field contains all lexer configs of this PaLex project. Further information on lexer configs can be found [here](#lexer-configurations). |
+
+### Language tags
+All possible values for the `language` field:
+| Language | Possible Tags      |
+| :------: | :----------------- |
+| C++      | C++, c++, CPP, cpp |
+
+### Lexer Configurations
+The name of a lexer is specified through it's entry key in `lexers`. The lexer configuration itself is also a JSON-Object. It's entries are the corresponding configurations for that specific lexer only. When a configuration is not defined, default settings are applied by default. However, some languages may require some fields to be explicitly specified.
+
+Note, that the name of the lexer also defines the name of the corresponding rule file. The generator expects a file named like the lexer with the file extension `.lrules` in the same folder as the `palex.cfg` is. Otherwise the lexer will be skipped during generation. The generated files will also be named after the lexer.
+
+
+#### General Configurations
+There are a few general settings that are supported by every target language:
+
+| Field Name       | Required | Type   | Default Value | Usage |
+| :--------------: | :------: | :----: | :-----------: | :---: |
+| `lexer_path`     | No       | String | `.`           | The output folder of the generated lexer |
+| `token_fallback` | No       | Bool   | `true`           | If this option is enabled, the lexer will try to match a shorter token if it runs into a dead end while parsing a longer one (e.g. it will match `int` when trying to parse `integer` from `integn` instead of an undefined token) |
+
+#### Configurations for C++ projects
+Here are all options to further customize C++ lexers for reference:
+
+| Field Name        | Required | Type   | Default Value     | Usage |
+| :---------------: | :------: | :----: | :---------------: | :---: |
+| `lexer_namespace` | No       | String | `palex`           | The namespace the generated lexer resides in |
+| `utf8_lib_path`   | No       | String |  `.`           | Folder where the utf8 library is located |
+| `create_utf8_lib` | No       | Bool   | `true`           | Specifies whether the utf8 library should also be generated |
 
 ## Lexer Generation
 
