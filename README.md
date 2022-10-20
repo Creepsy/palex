@@ -36,7 +36,7 @@ This is the bare minimum a config file needs to contain in order to be recognize
 }
 ```
 
-In oder to add a custom lexer to your PaLex project, create a new entry called `lexers` which contains the configurations for all lexers of the project. To add a lexer, simply add an entry to `lexers`:
+In order to add a custom lexer to your PaLex project, create a new entry called `lexers` which contains the configurations for all lexers of the project. To add a lexer, simply add an entry to `lexers`:
 
 ```json
 
@@ -49,7 +49,7 @@ In oder to add a custom lexer to your PaLex project, create a new entry called `
 }
 ```
 
-This config file registers a lexer called `ExampleLexer`. The generator expectes a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the default settings instead (**TODO** link to default config).
+This config file registers a lexer called `ExampleLexer`. The generator expects a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the default settings instead (**TODO** link to default config).
 
 Here is a simple rule file for a lexer that we will use for this example:
 ```
@@ -67,12 +67,12 @@ When supplying the project folder to the generator you should see four files pop
 - project_folder
   - palex.cfg
   - ExampleLexer.lrules
-  - <span style="background-color: gray">ExampleLexer.h  </span>
-  - <span style="background-color: gray">ExampleLexer.cpp</span>
-  - <span style="background-color: gray">utf8.h          </span>
-  - <span style="background-color: gray">utf8.cpp        </span>
+  - **ExampleLexer.h**
+  - **ExampleLexer.cpp**
+  - **utf8.h**          
+  - **utf8.cpp**        
 
-Congrats! You just created & build your first lexer with PaLex!
+Congrats! You just created your first lexer with PaLex!
 
 ## Config Files
 **TODO**
