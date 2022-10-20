@@ -7,6 +7,19 @@ PaLex is a parser and lexer generator written in C++. It allows the creation of 
 | :------: | :-------------: | :--------------: |
 | C++      | Yes             | No               |
 
+## Table of Contents
+- [PaLex](#palex)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Creating a custom PaLex project](#creating-a-custom-palex-project)
+  - [Config Files](#config-files)
+  - [Lexer Generation](#lexer-generation)
+    - [Naming of the rule file](#naming-of-the-rule-file)
+    - [Token rule syntax](#token-rule-syntax)
+    - [Naming limitations](#naming-limitations)
+    - [Regex limitations](#regex-limitations)
+    - [Token ignore list](#token-ignore-list)
+    - [Special tokens](#special-tokens)
 ## Getting Started
 
 In order to clone the repository and build PaLex run: 
@@ -78,7 +91,7 @@ Congrats! You just created your first lexer with PaLex!
 **TODO**
 
 
-## Lexer Generator
+## Lexer Generation
 
 ### Naming of the rule file
 In order the be recognized by the parser, a lexer rule file has to have the file extension ".lrules". The file name specifies the name of the generated lexer.
