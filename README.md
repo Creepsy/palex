@@ -1,12 +1,84 @@
 # PaLex
 ![GitHub CI](https://github.com/Creepsy/palex/actions/workflows/tests.yml/badge.svg)
 
-PaLex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers through rule files. The generated code supports ASCII and UTF-8 input. The generator currently supports the following languages: **TODO**
+PaLex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers supporting UTF-8 input. The following languages are currently supported:
 
-## Getting started / example
+| Language | Lexer Generator | Parser Generator |
+| :------: | :-------------: | :--------------: |
+| C++      | Yes             | No               |
+
+## Getting Started
+
+In order to clone the repository and build PaLex run: 
+```
+git clone https://github.com/Creepsy/palex.git
+cd palex
+mkdir build && cd build
+cmake .. && make
+```
+
+In case you want to try out the example or you already have a palex project, pass the path to the corresponding folder as argument to the program:
+
+```
+./palex ../examples
+```
+
+In case of the example project, the generated files can be found in the build folder.
+
+### Creating a custom PaLex project
+A PaLex project consists out of a folder containing a palex config file and the corresponding rule files. To get started with creating a custom PaLex project, create a folder containing a `palex.cfg` file. This file is **mandatory** and the generator won't work when provided with a path to a folder that doesn't contain such file on the top level directory.
+
+This is the bare minimum a config file needs to contain in order to be recognized as valid by the program:
+
+```json
+{
+    "language": "C++" // of course other languages are also possible
+}
+```
+
+In oder to add a custom lexer to your PaLex project, create a new entry called `lexers` which contains the configurations for all lexers of the project. To add a lexer, simply add an entry to `lexers`:
+
+```json
+
+{
+    "language": "C++",
+    "lexers": {
+        "ExampleLexer": {
+        }
+    }
+}
+```
+
+This config file registers a lexer called `ExampleLexer`. The generator expectes a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the default settings instead (**TODO** link to default config).
+
+Here is a simple rule file for a lexer that we will use for this example:
+```
+INT = "int";
+NUMBER = "[0-9]+";
+ASSIGN = "=";
+```
+
+Your folder structure should now look like this:
+- project_folder
+  - palex.cfg
+  - ExampleLexer.lrules
+
+When supplying the project folder to the generator you should see four files popping up in your project folder:
+- project_folder
+  - palex.cfg
+  - ExampleLexer.lrules
+  - <span style="background-color: gray">ExampleLexer.h  </span>
+  - <span style="background-color: gray">ExampleLexer.cpp</span>
+  - <span style="background-color: gray">utf8.h          </span>
+  - <span style="background-color: gray">utf8.cpp        </span>
+
+Congrats! You just created & build your first lexer with PaLex!
+
+## Config Files
 **TODO**
 
-## Lexer generator
+
+## Lexer Generator
 
 ### Naming of the rule file
 In order the be recognized by the parser, a lexer rule file has to have the file extension ".lrules". The file name specifies the name of the generated lexer.
