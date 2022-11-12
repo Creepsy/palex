@@ -14,15 +14,16 @@ const size_t regex::RegexQuantifier::INFINITE = (size_t) -1;
 
 //helper functions
 
-inline const std::string get_indentation(const size_t indentation_level);
+inline std::string get_indentation(const size_t indentation_level);
 void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print);
 
-inline const std::string get_indentation(const size_t indentation_level) {
+inline std::string get_indentation(const size_t indentation_level) {
     return std::string(indentation_level, '\t');
 }
 
 void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print) {
-    if(to_print <= 127 && std::isgraph(to_print)) {
+    constexpr char32_t LAST_ASCII_CHAR = 127;
+    if(to_print <= LAST_ASCII_CHAR && std::isgraph((int)to_print)) {
         output << to_print;
     } else {
         output << "<U0x" << std::hex << (size_t)to_print << std::dec << ">";
@@ -35,7 +36,7 @@ regex::CharRange::CharRange() : start(1), end(0) { //empty char range (end < sta
 
 }
 
-regex::CharRange::CharRange(const char32_t c) : start(c), end(c) {
+regex::CharRange::CharRange(const char32_t single_char) : start(single_char), end(single_char) {
 }
 
 regex::CharRange::CharRange(const char32_t start, const char32_t end) : start(start), end(end) {
@@ -54,7 +55,7 @@ bool regex::CharRange::can_prepend_to(const CharRange target) const {
 }
 
 bool regex::CharRange::can_append_to(const CharRange target) const {
-    return !this->empty() && !target.empty() && target.can_prepend_to(*this);
+    return target.can_prepend_to(*this);
 }
 
 bool regex::CharRange::is_subset_of(const CharRange other) const {
@@ -68,12 +69,18 @@ bool regex::CharRange::operator==(const CharRange other) const {
 // static
 
 regex::CharRange regex::CharRange::common_subset(const CharRange first, const CharRange second) {
-    if(first.end < second.start || second.end < first.start) return CharRange{};
-
-    if(first.is_subset_of(second)) return first;
-    if(second.is_subset_of(first)) return second;
-
-    if(first.start <= second.end && first.start >= second.start) return CharRange(first.start, second.end);
+    if(first.end < second.start || second.end < first.start) {
+        return CharRange{};
+    }
+    if(first.is_subset_of(second)) {
+        return first;
+    }
+    if(second.is_subset_of(first)) {
+        return second;
+    }
+    if(first.start <= second.end && first.start >= second.start) {
+        return CharRange(first.start, second.end);
+    }
 
     return CharRange(second.start, first.end); // first.start < second.start < first.end
 }
@@ -86,7 +93,9 @@ regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
 
         while(iter != this->ranges.end()) {
             //subset checks
-            if(to_add.is_subset_of(*iter)) return *this;
+            if(to_add.is_subset_of(*iter)) {
+                return *this;
+            }
             if((*iter).is_subset_of(to_add)) {
                 iter = this->ranges.erase(iter);
                 continue;
@@ -193,7 +202,7 @@ regex::CharRangeSet regex::CharRangeSet::operator-(const CharRangeSet& to_subtra
     return subtracted;
 }
 
-regex::CharRangeSet regex::CharRangeSet::operator+(const CharRangeSet to_add) const {
+regex::CharRangeSet regex::CharRangeSet::operator+(const CharRangeSet& to_add) const {
     CharRangeSet combined = *this;
 
     for(const CharRange range : to_add.ranges) {
@@ -213,11 +222,6 @@ bool regex::CharRangeSet::operator!=(const CharRangeSet& other) const {
 }
 
 
-
-regex::RegexAlternation::RegexAlternation() : RegexBase() {
-}   
-
-// public
 
 void regex::RegexAlternation::add_branch(std::unique_ptr<RegexBase> branch) {
     this->branches.push_back(std::move(branch));
@@ -246,11 +250,6 @@ void regex::RegexAlternation::debug(std::ostream& output, const size_t indentati
 }
 
 
-
-regex::RegexSequence::RegexSequence() : RegexBase() {
-}   
-
-// public
 
 void regex::RegexSequence::append_element(std::unique_ptr<RegexBase> to_append) {
     this->sequence.push_back(std::move(to_append));
@@ -281,7 +280,7 @@ void regex::RegexSequence::debug(std::ostream& output, const size_t indentation_
 
 
 regex::RegexQuantifier::RegexQuantifier(std::unique_ptr<RegexBase> operand, const size_t min_count, const size_t max_count)
- : RegexBase(), operand(std::move(operand)), min_count(min_count), max_count(max_count) {
+ : operand(std::move(operand)), min_count(min_count), max_count(max_count) {
 }   
 
 // public
@@ -308,7 +307,7 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 
 
-regex::RegexCharSet::RegexCharSet(const bool negated) : RegexBase(), negated(negated) {
+regex::RegexCharSet::RegexCharSet(const bool negated) : negated(negated) {
     if(this->negated) {
         this->range_set.insert_char_range(CharRange{0, utf8::LAST_UNICODE_CHAR});
     }
@@ -333,16 +332,21 @@ bool regex::RegexCharSet::is_negated() const {
 }
 
 size_t regex::RegexCharSet::get_priority() const {
-    if(this->range_set.empty()) return 0;
-    if(this->range_set.get_ranges().size() == 1 && this->range_set.get_ranges().front().is_single_char()) return 2;
-
+    if(this->range_set.empty()) {
+        return 0;
+    }
+    if(this->range_set.get_ranges().size() == 1 && this->range_set.get_ranges().front().is_single_char()) {
+        return 2;
+    }
     return 1;
 }
 
 void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "CharSet(";
-    if(this->negated) output << "^";
-
+    if(this->negated) {
+        output << "^";
+    }
+    
     output << this->range_set << ")\n";
 
 }

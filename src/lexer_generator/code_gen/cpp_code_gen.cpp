@@ -163,7 +163,9 @@ void code_gen::cpp::complete_lexer_header(std::ostream& output, const std::strin
             output << ",\n\t\t\t" << ignored_token;
         }
     } else {
-        if(complete_generic_lexer_tags(output, tag, config)) return;
+        if(complete_generic_lexer_tags(output, tag, config)) {
+            return;
+        }
         complete_fallback_header_tags(output, tag);
     }
 }
@@ -208,7 +210,9 @@ void code_gen::cpp::complete_lexer_source(
     } else if(tag == "UTF8_LIB_PATH") {
         output << config.utf8_lib_path;
     } else {
-        if(complete_generic_lexer_tags(output, tag, config)) return;
+        if(complete_generic_lexer_tags(output, tag, config)) {
+            return;
+        }
         complete_fallback_source_tags(output, tag, config);
     }
 }

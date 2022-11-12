@@ -23,7 +23,7 @@ char32_t utf8::get_unicode_char(std::istream& input) {
     constexpr size_t MAX_BYTE_COUNT = 4;
 
     // index: first 5 bytes of head_byte
-    const static std::array<size_t, 32> BYTE_COUNTS = {
+    const static std::array<std::streamsize, 32> BYTE_COUNTS = {
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0
     };
@@ -33,9 +33,9 @@ char32_t utf8::get_unicode_char(std::istream& input) {
         0x00, 0xff, 0x1f, 0x0f, 0x07
     };
 
-    char head_byte = input.get();
+    char head_byte = (char)input.get();
     
-    size_t byte_count = BYTE_COUNTS[(unsigned char)head_byte >> BYTE_COUNT_INFO_SHIFT];
+    std::streamsize byte_count = BYTE_COUNTS[(unsigned char)head_byte >> BYTE_COUNT_INFO_SHIFT];
     bool err_flag = byte_count == 0;
     
     std::array<char, 3> utf8_bytes = {};
@@ -113,8 +113,8 @@ std::string utf8::unicode_to_utf8(const char32_t to_convert) {
 std::string utf8::unicode_to_utf8(const std::u32string& to_convert) {
     std::string utf8_string;
 
-    for(const char32_t c : to_convert) {
-        utf8_string += unicode_to_utf8(c);
+    for(const char32_t unicode_char : to_convert) {
+        utf8_string += unicode_to_utf8(unicode_char);
     }
 
     return utf8_string;

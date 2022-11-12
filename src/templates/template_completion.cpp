@@ -10,7 +10,7 @@
 
 templates::TemplateCompleter_t templates::EMPTY_COMPLETER = [](std::ostream& output, const std::string_view tag) -> void {};
 
-void templates::write_template_to_stream(const char* const to_write, std::ostream& output, TemplateCompleter_t completer) {
+void templates::write_template_to_stream(const char* const to_write, std::ostream& output, const TemplateCompleter_t& completer) {
     const char* const to_write_end = to_write + strlen(to_write);
 
     for(size_t i = 0; to_write[i] != '\0'; i++) {
@@ -36,7 +36,7 @@ void templates::write_template_to_stream(const char* const to_write, std::ostrea
     }
 }
 
-void templates::write_template_to_file(const char* const to_write, const std::string& output_path, TemplateCompleter_t completer) {
+void templates::write_template_to_file(const char* const to_write, const std::string& output_path, const TemplateCompleter_t& completer) {
     std::ofstream output_file(output_path);
 
     if(!output_file.is_open()) {

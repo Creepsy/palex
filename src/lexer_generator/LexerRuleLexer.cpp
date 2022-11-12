@@ -21,8 +21,8 @@ const std::vector<std::string> lexer_generator::Token::TOKEN_TYPE_NAMES = {
 
 
 
-lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const char32_t c) {
-    if(c == '\n') {
+lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const char32_t to_process) {
+    if(to_process == '\n') {
         this->line++;
         this->column = 1;
     } else {
@@ -33,8 +33,8 @@ lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const char
 }
 
 lexer_generator::FilePosition& lexer_generator::FilePosition::advance(const std::u32string& text) {
-    for(const char32_t c : text) {
-        this->advance(c);
+    for(const char32_t to_process : text) {
+        this->advance(to_process);
     }
 
     return *this;
@@ -73,11 +73,13 @@ lexer_generator::Token lexer_generator::LexerRuleLexer::next_token() {
     } else if(next_char == '>') {
         type = Token::TokenType::ANGLE_PARENTHESIS_CLOSE;
     } else if(next_char == '"') {
-        if(this->get_regex(identifier)) type = Token::TokenType::REGEX;
-    } else if(std::isalpha(next_char) | next_char == '_') {
+        if(this->get_regex(identifier)) {
+            type = Token::TokenType::REGEX;
+        }
+    } else if(std::isalpha((int)next_char) || next_char == '_') {
         type = Token::TokenType::IDENTIFER;
         this->get_identifier(identifier);
-    } else if(std::isdigit(next_char)) {
+    } else if(std::isdigit((int)next_char)) {
         type = Token::TokenType::INTEGER;
         this->get_integer(identifier);
     }
@@ -97,7 +99,9 @@ char32_t lexer_generator::LexerRuleLexer::next_char() {
     }
 
     char32_t next = utf8::get_unicode_char(this->input);
-    if(this->input.good()) this->curr_pos.advance(next);
+    if(this->input.good()) {
+        this->curr_pos.advance(next);
+    }
 
     return next;
 }
@@ -121,11 +125,14 @@ bool lexer_generator::LexerRuleLexer::get_regex(std::u32string& output) {
 
         if(next == '"') {
             break;
-        } else if(next == '\\') {
-            output += this->next_char();
-        } else if(next == '\n') {
+        } 
+        if(next == '\n') {
             return false;
         }
+
+        if(next == '\\') {
+            output += this->next_char();
+        } 
     }
 
     if(this->input.eof()) {
@@ -138,14 +145,14 @@ bool lexer_generator::LexerRuleLexer::get_regex(std::u32string& output) {
 }
 
 void lexer_generator::LexerRuleLexer::get_identifier(std::u32string& output) {
-    output += this->get_matching_sequence([](const char32_t c) -> bool {
-        return std::isalnum(c) || c == '_';
+    output += this->get_matching_sequence([](const char32_t to_check) -> bool {
+        return std::isalnum((int)to_check) || to_check == '_';
     });
 }
 
 void lexer_generator::LexerRuleLexer::get_integer(std::u32string& output) {
-    output += this->get_matching_sequence([](const char32_t c) -> bool {
-        return std::isdigit(c);
+    output += this->get_matching_sequence([](const char32_t to_check) -> bool {
+        return std::isdigit((int)to_check);
     });
 
 }
@@ -168,8 +175,10 @@ std::u32string lexer_generator::LexerRuleLexer::get_matching_sequence(bool(*pred
 }
 
 void lexer_generator::LexerRuleLexer::insert_in_buffer(char32_t to_insert) {
-    if(this->has_buffered_char) throw std::runtime_error("Tried to insert char into buffer, but it is already occupied!");
-
+    if(this->has_buffered_char) {
+        throw std::runtime_error("Tried to insert char into buffer, but it is already occupied!");
+    }
+    
     this->has_buffered_char = true;
     this->buffer = to_insert;
 }

@@ -29,11 +29,11 @@ namespace lexer_generator {
             Token curr;
 
             void expect(const Token::TokenType type);
-            bool accept(const Token::TokenType type);
+            bool accept(const Token::TokenType type) const;
             Token consume();
             Token consume(const Token::TokenType type);
 
-            void throw_parsing_err(const Token::TokenType expected);
+            void throw_parsing_err(const Token::TokenType expected) const;
 
     };
 }

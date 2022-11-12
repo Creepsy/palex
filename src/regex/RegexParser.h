@@ -42,7 +42,7 @@ namespace regex {
             const std::u32string input;
             size_t curr_pos;
 
-            std::unique_ptr<RegexBase> parse_regex_branch();
+            std::unique_ptr<RegexBase> parse_regex_alternation();
             std::unique_ptr<RegexBase> parse_regex_sequence();
             std::unique_ptr<RegexBase> parse_regex_quantifier();
             std::unique_ptr<RegexBase> parse_regex_charset();
@@ -50,8 +50,6 @@ namespace regex {
 
             MultiRangeCharacter parse_char();
             MultiRangeCharacter parse_escaped_char();
-
-            void process_charset_contents(const std::vector<MultiRangeCharacter>& set_contents, RegexCharSet& target);
 
             char32_t parse_unicode_value();
 
@@ -71,6 +69,9 @@ namespace regex {
 
             void throw_parsing_err(const CharType expected);
             void throw_parsing_err(const std::string& message);
+    
+            static void process_charset_contents(const std::vector<MultiRangeCharacter>& set_contents, RegexCharSet& target);
+
     };
 }
 

@@ -13,7 +13,7 @@ namespace regex {
         char32_t end;
 
         CharRange();
-        CharRange(const char32_t c);
+        CharRange(const char32_t single_char);
         CharRange(const char32_t start, const char32_t end);
 
         bool is_single_char() const;
@@ -25,7 +25,7 @@ namespace regex {
 
         bool operator==(const CharRange other) const;
 
-        static CharRange common_subset(const CharRange first, const CharRange second); //currently unused
+        static CharRange common_subset(const CharRange first, const CharRange second);
     };
 
     class CharRangeSet {
@@ -42,7 +42,7 @@ namespace regex {
             const std::list<CharRange>& get_ranges() const;
 
             CharRangeSet operator-(const CharRangeSet& to_subtract) const;
-            CharRangeSet operator+(const CharRangeSet to_add) const;
+            CharRangeSet operator+(const CharRangeSet& to_add) const;
 
             bool operator==(const CharRangeSet& other) const;
             bool operator!=(const CharRangeSet& other) const;
@@ -62,7 +62,8 @@ namespace regex {
 
     class RegexAlternation : public RegexBase {
         public:
-            RegexAlternation();
+            RegexAlternation() = default;
+            ~RegexAlternation() = default;
             void add_branch(std::unique_ptr<RegexBase> branch);
             const std::vector<std::unique_ptr<RegexBase>>& get_branches() const;
             size_t get_priority() const override;
@@ -73,7 +74,8 @@ namespace regex {
 
     class RegexSequence : public RegexBase {
         public:
-            RegexSequence();
+            RegexSequence() = default;
+            ~RegexSequence() = default;
             void append_element(std::unique_ptr<RegexBase> to_append);
             const std::vector<std::unique_ptr<RegexBase>>& get_elements() const;
             size_t get_priority() const override;

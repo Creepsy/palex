@@ -11,7 +11,7 @@ namespace lexer_generator {
         size_t line = 1;
         size_t column = 1;
 
-        FilePosition& advance(const char32_t c);
+        FilePosition& advance(const char32_t to_process);
         FilePosition& advance(const std::u32string& text);
     };
     

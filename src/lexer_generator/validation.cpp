@@ -16,7 +16,8 @@ void lexer_generator::validate_names(const std::vector<TokenRegexRule>& to_valid
     for(const TokenRegexRule& rule : to_validate) {
         if(rule.name == U"UNDEFINED" || rule.name == U"END_OF_FILE") {
             throw palex_except::ValidationError("The token name " + utf8::unicode_to_utf8(rule.name) + " is already reserved by the generator!");
-        } else if(names.find(rule.name) != names.end()) {
+        }
+        if(names.find(rule.name) != names.end()) {
             throw palex_except::ValidationError("Multiple definitions for token name " + utf8::unicode_to_utf8(rule.name) + "!");
         }
 

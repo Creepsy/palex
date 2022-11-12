@@ -15,7 +15,9 @@ lexer_generator::LexerRuleParser::LexerRuleParser(LexerRuleLexer& input) : input
 //public
 
 std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule() {
-    if(this->accept(Token::TokenType::END_OF_FILE)) return std::nullopt;
+    if(this->accept(Token::TokenType::END_OF_FILE)) {
+        return std::nullopt;
+    }
 
     TokenRegexRule rule{};
 
@@ -73,10 +75,12 @@ std::vector<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::p
 //private
 
 void lexer_generator::LexerRuleParser::expect(const Token::TokenType type) {
-    if(!this->accept(type)) this->throw_parsing_err(type);
+    if(!this->accept(type)) {
+        this->throw_parsing_err(type);
+    }
 }
 
-bool lexer_generator::LexerRuleParser::accept(const Token::TokenType type) {
+bool lexer_generator::LexerRuleParser::accept(const Token::TokenType type) const {
     return this->curr.type == type;
 }
 
@@ -92,7 +96,7 @@ lexer_generator::Token lexer_generator::LexerRuleParser::consume(const Token::To
     return this->consume();
 }
 
-void lexer_generator::LexerRuleParser::throw_parsing_err(const Token::TokenType expected) {
+void lexer_generator::LexerRuleParser::throw_parsing_err(const Token::TokenType expected) const {
     std::stringstream err{};
 
     err << "Unexpected token while parsing! Expected '" << Token::TOKEN_TYPE_NAMES.at((size_t)expected)

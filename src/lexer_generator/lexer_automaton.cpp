@@ -20,7 +20,9 @@ void throw_ambiguous_priority_err(const std::vector<std::u32string>& ambiguous_t
     err_msg << "Tokens with ambiguous priority in the same state! The tokens ";
 
     for(size_t i = 0; i < ambiguous_tokens.size(); i++) {
-        if(i != 0) err_msg << ", ";
+        if(i != 0) {
+            err_msg << ", ";
+        }
         err_msg << ambiguous_tokens[i];
     }
 
@@ -33,12 +35,14 @@ void lexer_generator::resolve_connection_collisions(
     const LexerAutomaton_t::Connection& to_add, 
     std::vector<std::pair<regex::CharRangeSet, std::set<LexerAutomaton_t::StateID_t>>>& dfa_connections
 ) {
+    assert((to_add.value.has_value() && "tried to insert epsilon connection into dfa!"));
     regex::CharRangeSet remaining_value = to_add.value.value();
 
     for(auto iter = dfa_connections.begin(); iter != dfa_connections.end(); iter++) {     
         regex::CharRangeSet intersection = remaining_value.get_intersection((*iter).first);
-        if(intersection.empty()) continue;
-
+        if(intersection.empty()) {
+            continue;
+        }
         if(intersection != (*iter).first) {
             iter = dfa_connections.insert(iter, std::make_pair(intersection, (*iter).second));
         }
@@ -67,7 +71,7 @@ std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32
     std::vector<std::u32string> hp_tokens;
 
 
-    for(const std::u32string token : to_merge) {
+    for(const std::u32string& token : to_merge) {
         if(!token.empty()) {
             const size_t token_priority = token_priorities.at(token);
             
@@ -80,7 +84,9 @@ std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32
         }
     }
 
-    if(hp_tokens.size() > 1) throw_ambiguous_priority_err(hp_tokens, highest_priority);
+    if(hp_tokens.size() > 1) {
+        throw_ambiguous_priority_err(hp_tokens, highest_priority);
+    }
 
     return (hp_tokens.empty()) ? U"" : hp_tokens.front();
 }
@@ -97,15 +103,18 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_ast_i
 ) {
     if(dynamic_cast<const regex::RegexAlternation*>(to_insert)) {
         return insert_regex_branch_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexAlternation*>(to_insert));
-    } else if(dynamic_cast<const regex::RegexCharSet*>(to_insert)) {
+    } 
+    if(dynamic_cast<const regex::RegexCharSet*>(to_insert)) {
         return insert_regex_char_set_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexCharSet*>(to_insert));
-    } else if(dynamic_cast<const regex::RegexQuantifier*>(to_insert)) {
-        return insert_regex_quantifier_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexQuantifier*>(to_insert));
-    } else if(dynamic_cast<const regex::RegexSequence*>(to_insert)) {
-        return insert_regex_sequence_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexSequence*>(to_insert));
-    } else {
-        throw std::runtime_error("Tried to insert unknown regex type into NFA!");
     }
+    if(dynamic_cast<const regex::RegexQuantifier*>(to_insert)) {
+        return insert_regex_quantifier_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexQuantifier*>(to_insert));
+    }
+    if(dynamic_cast<const regex::RegexSequence*>(to_insert)) {
+        return insert_regex_sequence_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexSequence*>(to_insert));
+    }
+
+    throw std::runtime_error("Tried to insert unknown regex type into NFA!");
 }
 
 lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_branch_in_nfa(
@@ -151,19 +160,19 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_quant
         nfa.connect_states(repeat_state, curr_state);
 
         return curr_state;
-    } else {
-        std::vector<LexerAutomaton_t::StateID_t> intermediate_states = {curr_state};
-
-        for(size_t i = to_insert->get_min(); i < to_insert->get_max(); i++) {
-            intermediate_states.push_back(insert_regex_ast_in_nfa(nfa, intermediate_states.back(), to_insert->get_operand().get()));
-        }
-
-        for(size_t i = 0; i < intermediate_states.size() - 1; i++) {
-            nfa.connect_states(intermediate_states[i], intermediate_states.back());
-        }
-
-        return intermediate_states.back();
     }
+
+    std::vector<LexerAutomaton_t::StateID_t> intermediate_states = {curr_state};
+
+    for(size_t i = to_insert->get_min(); i < to_insert->get_max(); i++) {
+        intermediate_states.push_back(insert_regex_ast_in_nfa(nfa, intermediate_states.back(), to_insert->get_operand().get()));
+    }
+
+    for(size_t i = 0; i < intermediate_states.size() - 1; i++) {
+        nfa.connect_states(intermediate_states[i], intermediate_states.back());
+    }
+
+    return intermediate_states.back();
 }
 
 lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_sequence_in_nfa(
