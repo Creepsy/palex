@@ -5,6 +5,7 @@
 #include <vector>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
 
 #include "templates/template_completion.h"
 
@@ -132,6 +133,8 @@ void code_gen::cpp::generate_lexer_header(const CppLexerConfig& config, const To
     using namespace std::placeholders;
 
     const std::string header_file_path = config.lexer_path + "/" + config.lexer_name + ".h";
+    std::cout << "Generating file " << header_file_path << "..." << std::endl;
+
     templates::TemplateCompleter_t completer = std::bind(complete_lexer_header, _1, _2, config, tokens);
     templates::write_template_to_file(cpp_lexer_header, header_file_path, completer);
 }
@@ -140,14 +143,19 @@ void code_gen::cpp::generate_lexer_source(const CppLexerConfig& config, const To
     using namespace std::placeholders;
 
     const std::string source_file_path = config.lexer_path + "/" + config.lexer_name + ".cpp";
+    std::cout << "Generating file " << source_file_path << "..." << std::endl;
+
     templates::TemplateCompleter_t completer = std::bind(complete_lexer_source, _1, _2, config, tokens, dfa);
     templates::write_template_to_file(cpp_lexer_source, source_file_path, completer);
 }
 
 void code_gen::cpp::generate_utf8_lib(const CppLexerConfig& config) {
     const std::string utf8_path = config.utf8_lib_path + "/utf8";
+
     templates::write_template_to_file(cpp_utf8_source, utf8_path + ".cpp", templates::EMPTY_COMPLETER);
+    std::cout << "Generating file " << utf8_path << ".cpp..." << std::endl;
     templates::write_template_to_file(cpp_utf8_header, utf8_path + ".h", templates::EMPTY_COMPLETER);
+    std::cout << "Generating file " << utf8_path << ".h..." << std::endl;
 }
 
 void code_gen::cpp::complete_lexer_header(std::ostream& output, const std::string_view tag, const CppLexerConfig& config, const TokenInfos& tokens) {
