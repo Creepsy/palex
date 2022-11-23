@@ -1,22 +1,31 @@
-set(TEST_UTILS_SOURCES
-    TestReport.cpp
-)
-
-set(TEST_UTILS_HEADERS
-    test_utils.h
-    TestReport.h
-)
-
-add_library(test_utils ${TEST_UTILS_SOURCES} ${TEST_UTILS_HEADERS})
-target_include_directories(test_utils PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-
-function(generate_test_executable test_name)
-    add_executable(${test_name} ${test_name}.cpp)
+function(generate_test_executable test_name test_src)
+    add_executable(${test_name} ${test_src})
     target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(${test_name} palex_objects test_utils)    
+    target_link_libraries(${test_name} palex_objects)  
+    add_test(NAME ${test_name} COMMAND ${test_name})  
 endfunction()
 
-generate_test_executable(util_test)
-generate_test_executable(lexer_generator_test)
-generate_test_executable(regex_test)
-generate_test_executable(templates_test)
+generate_test_executable(UTF8Input util/utf8_input_test.cpp)
+generate_test_executable(UTF8Output util/utf8_output_test.cpp)
+generate_test_executable(AutomatonStates util/automaton_states_test.cpp)
+generate_test_executable(AutomatonConnections util/automaton_connections_test.cpp)
+generate_test_executable(AutomatonDFAConversion util/automaton_dfa_conversion_test.cpp)
+generate_test_executable(ConfigGetters util/config_getters_test.cpp)
+
+generate_test_executable(LexerRuleLexer lexer_generator/rule_lexer_test.cpp)
+generate_test_executable(LexerRuleParser lexer_generator/rule_parser_test.cpp)
+generate_test_executable(LexerRuleParserErrors lexer_generator/rule_parser_errors_test.cpp)
+generate_test_executable(LexerRuleValidation lexer_generator/rule_validation_test.cpp)
+
+generate_test_executable(RegexCharRange regex/char_range_test.cpp)
+generate_test_executable(RegexCharRangeSet regex/char_range_set_test.cpp)
+generate_test_executable(RegexErrors regex/regex_errors_test.cpp)
+generate_test_executable(RegexCharSet regex/char_set_test.cpp)
+generate_test_executable(RegexBranch regex/branch_test.cpp)
+generate_test_executable(RegexSequence regex/sequence_test.cpp)
+generate_test_executable(RegexQuantifier regex/quantifier_test.cpp)
+generate_test_executable(RegexPriority regex/regex_priority_test.cpp)
+
+generate_test_executable(TemplateCompletion templates/template_completion_test.cpp)
+generate_test_executable(TemplateErrors templates/template_errors_test.cpp)
+generate_test_executable(TemplateEscapeCharacters templates/escape_characters_test.cpp)

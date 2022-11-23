@@ -150,6 +150,42 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::add_connection(const Connec
 }
 
 template<class StateValue_T, class ConnectionValue_T>
+template<class StateValueOut_T>
+StateValueOut_T sm::Automaton<StateValue_T, ConnectionValue_T>::merge_state_values(
+    const std::set<StateID_t> to_merge,
+    merge_states_t<StateValueOut_T> merge_states
+) const {
+    std::vector<StateValue_T> state_values;
+    std::transform(to_merge.begin(), to_merge.end(), std::back_inserter(state_values), 
+        [this](const StateID_t state) -> StateValue_T {
+            return this->get_state(state);
+        }
+    );
+
+    return merge_states(state_values);
+}
+
+template<class StateValue_T, class ConnectionValue_T>
+template<class StateValueOut_T>
+auto sm::Automaton<StateValue_T, ConnectionValue_T>::get_intersect_free_outgoing_conns(
+    const std::set<StateID_t>& origin_states,
+    resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions
+) const -> std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> {
+    std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> new_outgoing_connections;
+    
+    for(const StateID_t state_id : origin_states) {
+        for(const ConnectionID_t connection_id : this->get_outgoing_connection_ids(state_id)) {
+            if(this->get_connection(connection_id).type != Connection::ConnectionType::EPSILON) {
+                resolve_connection_collisions(this->get_connection(connection_id), new_outgoing_connections);
+            }
+        }
+    }
+
+    return new_outgoing_connections;
+}
+
+
+template<class StateValue_T, class ConnectionValue_T>
 void sm::Automaton<StateValue_T, ConnectionValue_T>::insert_mergeable_states(const StateID_t source, std::set<StateID_t>& mergeable_states) const {
     if(mergeable_states.find(source) != mergeable_states.end()) return;
     mergeable_states.insert(source);
@@ -187,24 +223,13 @@ auto sm::Automaton<StateValue_T, ConnectionValue_T>::insert_nodes_as_node_in_dfa
     
     if(merged_states_mappings.find(mergeable_states) != merged_states_mappings.end()) return merged_states_mappings.at(mergeable_states);
 
-    std::vector<StateValue_T> state_values;
-    std::transform(mergeable_states.begin(), mergeable_states.end(), std::back_inserter(state_values), 
-        [this](const StateID_t state) -> StateValue_T {
-            return this->get_state(state);
-        }
-    );
-
-    const size_t dfa_source_id = dfa.add_state(merge_states(state_values));
+    const size_t dfa_source_id = dfa.add_state(this->merge_state_values(mergeable_states, merge_states));
     merged_states_mappings[mergeable_states] = dfa_source_id;
 
-    std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> new_outgoing_connections;
-    for(const StateID_t state_id : mergeable_states) {
-        for(const ConnectionID_t connection_id : this->get_outgoing_connection_ids(state_id)) {
-            if(this->get_connection(connection_id).type != Connection::ConnectionType::EPSILON) {
-                resolve_connection_collisions(this->get_connection(connection_id), new_outgoing_connections);
-            }
-        }
-    }
+    std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> new_outgoing_connections = this->get_intersect_free_outgoing_conns<StateValueOut_T>(
+        mergeable_states, 
+        resolve_connection_collisions
+    );
 
     for(const std::pair<ConnectionValue_T, std::set<StateID_t>> connection : new_outgoing_connections) {
         const StateID_t dfa_target_id = this->insert_nodes_as_node_in_dfa(dfa, connection.second, merge_states, resolve_connection_collisions, merged_states_mappings); 

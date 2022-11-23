@@ -69,7 +69,14 @@ namespace sm {
             ) const;
         private:
             ConnectionID_t add_connection(const Connection& to_add);
-            void insert_mergeable_states(const StateID_t source, std::set<StateID_t>& mergeable_states) const;
+            template<class StateValueOut_T>
+            StateValueOut_T merge_state_values(const std::set<StateID_t> to_merge, merge_states_t<StateValueOut_T> merge_states) const;
+            template<class StateValueOut_T>
+            std::vector<std::pair<ConnectionValue_T, std::set<StateID_t>>> get_intersect_free_outgoing_conns(
+                const std::set<StateID_t>& origin_states,
+                resolve_connection_collisions_t<StateValueOut_T> resolve_connection_collisions
+            ) const;
+            void insert_mergeable_states(const StateID_t source, std::set<StateID_t>& mergeable_states) const; // TODO rename
             std::set<StateID_t> get_mergeable_states(const std::set<StateID_t> sources) const;
             
             template<class StateValueOut_T>
