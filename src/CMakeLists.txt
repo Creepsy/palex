@@ -53,11 +53,29 @@ set(PROJECT_INLINE_FILES
     regex/RegexParser.ipp
 )
 
+set(AUTO_GENERATED_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.cpp
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.h
+)
+
 include(templates/all_template_headers.cmake)
 
 add_library(palex_objects ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_INLINE_FILES})
 target_include_directories(palex_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
+add_executable(lexergen lexergen.cpp)
+target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(lexergen palex_objects)
+
+add_custom_command(
+    OUTPUT ${AUTO_GENERATED_FILES}
+    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
+target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(palex palex_objects)
+target_link_libraries(palex palex_objects auto_generated_objects)
