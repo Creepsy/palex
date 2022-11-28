@@ -74,6 +74,7 @@ add_custom_command(
     OUTPUT ${AUTO_GENERATED_FILES}
     COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.lrules
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})

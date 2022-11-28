@@ -16,14 +16,16 @@ void parser_generator::CharacterPosition::advance(const char32_t consumed) {
 }
 
 
-std::array<std::string, 3> TOKEN_TYPE_TO_STRING {
+std::array<std::string, 5> TOKEN_TYPE_TO_STRING {
     "UNDEFINED",
 	"END_OF_FILE",
-	"test"
+	"PRODUCTION",
+	"TOKEN",
+	"EQ"
 };
 
 bool parser_generator::Token::is_ignored() const {
-    return this->type > TokenType::test;
+    return this->type > TokenType::EQ;
 }
 
 parser_generator::ParserRuleLexer::ParserRuleLexer(std::istream& input) : input{input}, curr_position{} {
@@ -46,8 +48,14 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 		switch(state) {
 			case 0:
 				switch(curr) {
-					case 116:
+					case 97 ... 122:
 						state = 1;
+						break;
+					case 60:
+						state = 3;
+						break;
+					case 61:
+						state = 7;
 						break;
 					default:
 						state = ERROR_STATE;
@@ -55,28 +63,32 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 				}
 				break;
 			case 1:
+				this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
 				switch(curr) {
-					case 101:
+					case 48 ... 57:
+					case 95:
+					case 97 ... 122:
 						state = 2;
 						break;
 					default:
-						state = ERROR_STATE;
-						break;
+						return Token{Token::TokenType::PRODUCTION, identifier, token_start};
 				}
 				break;
 			case 2:
+				this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
 				switch(curr) {
-					case 115:
-						state = 3;
+					case 48 ... 57:
+					case 95:
+					case 97 ... 122:
+						state = 2;
 						break;
 					default:
-						state = ERROR_STATE;
-						break;
+						return Token{Token::TokenType::PRODUCTION, identifier, token_start};
 				}
 				break;
 			case 3:
 				switch(curr) {
-					case 116:
+					case 65 ... 90:
 						state = 4;
 						break;
 					default:
@@ -85,7 +97,39 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 				}
 				break;
 			case 4:
-				return Token{Token::TokenType::test, identifier, token_start};
+				switch(curr) {
+					case 48 ... 57:
+					case 65 ... 90:
+					case 95:
+						state = 5;
+						break;
+					case 62:
+						state = 6;
+						break;
+					default:
+						state = ERROR_STATE;
+						break;
+				}
+				break;
+			case 5:
+				switch(curr) {
+					case 48 ... 57:
+					case 65 ... 90:
+					case 95:
+						state = 5;
+						break;
+					case 62:
+						state = 6;
+						break;
+					default:
+						state = ERROR_STATE;
+						break;
+				}
+				break;
+			case 6:
+				return Token{Token::TokenType::TOKEN, identifier, token_start};
+			case 7:
+				return Token{Token::TokenType::EQ, identifier, token_start};
 			case ERROR_STATE:
 				return this->try_restore_fallback(identifier, token_start);
 		}
