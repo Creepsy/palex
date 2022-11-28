@@ -2,6 +2,7 @@ set(PROJECT_SOURCES
     util/utf8.cpp
     util/palex_except.cpp
     util/config_getters.cpp
+    util/config_loader.cpp
 
     regex/regex_ast.cpp
     regex/RegexParser.cpp
@@ -23,6 +24,7 @@ set(PROJECT_HEADERS
     util/utf8.h
     util/palex_except.h
     util/config_getters.h
+    util/config_loader.h
 
     regex/character_classes.h
     regex/regex_ast.cpp

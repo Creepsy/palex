@@ -6,6 +6,7 @@
 #include <json.h>
 
 #include "util/config_getters.h"
+#include "util/config_loader.h"
 #include "util/palex_except.h"
 
 #include "lexer_generator/code_gen/lexer_generation.h"
@@ -26,7 +27,7 @@ int main(int argc, char* argv[]) {
     const std::string config_path = std::filesystem::current_path().string() + "/palex.cfg";
     nlohmann::json json_config;
 
-    if(!load_config(config_path, json_config)) {
+    if(!config::load_config(config_path, json_config)) {
         return 1;
     }
 
@@ -52,33 +53,4 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
-}
-
-bool load_config(const std::string& config_path, nlohmann::json& parsed_config) {
-    std::ifstream config_file;
-    config_file.open(config_path);
-
-    if(!config_file.is_open()) {
-        std::cerr << "Unable to open config file '" + config_path + "'!" << std::endl;
-        
-        return false;
-    }
-
-    try {
-        parsed_config = nlohmann::json::parse(config_file);
-    } catch(const nlohmann::json::parse_error& e) {
-        config_file.close();
-        std::cerr << "Invalid config format! Parsing concluded in error: " << e.what() << std::endl;
-
-        return false;
-    }
-    config_file.close();
-
-    if(!parsed_config.is_object()) {
-        std::cerr << "Invalid config format! Expected a map on the top level of the config file!" << std::endl;
-
-        return false;
-    }
-
-    return true;
 }
