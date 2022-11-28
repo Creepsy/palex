@@ -16,16 +16,18 @@ void parser_generator::CharacterPosition::advance(const char32_t consumed) {
 }
 
 
-std::array<std::string, 5> TOKEN_TYPE_TO_STRING {
+std::array<std::string, 7> TOKEN_TYPE_TO_STRING {
     "UNDEFINED",
 	"END_OF_FILE",
 	"PRODUCTION",
 	"TOKEN",
-	"EQ"
+	"EQ",
+	"EOL",
+	"WSPACE"
 };
 
 bool parser_generator::Token::is_ignored() const {
-    return this->type > TokenType::EQ;
+    return this->type > TokenType::EOL;
 }
 
 parser_generator::ParserRuleLexer::ParserRuleLexer(std::istream& input) : input{input}, curr_position{} {
@@ -56,6 +58,21 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 						break;
 					case 61:
 						state = 7;
+						break;
+					case 59:
+						state = 8;
+						break;
+					case 9 ... 13:
+					case 32:
+					case 133:
+					case 160:
+					case 5760:
+					case 8192 ... 8202:
+					case 8232 ... 8233:
+					case 8239:
+					case 8297:
+					case 12288:
+						state = 9;
 						break;
 					default:
 						state = ERROR_STATE;
@@ -130,6 +147,46 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 				return Token{Token::TokenType::TOKEN, identifier, token_start};
 			case 7:
 				return Token{Token::TokenType::EQ, identifier, token_start};
+			case 8:
+				return Token{Token::TokenType::EOL, identifier, token_start};
+			case 9:
+				this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
+				switch(curr) {
+					case 9 ... 13:
+					case 32:
+					case 133:
+					case 160:
+					case 5760:
+					case 8192 ... 8202:
+					case 8232 ... 8233:
+					case 8239:
+					case 8297:
+					case 12288:
+						state = 10;
+						break;
+					default:
+						return Token{Token::TokenType::WSPACE, identifier, token_start};
+				}
+				break;
+			case 10:
+				this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
+				switch(curr) {
+					case 9 ... 13:
+					case 32:
+					case 133:
+					case 160:
+					case 5760:
+					case 8192 ... 8202:
+					case 8232 ... 8233:
+					case 8239:
+					case 8297:
+					case 12288:
+						state = 10;
+						break;
+					default:
+						return Token{Token::TokenType::WSPACE, identifier, token_start};
+				}
+				break;
 			case ERROR_STATE:
 				return this->try_restore_fallback(identifier, token_start);
 		}

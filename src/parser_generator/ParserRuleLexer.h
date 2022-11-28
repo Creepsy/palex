@@ -21,7 +21,9 @@ namespace parser_generator {
 			END_OF_FILE,
 			PRODUCTION,
 			TOKEN,
-			EQ
+			EQ,
+			EOL,
+			WSPACE
         };
 
         TokenType type;

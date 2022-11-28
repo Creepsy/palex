@@ -1,0 +1,5 @@
+addition = addition <ADD> multiplication;
+addition = multiplication;
+
+multiplication = multiplication <MUL> <NUMBER>;
+multiplication = <NUMBER>;

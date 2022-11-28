@@ -2,3 +2,4 @@ PRODUCTION = "[a-z][a-z0-9_]*";
 TOKEN = "<[A-Z][A-Z0-9_]*>";
 EQ = "=";
 EOL = ";";
+$WSPACE = "\s+";
