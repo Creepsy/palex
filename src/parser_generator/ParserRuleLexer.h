@@ -9,8 +9,8 @@
 
 namespace parser_generator {
     struct CharacterPosition {
-        size_t line;
-        size_t column;
+        size_t line = 1;
+        size_t column = 1;
 
         void advance(const char32_t consumed);
     };
@@ -57,4 +57,5 @@ namespace parser_generator {
 
     std::ostream& operator<<(std::ostream& output, const CharacterPosition& to_print);
     std::ostream& operator<<(std::ostream& output, const Token& to_print);
+    std::ostream& operator<<(std::ostream& output, const Token::TokenType to_print);
 }

@@ -17,6 +17,8 @@ set(PROJECT_SOURCES
     lexer_generator/code_gen/code_gen_data.cpp
 
     templates/template_completion.cpp
+
+    parser_generator/ParserRuleParser.cpp
 )
 
 set(PROJECT_HEADERS
@@ -47,6 +49,8 @@ set(PROJECT_HEADERS
     ${CMAKE_BINARY_DIR}/cpp_utf8_source.h
     
     ${CMAKE_SOURCE_DIR}/vendor/json.h
+
+    parser_generator/ParserRuleParser.h
 )
 
 set(PROJECT_INLINE_FILES

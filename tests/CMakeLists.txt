@@ -1,7 +1,7 @@
 function(generate_test_executable test_name test_src)
     add_executable(${test_name} ${test_src})
     target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(${test_name} palex_objects)  
+    target_link_libraries(${test_name} palex_objects auto_generated_objects)  
     add_test(NAME ${test_name} COMMAND ${test_name})  
 endfunction()
 
@@ -29,3 +29,5 @@ generate_test_executable(RegexPriority regex/regex_priority_test.cpp)
 generate_test_executable(TemplateCompletion templates/template_completion_test.cpp)
 generate_test_executable(TemplateErrors templates/template_errors_test.cpp)
 generate_test_executable(TemplateEscapeCharacters templates/escape_characters_test.cpp)
+
+generate_test_executable(ParserProductionParser parser_generator/production_parser_test.cpp)
