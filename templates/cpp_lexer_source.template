@@ -9,7 +9,7 @@ constexpr size_t ERROR_STATE = (size_t)-1;
 void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
     if(consumed == (char32_t)'\n') {
         this->line++;
-        this->column = 0;
+        this->column = 1;
     } else {
         this->column++;
     }
@@ -66,5 +66,9 @@ std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Characte
 }
 
 std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Token& to_print) {
-    return output << to_print.position << " " << TOKEN_TYPE_TO_STRING.at((size_t)to_print.type) << " " << to_print.identifier;
+    return output << to_print.position << " " << to_print.type << " " << to_print.identifier;
+}
+
+std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Token::TokenType to_print) {
+    return output << TOKEN_TYPE_TO_STRING.at((size_t)to_print);
 }
