@@ -79,3 +79,28 @@ parser_generator::Token parser_generator::ParserRuleParser::consume(const Token:
     
     return this->consume();
 }
+
+bool parser_generator::operator<(const Symbol& first, const Symbol& second) {
+    if (first.type < second.type) return true;
+    return first.type == second.type && first.identifier < second.identifier;
+}
+
+bool parser_generator::operator<(const Production& first, const Production& second) {
+    if (first.name < second.name) return true;
+    return first.name == second.name && first.symbols < second.symbols;
+}
+
+std::ostream& parser_generator::operator<<(std::ostream& output, const Symbol& to_print) {
+    if (to_print.type == Symbol::SymbolType::TERMINAL) {
+        return output << "<" << to_print.identifier << ">";
+    }
+    return output << to_print.identifier;
+}
+
+std::ostream& parser_generator::operator<<(std::ostream& output, const Production& to_print) {
+    output << to_print.name << " =";
+    for (const Symbol& sym : to_print.symbols) {
+        output << " " << sym;
+    }
+    return output;
+}

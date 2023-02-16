@@ -3,6 +3,7 @@
 #include <vector>
 #include <optional>
 #include <string>
+#include <ostream>
 
 #include "util/palex_except.h"
 
@@ -40,4 +41,10 @@ namespace parser_generator {
             Token consume();
             Token consume(const Token::TokenType to_expect);
     };    
+
+    bool operator<(const Symbol& first, const Symbol& second);
+    bool operator<(const Production& first, const Production& second);
+
+    std::ostream& operator<<(std::ostream& output, const Symbol& to_print);
+    std::ostream& operator<<(std::ostream& output, const Production& to_print);
 }

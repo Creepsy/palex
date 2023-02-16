@@ -19,6 +19,7 @@ set(PROJECT_SOURCES
     templates/template_completion.cpp
 
     parser_generator/ParserRuleParser.cpp
+    parser_generator/validation.cpp
 )
 
 set(PROJECT_HEADERS
@@ -51,6 +52,7 @@ set(PROJECT_HEADERS
     ${CMAKE_SOURCE_DIR}/vendor/json.h
 
     parser_generator/ParserRuleParser.h
+    parser_generator/validation.h
 )
 
 set(PROJECT_INLINE_FILES
