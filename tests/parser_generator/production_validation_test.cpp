@@ -1,8 +1,8 @@
 #include <vector>
 #include <sstream>
 
-#include "parser_generator/ParserRuleLexer.h"
-#include "parser_generator/ParserRuleParser.h"
+#include "parser_generator/ParserProductionLexer.h"
+#include "parser_generator/ParserProductionParser.h"
 #include "parser_generator/validation.h"
 
 #include "util/palex_except.h"
@@ -23,8 +23,8 @@ int main() {
 
     for (const TestCase& test : TEST_CASES) {
         std::stringstream input(test.input);
-        parser_generator::ParserRuleLexer lexer(input);
-        parser_generator::ParserRuleParser parser(lexer);
+        parser_generator::ParserProductionLexer lexer(input);
+        parser_generator::ParserProductionParser parser(lexer);
 
         if (test.should_fail) {
             TEST_EXCEPT(parser_generator::validate_productions(parser.parse_all_productions()), palex_except::ValidationError);

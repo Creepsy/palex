@@ -18,7 +18,7 @@ set(PROJECT_SOURCES
 
     templates/template_completion.cpp
 
-    parser_generator/ParserRuleParser.cpp
+    parser_generator/ParserProductionParser.cpp
     parser_generator/validation.cpp
 )
 
@@ -51,7 +51,7 @@ set(PROJECT_HEADERS
     
     ${CMAKE_SOURCE_DIR}/vendor/json.h
 
-    parser_generator/ParserRuleParser.h
+    parser_generator/ParserProductionParser.h
     parser_generator/validation.h
 )
 
@@ -62,9 +62,9 @@ set(PROJECT_INLINE_FILES
 )
 
 set(AUTO_GENERATED_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.cpp
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.h
 )
 
 include(templates/all_template_headers.cmake)
@@ -80,7 +80,7 @@ add_custom_command(
     OUTPUT ${AUTO_GENERATED_FILES}
     COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserRuleLexer.lrules
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.lrules
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_link_libraries(auto_generated_objects PRIVATE palex_objects)

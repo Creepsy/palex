@@ -3,7 +3,7 @@
 #include <vector>
 #include <set>
 
-#include "ParserRuleParser.h"
+#include "ParserProductionParser.h"
 
 namespace parser_generator {
     void validate_productions(const std::vector<Production>& to_check);

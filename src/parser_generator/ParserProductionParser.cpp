@@ -1,14 +1,14 @@
-#include "ParserRuleParser.h"
+#include "ParserProductionParser.h"
 
 #include <sstream>
 
 #include "util/utf8.h"
 
-parser_generator::ParserRuleParser::ParserRuleParser(ParserRuleLexer& input) : input(input) {
+parser_generator::ParserProductionParser::ParserProductionParser(ParserProductionLexer& input) : input(input) {
     this->consume();
 }
 
-std::optional<parser_generator::Production> parser_generator::ParserRuleParser::parse_production() {
+std::optional<parser_generator::Production> parser_generator::ParserProductionParser::parse_production() {
     if (this->accept(Token::TokenType::END_OF_FILE)) {
         return std::nullopt;
     }
@@ -38,7 +38,7 @@ std::optional<parser_generator::Production> parser_generator::ParserRuleParser::
     return parsed;
 }
 
-std::vector<parser_generator::Production> parser_generator::ParserRuleParser::parse_all_productions() {
+std::vector<parser_generator::Production> parser_generator::ParserProductionParser::parse_all_productions() {
     std::vector<Production> productions;
 
     std::optional<Production> production = this->parse_production();
@@ -54,7 +54,7 @@ std::vector<parser_generator::Production> parser_generator::ParserRuleParser::pa
 
 // private
 
-void parser_generator::ParserRuleParser::expect(const Token::TokenType to_expect) const {
+void parser_generator::ParserProductionParser::expect(const Token::TokenType to_expect) const {
     if (!this->accept(to_expect)) {
         std::stringstream err_msg;
         err_msg << this->curr.position << " Invalid token '" << this->curr.identifier 
@@ -63,18 +63,18 @@ void parser_generator::ParserRuleParser::expect(const Token::TokenType to_expect
     }
 }
 
-bool parser_generator::ParserRuleParser::accept(const Token::TokenType to_check) const {
+bool parser_generator::ParserProductionParser::accept(const Token::TokenType to_check) const {
     return this->curr.type == to_check;
 }
 
-parser_generator::Token parser_generator::ParserRuleParser::consume() {
+parser_generator::Token parser_generator::ParserProductionParser::consume() {
     Token consumed = this->curr;
     this->curr = this->input.next_unignored_token();
 
     return consumed;
 }
 
-parser_generator::Token parser_generator::ParserRuleParser::consume(const Token::TokenType to_expect) {
+parser_generator::Token parser_generator::ParserProductionParser::consume(const Token::TokenType to_expect) {
     this->expect(to_expect);
     
     return this->consume();

@@ -1,4 +1,4 @@
-#include "ParserRuleLexer.h"
+#include "ParserProductionLexer.h"
 
 #include <array>
 
@@ -30,10 +30,10 @@ bool parser_generator::Token::is_ignored() const {
     return this->type > TokenType::EOL;
 }
 
-parser_generator::ParserRuleLexer::ParserRuleLexer(std::istream& input) : input{input}, curr_position{} {
+parser_generator::ParserProductionLexer::ParserProductionLexer(std::istream& input) : input{input}, curr_position{} {
 }
 
-parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
+parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
     this->fallback = std::nullopt;
     const CharacterPosition token_start = this->curr_position;
 	size_t state = 0;
@@ -198,7 +198,7 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 	}
 }
 
-parser_generator::Token parser_generator::ParserRuleLexer::next_unignored_token() {
+parser_generator::Token parser_generator::ParserProductionLexer::next_unignored_token() {
     Token unignored{};
 
     do {
@@ -208,11 +208,11 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_unignored_token(
     return unignored;
 }
 
-bool parser_generator::ParserRuleLexer::end() const {
+bool parser_generator::ParserProductionLexer::end() const {
     return this->input.eof() && this->cache.empty();
 }
 
-char32_t parser_generator::ParserRuleLexer::get_char() {
+char32_t parser_generator::ParserProductionLexer::get_char() {
     if (!this->cache.empty()) {
         char32_t cached = this->cache.top();
         this->cache.pop();
@@ -223,7 +223,7 @@ char32_t parser_generator::ParserRuleLexer::get_char() {
     return utf8::get_unicode_char(this->input);
 }
 
-parser_generator::Token parser_generator::ParserRuleLexer::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
+parser_generator::Token parser_generator::ParserProductionLexer::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
 	if (!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};
 
 	while (token_identifier.size() > this->fallback.value().token_length) {

@@ -7,7 +7,7 @@
 
 #include "util/palex_except.h"
 
-#include "parser_generator/ParserRuleLexer.h"
+#include "parser_generator/ParserProductionLexer.h"
 
 namespace parser_generator {
     struct Symbol {
@@ -26,13 +26,13 @@ namespace parser_generator {
         std::vector<Symbol> symbols;
     };
 
-    class ParserRuleParser {
+    class ParserProductionParser {
         public:
-            ParserRuleParser(ParserRuleLexer& input);
+            ParserProductionParser(ParserProductionLexer& input);
             std::optional<Production> parse_production();
             std::vector<Production> parse_all_productions();            
         private:
-            ParserRuleLexer& input;
+            ParserProductionLexer& input;
             Token curr;
 
             void expect(const Token::TokenType to_expect) const;

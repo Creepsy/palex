@@ -33,9 +33,9 @@ namespace parser_generator {
         bool is_ignored() const;
     };
 
-    class ParserRuleLexer {
+    class ParserProductionLexer {
         public:
-            ParserRuleLexer(std::istream& input);
+            ParserProductionLexer(std::istream& input);
             Token next_token();
             Token next_unignored_token();
             bool end() const;
