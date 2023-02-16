@@ -36,7 +36,7 @@ lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexe
     const lexer_generator::LexerAutomaton_t::StateID_t root_state = lexer_nfa.add_state(U"");
 
 
-    for(const lexer_generator::TokenRegexRule& rule : lexer_rules) {
+    for (const lexer_generator::TokenRegexRule& rule : lexer_rules) {
         lexer_generator::insert_rule_in_nfa(lexer_nfa, root_state, rule);
     }
 
@@ -57,7 +57,7 @@ bool code_gen::generate_lexer(const std::string& lexer_name, const nlohmann::jso
 
     std::ifstream lexer_rule_file{lexer_rule_path};
 
-    if(!lexer_rule_file.is_open()) {
+    if (!lexer_rule_file.is_open()) {
         std::cerr << "Unable to open lexer rule file '" << lexer_rule_path << "'!" << std::endl; 
         
         return false;
@@ -75,7 +75,7 @@ bool code_gen::generate_lexer(const std::string& lexer_name, const nlohmann::jso
     }
     lexer_rule_file.close();
 
-    if(lexer_rules.empty()) {
+    if (lexer_rules.empty()) {
         std::cerr << "Skipped generation of lexer '" << lexer_name + "' as it's rule file is empty!" << std::endl;
 
         return false;
@@ -99,7 +99,7 @@ bool code_gen::generate_lexer(const std::string& lexer_name, const nlohmann::jso
         return false;
     }
 
-    if(LANGUAGE_CODE_GENERATORS.find(target_language) == LANGUAGE_CODE_GENERATORS.end()) {
+    if (LANGUAGE_CODE_GENERATORS.find(target_language) == LANGUAGE_CODE_GENERATORS.end()) {
         std::cerr << "Lexer code generation for the language '" << target_language << "' is not supported!" << std::endl;
 
         return false;

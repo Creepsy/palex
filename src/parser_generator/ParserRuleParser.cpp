@@ -9,7 +9,7 @@ parser_generator::ParserRuleParser::ParserRuleParser(ParserRuleLexer& input) : i
 }
 
 std::optional<parser_generator::Production> parser_generator::ParserRuleParser::parse_production() {
-    if(this->accept(Token::TokenType::END_OF_FILE)) {
+    if (this->accept(Token::TokenType::END_OF_FILE)) {
         return std::nullopt;
     }
 
@@ -18,13 +18,13 @@ std::optional<parser_generator::Production> parser_generator::ParserRuleParser::
     parsed.name = utf8::unicode_to_utf8(this->consume(Token::TokenType::PRODUCTION).identifier);
     this->consume(Token::TokenType::EQ);
 
-    while(this->accept(Token::TokenType::PRODUCTION) || this->accept(Token::TokenType::TOKEN)) {
-        if(this->accept(Token::TokenType::PRODUCTION)) {
-            parsed.symbols.push_back(Symbol{Symbol::SymbolType::PRODUCTION, utf8::unicode_to_utf8(this->curr.identifier)});
+    while (this->accept(Token::TokenType::PRODUCTION) || this->accept(Token::TokenType::TOKEN)) {
+        if (this->accept(Token::TokenType::PRODUCTION)) {
+            parsed.symbols.push_back(Symbol{Symbol::SymbolType::NONTERMINAL, utf8::unicode_to_utf8(this->curr.identifier)});
         } else {
             parsed.symbols.push_back(
                 Symbol{
-                    Symbol::SymbolType::TOKEN,
+                    Symbol::SymbolType::TERMINAL,
                     utf8::unicode_to_utf8(this->curr.identifier.substr(1, this->curr.identifier.length() - 2)) // remove <>
                 }
             );
@@ -43,7 +43,7 @@ std::vector<parser_generator::Production> parser_generator::ParserRuleParser::pa
 
     std::optional<Production> production = this->parse_production();
 
-    while(production.has_value()) {
+    while (production.has_value()) {
         productions.push_back(production.value());
 
         production = this->parse_production();
@@ -55,7 +55,7 @@ std::vector<parser_generator::Production> parser_generator::ParserRuleParser::pa
 // private
 
 void parser_generator::ParserRuleParser::expect(const Token::TokenType to_expect) const {
-    if(!this->accept(to_expect)) {
+    if (!this->accept(to_expect)) {
         std::stringstream err_msg;
         err_msg << this->curr.position << " Invalid token '" << this->curr.identifier 
                 << "' of type " << this->curr.type << ". Expected token of type " << to_expect << "!" << std::endl;

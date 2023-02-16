@@ -11,8 +11,8 @@
 namespace parser_generator {
     struct Symbol {
         enum class SymbolType {
-            TOKEN,
-            PRODUCTION
+            TERMINAL,
+            NONTERMINAL
         };
 
         SymbolType type;

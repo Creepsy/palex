@@ -7,7 +7,7 @@
 constexpr size_t ERROR_STATE = (size_t)-1;
 
 void parser_generator::CharacterPosition::advance(const char32_t consumed) {
-    if(consumed == (char32_t)'\n') {
+    if (consumed == (char32_t)'\n') {
         this->line++;
         this->column = 1;
     } else {
@@ -40,11 +40,11 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_token() {
 	std::u32string identifier = U"";
 	char32_t curr = this->get_char();
 
-	if(this->end()) {
+	if (this->end()) {
 		return Token{Token::TokenType::END_OF_FILE, U"", token_start};
 	}
 
-    while(true) {
+    while (true) {
 		this->cache.push(curr);
 
 		switch(state) {
@@ -203,7 +203,7 @@ parser_generator::Token parser_generator::ParserRuleLexer::next_unignored_token(
 
     do {
         unignored = this->next_token();
-    } while(unignored.is_ignored());
+    } while (unignored.is_ignored());
 
     return unignored;
 }
@@ -213,7 +213,7 @@ bool parser_generator::ParserRuleLexer::end() const {
 }
 
 char32_t parser_generator::ParserRuleLexer::get_char() {
-    if(!this->cache.empty()) {
+    if (!this->cache.empty()) {
         char32_t cached = this->cache.top();
         this->cache.pop();
 
@@ -224,9 +224,9 @@ char32_t parser_generator::ParserRuleLexer::get_char() {
 }
 
 parser_generator::Token parser_generator::ParserRuleLexer::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
-	if(!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};
+	if (!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};
 
-	while(token_identifier.size() > this->fallback.value().token_length) {
+	while (token_identifier.size() > this->fallback.value().token_length) {
 		this->cache.push(token_identifier.back());
 		token_identifier.pop_back();
 	}

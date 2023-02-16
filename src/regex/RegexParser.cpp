@@ -40,7 +40,7 @@ regex::RegexParser::RegexParser(const std::u32string& input) : input(input), cur
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
     std::unique_ptr<RegexBase> parsed_regex = this->parse_regex_alternation();
-    if(this->accept(CharType::PARENTHESIS_CLOSE)) {
+    if (this->accept(CharType::PARENTHESIS_CLOSE)) {
         this->throw_parsing_err("The special character ')' has to be escaped in this context! Use \\).");
     }
 
@@ -55,11 +55,11 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex() {
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_alternation() {
     std::unique_ptr<RegexBase> sequence = this->parse_regex_sequence();
 
-    if(this->accept(CharType::ALTERNATION)) {
+    if (this->accept(CharType::ALTERNATION)) {
         std::unique_ptr<RegexAlternation> branch = std::make_unique<RegexAlternation>();
         branch->add_branch(std::move(sequence));
 
-        while(this->accept(CharType::ALTERNATION)) {
+        while (this->accept(CharType::ALTERNATION)) {
             this->consume();
             branch->add_branch(this->parse_regex_sequence());
         }
@@ -78,16 +78,16 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_sequence() {
         &RegexParser::parse_regex_quantifier
     );
 
-    if(sequence_content.empty()) {
+    if (sequence_content.empty()) {
         this->throw_parsing_err("Empty sequences are not allowed, as they might lead to infinite matches!"); // TODO: allow this?
     }
-    if(sequence_content.size() == 1)  {
+    if (sequence_content.size() == 1)  {
         return std::move(sequence_content.front());
     }
 
     std::unique_ptr<RegexSequence> sequence = std::make_unique<RegexSequence>();
 
-    for(std::unique_ptr<RegexBase>& element : sequence_content) {
+    for (std::unique_ptr<RegexBase>& element : sequence_content) {
         sequence->append_element(std::move(element));
     }
 
@@ -99,7 +99,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
     
     std::unique_ptr<RegexBase> operand = nullptr;
 
-    if(this->accept(CharType::PARENTHESIS_OPEN)) {
+    if (this->accept(CharType::PARENTHESIS_OPEN)) {
         operand = this->parse_regex_group();
     } else {
         operand = this->parse_regex_charset();
@@ -108,32 +108,32 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
     size_t min = 0;
     size_t max = 0;
 
-    if(this->accept(CharType::PLUS)) {
+    if (this->accept(CharType::PLUS)) {
         this->consume();
         min = 1;
         max = RegexQuantifier::INFINITE;
-    } else if(this->accept(CharType::OPTIONAL)) {
+    } else if (this->accept(CharType::OPTIONAL)) {
         this->consume();
         min = 0;
         max = 1;
-    } else if(this->accept(CharType::STAR)) {
+    } else if (this->accept(CharType::STAR)) {
         this->consume();
         min = 0;
         max = RegexQuantifier::INFINITE;
-    } else if(this->accept(CharType::BRACE_OPEN)) {
+    } else if (this->accept(CharType::BRACE_OPEN)) {
         this->consume();
 
         std::u32string min_str = this->parse_matching_string(IS_DIGIT);
-        if(min_str.empty()) {
+        if (min_str.empty()) {
             this->throw_parsing_err("Expected a number!");
         }
         min = std::stoul(utf8::unicode_to_utf8(min_str));
         max = min;
 
-        if(this->accept(CharType::COMMA)) {
+        if (this->accept(CharType::COMMA)) {
             this->consume();
 
-            if(IS_DIGIT(this->get_curr())) {
+            if (IS_DIGIT(this->get_curr())) {
                 std::u32string max_str = this->parse_matching_string(IS_DIGIT);
                 
                 assert(("Number string empty! Please create an issue on github containing the used input!", !max_str.empty()));
@@ -153,11 +153,11 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
 }
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
-    if(this->accept(CharType::BRACKET_OPEN)) {
+    if (this->accept(CharType::BRACKET_OPEN)) {
         this->consume();
 
         std::unique_ptr<RegexCharSet> char_set = std::make_unique<RegexCharSet>(this->accept(CharType::NEGATION));
-        if(this->accept(CharType::NEGATION)) {
+        if (this->accept(CharType::NEGATION)) {
             this->consume();
         }
 
@@ -176,7 +176,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
 
     std::unique_ptr<RegexCharSet> regex_char = std::make_unique<RegexCharSet>(false);
 
-    for(const CharRange& range : this->parse_char().first) {
+    for (const CharRange& range : this->parse_char().first) {
         regex_char->insert_char_range(range);
     }
 
@@ -194,11 +194,11 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_group() {
 }
 
 regex::RegexParser::MultiRangeCharacter regex::RegexParser::parse_char() {
-    if(this->accept(CharType::ESCAPE)) {
+    if (this->accept(CharType::ESCAPE)) {
         return this->parse_escaped_char();
     }
 
-    if(this->accept(CharType::DOT)) {
+    if (this->accept(CharType::DOT)) {
         this->consume();
 
         return {character_classes::DOT_CLASS, CharType::DOT};
@@ -211,7 +211,7 @@ regex::RegexParser::MultiRangeCharacter regex::RegexParser::parse_char() {
 }
 
 regex::RegexParser::MultiRangeCharacter regex::RegexParser::parse_escaped_char() {
-    if(!this->accept(CharType::ESCAPE)) {
+    if (!this->accept(CharType::ESCAPE)) {
         return {};
     }
     this->consume();
@@ -222,7 +222,7 @@ regex::RegexParser::MultiRangeCharacter regex::RegexParser::parse_escaped_char()
         case 'c':
             {
                 const char32_t curr = this->consume(CharType::CHARACTER);
-                if(curr > 'Z' || curr < 'A') {
+                if (curr > 'Z' || curr < 'A') {
                     this->throw_parsing_err("Parameter of \\c has to be part of the upper-case alphabet!");
                 }
                 
@@ -264,23 +264,23 @@ char32_t regex::RegexParser::parse_unicode_value() {
     
     std::u32string unicode_value;
 
-    if(this->accept(CharType::BRACE_OPEN)) {
+    if (this->accept(CharType::BRACE_OPEN)) {
         this->consume();
         unicode_value = this->parse_matching_string(IS_HEX_DIGIT);
         this->consume(CharType::BRACE_CLOSE);
     } else {
         unicode_value = this->parse_matching_string(IS_HEX_DIGIT, 4);
-        if(unicode_value.length() != 4) {
+        if (unicode_value.length() != 4) {
             this->throw_parsing_err("Expected 4 hexadecimal characters, found " + std::to_string(unicode_value.length()) + "!");
         }
     }
 
-    if(unicode_value.empty())  {
+    if (unicode_value.empty())  {
         this->throw_parsing_err("Expected a hexadecimal value!");
     }
 
     char32_t unicode_char = (char32_t)std::stoul(utf8::unicode_to_utf8(unicode_value), nullptr, 16);
-    if(unicode_char > utf8::LAST_UNICODE_CHAR) {
+    if (unicode_char > utf8::LAST_UNICODE_CHAR) {
         this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
     }
 
@@ -325,7 +325,7 @@ regex::RegexParser::CharType regex::RegexParser::get_curr_type() {
 }
 
 char32_t regex::RegexParser::get_curr() {
-    if(this->end()) {
+    if (this->end()) {
         this->throw_parsing_err("Tried to read past the end of the regex!");
     }
     
@@ -334,7 +334,7 @@ char32_t regex::RegexParser::get_curr() {
 
 std::u32string regex::RegexParser::parse_matching_string(Predicate_t predicate, const size_t max_count) {
     size_t length = std::find_if_not(this->input.begin() + this->curr_pos, this->input.end(), predicate) - (this->input.begin() + this->curr_pos);
-    if(length > max_count) {
+    if (length > max_count) {
         length = max_count;
     }
     this->curr_pos += length;
@@ -343,13 +343,13 @@ std::u32string regex::RegexParser::parse_matching_string(Predicate_t predicate, 
 }
 
 void regex::RegexParser::expect(const CharType type) {
-    if(!this->accept(type)) {
+    if (!this->accept(type)) {
         this->throw_parsing_err(type);
     }
 }
 
 bool regex::RegexParser::accept(const CharType type) {
-    if(this->end()) {
+    if (this->end()) {
         return false;
     }
 
@@ -390,10 +390,10 @@ void regex::RegexParser::process_charset_contents(const std::vector<MultiRangeCh
         return (to_unwrap.second == CharType::DOT) ? '.' : to_unwrap.first.front().start;
     };
 
-    for(size_t i = 0; i < set_contents.size(); i++) {
+    for (size_t i = 0; i < set_contents.size(); i++) {
         switch(set_contents[i].second) {
             case CharType::CHARACTER_CLASS:
-                for(const CharRange range : set_contents[i].first) {
+                for (const CharRange range : set_contents[i].first) {
                     target.insert_char_range(range);
                 }
                 break;
@@ -401,7 +401,7 @@ void regex::RegexParser::process_charset_contents(const std::vector<MultiRangeCh
                 assert(("Expected native character! Please create an issue on github containing the used input!", IS_SINGLE_CHAR(set_contents[i])));
                 char32_t start = GET_SINGLE_CHAR(set_contents[i]);
 
-                if(i < set_contents.size() - 2 && set_contents[i + 1].second == CharType::MINUS && IS_SINGLE_CHAR(set_contents[i + 2])) {
+                if (i < set_contents.size() - 2 && set_contents[i + 1].second == CharType::MINUS && IS_SINGLE_CHAR(set_contents[i + 2])) {
                     target.insert_char_range(CharRange{start, GET_SINGLE_CHAR(set_contents[i + 2])});
                     i += 2;
                 } else {

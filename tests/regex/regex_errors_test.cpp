@@ -14,7 +14,7 @@ int main() {
         U"a{3,", U"a{3,", U"a{}", U"a{", U"a{3, 5}"
     };
 
-    for(const std::u32string& test : TEST_CASES) {
+    for (const std::u32string& test : TEST_CASES) {
         TEST_EXCEPT(regex::RegexParser(test).parse_regex(), palex_except::ParserError)
     }
 

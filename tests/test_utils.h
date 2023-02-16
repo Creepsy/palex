@@ -3,13 +3,13 @@
 #include <iostream>
 
 #define TEST_TRUE(value) \
-if(!(value)) { \
+if (!(value)) { \
     std::cerr << "[Ln " << __LINE__ << "] TEST_TRUE failed on case: '" << #value << "' "; \
     return 1; \
 }   
 
 #define TEST_FALSE(value) \
-if(value) { \
+if (value) { \
     std::cerr << "[Ln " << __LINE__ << "] TEST_FALSE failed on case: '" << #value << "' "; \
     return 1; \
 } 

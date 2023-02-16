@@ -6,7 +6,7 @@
 
 int main() {
     templates::TemplateCompleter_t completer = [](std::ostream& output, const std::string_view tag) -> void {        
-        if(tag == "replace_me") {
+        if (tag == "replace_me") {
             output << "TAG_REPLACE";
         }
     };

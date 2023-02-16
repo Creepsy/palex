@@ -23,7 +23,7 @@ int main() {
         {U"a{10,15}", 10, 15}
     };
 
-    for(const TestCase& test : TEST_CASES) {
+    for (const TestCase& test : TEST_CASES) {
         std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.input).parse_regex();
         TEST_TRUE(dynamic_cast<regex::RegexQuantifier*>(base_ast.get()))
         regex::RegexQuantifier* quantifier = dynamic_cast<regex::RegexQuantifier*>(base_ast.get());

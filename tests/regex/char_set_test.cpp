@@ -49,7 +49,7 @@ int main() {
         {U"\\cB", {regex::CharRange{2}}, false}
     };
 
-    for(const TestCase& test : TEST_CASES) {
+    for (const TestCase& test : TEST_CASES) {
         std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.input).parse_regex();
         TEST_TRUE(dynamic_cast<regex::RegexCharSet*>(base_ast.get()))
         regex::RegexCharSet* char_set = dynamic_cast<regex::RegexCharSet*>(base_ast.get());

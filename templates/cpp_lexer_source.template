@@ -7,7 +7,7 @@
 constexpr size_t ERROR_STATE = (size_t)-1;
 
 void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
-    if(consumed == (char32_t)'\n') {
+    if (consumed == (char32_t)'\n') {
         this->line++;
         this->column = 1;
     } else {
@@ -39,7 +39,7 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
 
     do {
         unignored = this->next_token();
-    } while(unignored.is_ignored());
+    } while (unignored.is_ignored());
 
     return unignored;
 }
@@ -49,7 +49,7 @@ bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() const {
 }
 
 char32_t %LEXER_NAMESPACE%::%LEXER_NAME%::get_char() {
-    if(!this->cache.empty()) {
+    if (!this->cache.empty()) {
         char32_t cached = this->cache.top();
         this->cache.pop();
 

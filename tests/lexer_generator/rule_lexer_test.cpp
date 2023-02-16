@@ -5,12 +5,11 @@
 #include "../test_utils.h"
 
 int main() {
-    std::stringstream input("$ IDENT iDEnT _iden1 \"regex\" \"\\\"with quote\" = ; \"undefined\n\"\" ^<>6ust");
+    std::stringstream input("$ IDENT _IDENT1 \"regex\" \"\\\"with quote\" = ; \"undefined\n\"\" ^<>6UST");
 
     lexer_generator::LexerRuleLexer lexer(input);
 
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IGNORE)
-    TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IDENTIFER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IDENTIFER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::IDENTIFER)
     TEST_TRUE(lexer.next_token().type == lexer_generator::Token::TokenType::REGEX)

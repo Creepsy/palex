@@ -12,10 +12,10 @@ int main(int argc, char* argv[]) {
 
     std::vector<parser_generator::Production> productions = parser.parse_all_productions();
 
-    for(const parser_generator::Production& production : productions) {
+    for (const parser_generator::Production& production : productions) {
         std::cout << production.name << " =";
-        for(const parser_generator::Symbol& sym : production.symbols) {
-            if(sym.type == parser_generator::Symbol::SymbolType::TOKEN) {
+        for (const parser_generator::Symbol& sym : production.symbols) {
+            if (sym.type == parser_generator::Symbol::SymbolType::TERMINAL) {
                 std::cout << " <" << sym.identifier << ">";
             } else {
                 std::cout << " " << sym.identifier;

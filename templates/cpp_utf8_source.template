@@ -62,10 +62,10 @@ std::u32string utf8::utf8_to_unicode(const std::string& to_convert) {
 
     std::u32string unicode_string;
 
-    while(input.good()) {
+    while (input.good()) {
         char32_t next = get_unicode_char(input);
 
-        if(next == (char32_t)-1) {
+        if (next == (char32_t)-1) {
             break;
         }
 
@@ -76,27 +76,27 @@ std::u32string utf8::utf8_to_unicode(const std::string& to_convert) {
 }
 
 std::string utf8::unicode_to_utf8(const char32_t to_convert) {
-    if(to_convert > LAST_UNICODE_CHAR) {
+    if (to_convert > LAST_UNICODE_CHAR) {
         return "";
     }
     
-    if(to_convert <= LAST_ASCII_CHAR) {
+    if (to_convert <= LAST_ASCII_CHAR) {
         return {(char)to_convert};
     }
-    if(to_convert <= LAST_UTF8_2_BIT_CHAR) {
+    if (to_convert <= LAST_UTF8_2_BIT_CHAR) {
         return {
             (char)((to_convert >> BYTE_SHIFT) | PADDING_2_BYTE_CHAR),
             (char)((to_convert & MASK_6_BIT) | PADDING_TRAILING_BYTE)
         };
     } 
-    if(to_convert <= LAST_UTF8_3_BIT_CHAR) {
+    if (to_convert <= LAST_UTF8_3_BIT_CHAR) {
         return {
             (char)((to_convert >> TWO_BYTES_SHIFT) | PADDING_3_BYTE_CHAR),
             (char)(((to_convert >> BYTE_SHIFT) & MASK_6_BIT) | PADDING_TRAILING_BYTE),
             (char)((to_convert & MASK_6_BIT) | PADDING_TRAILING_BYTE)
         };
     }
-    if(to_convert <= LAST_UNICODE_CHAR) {
+    if (to_convert <= LAST_UNICODE_CHAR) {
         return {
             (char)((to_convert >> THREE_BYTES_SHIFT) | PADDING_4_BYTE_CHAR),
             (char)(((to_convert >> TWO_BYTES_SHIFT) & MASK_6_BIT) | PADDING_TRAILING_BYTE),
@@ -113,7 +113,7 @@ std::string utf8::unicode_to_utf8(const char32_t to_convert) {
 std::string utf8::unicode_to_utf8(const std::u32string& to_convert) {
     std::string utf8_string;
 
-    for(const char32_t c : to_convert) {
+    for (const char32_t c : to_convert) {
         utf8_string += unicode_to_utf8(c);
     }
 
@@ -127,7 +127,7 @@ std::istream& std::operator>>(std::istream& input, char32_t& to_read) {
 }
 
 std::istream& std::operator>>(std::istream& input, std::u32string& to_read) {
-    while(!std::iswspace(input.peek())) {
+    while (!std::iswspace(input.peek())) {
         to_read += utf8::get_unicode_char(input);
     }
 

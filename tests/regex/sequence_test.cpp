@@ -15,7 +15,7 @@ int main() {
         {U"(aab)?a", 2}
     };
 
-    for(const auto& test : TEST_CASES) {
+    for (const auto& test : TEST_CASES) {
         std::unique_ptr<regex::RegexBase> base_ast = regex::RegexParser(test.first).parse_regex();
         TEST_TRUE(dynamic_cast<regex::RegexSequence*>(base_ast.get()))
         TEST_TRUE(dynamic_cast<regex::RegexSequence*>(base_ast.get())->get_elements().size() == test.second)

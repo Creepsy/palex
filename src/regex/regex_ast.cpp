@@ -23,7 +23,7 @@ inline std::string get_indentation(const size_t indentation_level) {
 
 void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print) {
     constexpr char32_t LAST_ASCII_CHAR = 127;
-    if(to_print <= LAST_ASCII_CHAR && std::isgraph((int)to_print)) {
+    if (to_print <= LAST_ASCII_CHAR && std::isgraph((int)to_print)) {
         output << to_print;
     } else {
         output << "<U0x" << std::hex << (size_t)to_print << std::dec << ">";
@@ -69,16 +69,16 @@ bool regex::CharRange::operator==(const CharRange other) const {
 // static
 
 regex::CharRange regex::CharRange::common_subset(const CharRange first, const CharRange second) {
-    if(first.end < second.start || second.end < first.start) {
+    if (first.end < second.start || second.end < first.start) {
         return CharRange{};
     }
-    if(first.is_subset_of(second)) {
+    if (first.is_subset_of(second)) {
         return first;
     }
-    if(second.is_subset_of(first)) {
+    if (second.is_subset_of(first)) {
         return second;
     }
-    if(first.start <= second.end && first.start >= second.start) {
+    if (first.start <= second.end && first.start >= second.start) {
         return CharRange(first.start, second.end);
     }
 
@@ -88,21 +88,21 @@ regex::CharRange regex::CharRange::common_subset(const CharRange first, const Ch
 
 
 regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
-    if(!to_add.empty()) {
+    if (!to_add.empty()) {
         auto iter = this->ranges.begin();
 
-        while(iter != this->ranges.end()) {
+        while (iter != this->ranges.end()) {
             //subset checks
-            if(to_add.is_subset_of(*iter)) {
+            if (to_add.is_subset_of(*iter)) {
                 return *this;
             }
-            if((*iter).is_subset_of(to_add)) {
+            if ((*iter).is_subset_of(to_add)) {
                 iter = this->ranges.erase(iter);
                 continue;
             }
 
-            if(to_add.end < (*iter).end) { // element has to be inserted here
-                if(to_add.can_prepend_to(*iter)) {
+            if (to_add.end < (*iter).end) { // element has to be inserted here
+                if (to_add.can_prepend_to(*iter)) {
                     (*iter).start = to_add.start;
                 } else {
                     this->ranges.insert(iter, to_add);
@@ -110,7 +110,7 @@ regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
                 return *this;
             }
             
-            if((*iter).can_prepend_to(to_add)) {
+            if ((*iter).can_prepend_to(to_add)) {
                 to_add.start = (*iter).start;
                 iter = this->ranges.erase(iter);
                 continue;
@@ -119,7 +119,7 @@ regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
             iter++;
         }    
 
-        if(!this->ranges.empty() && to_add.can_append_to(this->ranges.back())) {
+        if (!this->ranges.empty() && to_add.can_append_to(this->ranges.back())) {
             this->ranges.back().end = to_add.end;
         } else {
             this->ranges.push_back(to_add);
@@ -130,14 +130,14 @@ regex::CharRangeSet& regex::CharRangeSet::insert_char_range(CharRange to_add) {
 }
 
 regex::CharRangeSet& regex::CharRangeSet::remove_char_range(const CharRange to_remove) {
-    if(!to_remove.empty()) {
+    if (!to_remove.empty()) {
         auto iter = this->ranges.begin();
 
-        while(iter != this->ranges.end()) {
+        while (iter != this->ranges.end()) {
             const CharRange intersection = CharRange::common_subset(to_remove, *iter);
 
-            if(!intersection.empty()) {
-                if(*iter == intersection) {
+            if (!intersection.empty()) {
+                if (*iter == intersection) {
                     iter = this->ranges.erase(iter);
                     continue;
                 }
@@ -146,9 +146,9 @@ regex::CharRangeSet& regex::CharRangeSet::remove_char_range(const CharRange to_r
                 const CharRange second_half{intersection.end + 1, (*iter).end};
 
                 assert(("Range remove error! Please create an issue on github containing the used input!", !(first_half.empty() && second_half.empty())));
-                if(first_half.empty() || intersection.start == 0) { // edge-case which leads to underflow
+                if (first_half.empty() || intersection.start == 0) { // edge-case which leads to underflow
                     *iter = second_half;
-                } else if(second_half.empty()) {
+                } else if (second_half.empty()) {
                     *iter = first_half;
                 } else {
                     *iter = second_half;
@@ -171,11 +171,11 @@ bool regex::CharRangeSet::empty() const {
 regex::CharRangeSet regex::CharRangeSet::get_intersection(const CharRangeSet& other) const {
     CharRangeSet intersection;
 
-    for(const CharRange& own_range : this->ranges) {
-        for(const CharRange& other_range : other.ranges) {
+    for (const CharRange& own_range : this->ranges) {
+        for (const CharRange& other_range : other.ranges) {
             CharRange range_intersection = CharRange::common_subset(own_range, other_range);
 
-            if(!range_intersection.empty()) {
+            if (!range_intersection.empty()) {
                 intersection.insert_char_range(range_intersection);
             }
         }
@@ -195,7 +195,7 @@ const std::list<regex::CharRange>& regex::CharRangeSet::get_ranges() const {
 regex::CharRangeSet regex::CharRangeSet::operator-(const CharRangeSet& to_subtract) const {
     CharRangeSet subtracted = *this;
 
-    for(const CharRange range : to_subtract.ranges) {
+    for (const CharRange range : to_subtract.ranges) {
         subtracted.remove_char_range(range);
     }
     
@@ -205,7 +205,7 @@ regex::CharRangeSet regex::CharRangeSet::operator-(const CharRangeSet& to_subtra
 regex::CharRangeSet regex::CharRangeSet::operator+(const CharRangeSet& to_add) const {
     CharRangeSet combined = *this;
 
-    for(const CharRange range : to_add.ranges) {
+    for (const CharRange range : to_add.ranges) {
         combined.insert_char_range(range);
     }
 
@@ -234,7 +234,7 @@ const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexAlternation::g
 size_t regex::RegexAlternation::get_priority() const {
     size_t shortest = (size_t)-1;
 
-    for(const std::unique_ptr<RegexBase>& branch : this->branches) {
+    for (const std::unique_ptr<RegexBase>& branch : this->branches) {
         shortest = std::min(shortest, branch->get_priority());
     }
 
@@ -244,7 +244,7 @@ size_t regex::RegexAlternation::get_priority() const {
 void regex::RegexAlternation::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Branch\n";
 
-    for(const std::unique_ptr<RegexBase>& branch : this->branches) {
+    for (const std::unique_ptr<RegexBase>& branch : this->branches) {
         branch->debug(output, indentation_level + 1);
     }
 }
@@ -262,7 +262,7 @@ const std::vector<std::unique_ptr<regex::RegexBase>>& regex::RegexSequence::get_
 size_t regex::RegexSequence::get_priority() const {
     size_t priority_sum = 0;
 
-    for(const std::unique_ptr<RegexBase>& element : this->sequence) {
+    for (const std::unique_ptr<RegexBase>& element : this->sequence) {
         priority_sum += element->get_priority();
     }
 
@@ -272,7 +272,7 @@ size_t regex::RegexSequence::get_priority() const {
 void regex::RegexSequence::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "Sequence\n";
 
-    for(const std::unique_ptr<RegexBase>& element : this->sequence) {
+    for (const std::unique_ptr<RegexBase>& element : this->sequence) {
         element->debug(output, indentation_level + 1);
     }
 }
@@ -308,7 +308,7 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 
 regex::RegexCharSet::RegexCharSet(const bool negated) : negated(negated) {
-    if(this->negated) {
+    if (this->negated) {
         this->range_set.insert_char_range(CharRange{0, utf8::LAST_UNICODE_CHAR});
     }
 } 
@@ -316,7 +316,7 @@ regex::RegexCharSet::RegexCharSet(const bool negated) : negated(negated) {
 // public
 
 void regex::RegexCharSet::insert_char_range(CharRange to_insert) {
-    if(this->negated) {
+    if (this->negated) {
         this->range_set.remove_char_range(to_insert);
     } else {
         this->range_set.insert_char_range(to_insert);
@@ -332,10 +332,10 @@ bool regex::RegexCharSet::is_negated() const {
 }
 
 size_t regex::RegexCharSet::get_priority() const {
-    if(this->range_set.empty()) {
+    if (this->range_set.empty()) {
         return 0;
     }
-    if(this->range_set.get_ranges().size() == 1 && this->range_set.get_ranges().front().is_single_char()) {
+    if (this->range_set.get_ranges().size() == 1 && this->range_set.get_ranges().front().is_single_char()) {
         return 2;
     }
     return 1;
@@ -343,7 +343,7 @@ size_t regex::RegexCharSet::get_priority() const {
 
 void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_level) const {
     output << get_indentation(indentation_level) << "CharSet(";
-    if(this->negated) {
+    if (this->negated) {
         output << "^";
     }
     
@@ -358,7 +358,7 @@ void regex::RegexCharSet::debug(std::ostream& output, const size_t indentation_l
 std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print) {    
     print_graphical_unicode_representation(output, to_print.start);
 
-    if(!to_print.is_single_char()) {
+    if (!to_print.is_single_char()) {
         output << "-";
         print_graphical_unicode_representation(output, to_print.end);
     }
@@ -367,7 +367,7 @@ std::ostream& regex::operator<<(std::ostream& output, const CharRange& to_print)
 }
 
 std::ostream& regex::operator<<(std::ostream& output, const regex::CharRangeSet& to_print) {
-    for(const CharRange range : to_print.get_ranges()) {
+    for (const CharRange range : to_print.get_ranges()) {
         assert(("CharRangeSet contains empty range! Please create an issue on github containing the used input!", !range.empty()));
         output << range;
     }

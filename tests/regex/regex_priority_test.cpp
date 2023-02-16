@@ -17,7 +17,7 @@ int main() {
         {U"(abc){2,10}", 12}
     };
 
-    for(const std::pair<std::u32string, size_t>& test : TEST_CASES) {
+    for (const std::pair<std::u32string, size_t>& test : TEST_CASES) {
         TEST_TRUE(regex::RegexParser(test.first).parse_regex()->get_priority() == test.second)
     }
     

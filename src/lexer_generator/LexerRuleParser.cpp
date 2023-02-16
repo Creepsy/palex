@@ -15,19 +15,19 @@ lexer_generator::LexerRuleParser::LexerRuleParser(LexerRuleLexer& input) : input
 //public
 
 std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::parse_token_rule() {
-    if(this->accept(Token::TokenType::END_OF_FILE)) {
+    if (this->accept(Token::TokenType::END_OF_FILE)) {
         return std::nullopt;
     }
 
     TokenRegexRule rule{};
 
-    if(this->accept(Token::TokenType::IGNORE)) {
+    if (this->accept(Token::TokenType::IGNORE)) {
         this->consume();
         rule.ignore_token = true;
     }
 
     const bool user_defined_priority = this->accept(Token::TokenType::ANGLE_PARENTHESIS_OPEN);
-    if(user_defined_priority) {
+    if (user_defined_priority) {
         this->consume();
         
         this->expect(Token::TokenType::INTEGER);
@@ -49,7 +49,7 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
 
     this->consume(Token::TokenType::END_OF_LINE);
 
-    if(!user_defined_priority) {
+    if (!user_defined_priority) {
         rule.priority = rule.regex_ast->get_priority();
     }
 
@@ -59,10 +59,10 @@ std::optional<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser:
 std::vector<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::parse_all_rules() {
     std::vector<TokenRegexRule> all_rules;
 
-    while(true) {
+    while (true) {
         std::optional<lexer_generator::TokenRegexRule> token_rule_result = this->parse_token_rule();
 
-        if(!token_rule_result.has_value()) {
+        if (!token_rule_result.has_value()) {
             break;
         }
 
@@ -75,7 +75,7 @@ std::vector<lexer_generator::TokenRegexRule> lexer_generator::LexerRuleParser::p
 //private
 
 void lexer_generator::LexerRuleParser::expect(const Token::TokenType type) {
-    if(!this->accept(type)) {
+    if (!this->accept(type)) {
         this->throw_parsing_err(type);
     }
 }

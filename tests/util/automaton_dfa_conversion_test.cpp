@@ -14,8 +14,8 @@ int main() {
         const sm::Automaton<int, int>::Connection& to_add, 
         std::vector<std::pair<int, std::set<size_t>>>& dfa_connections
     ) -> void {
-        for(size_t i = 0; i < dfa_connections.size(); i++) {
-            if(dfa_connections.at(i).first == to_add.value) {
+        for (size_t i = 0; i < dfa_connections.size(); i++) {
+            if (dfa_connections.at(i).first == to_add.value) {
                 dfa_connections.at(i).second.insert(to_add.target);
                 return;
             }

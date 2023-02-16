@@ -25,14 +25,14 @@ int main() {
         {"DUP_IDENT = \"a\"; DUP_IDENT = \"a\";", true}
     };
 
-    for(const TestCase& test : TEST_CASES) {
+    for (const TestCase& test : TEST_CASES) {
         std::stringstream input(test.input);
         lexer_generator::LexerRuleLexer lexer(input);
         lexer_generator::LexerRuleParser parser(lexer);
         
         std::vector<lexer_generator::TokenRegexRule> rules = parser.parse_all_rules();
 
-        if(test.should_fail) {
+        if (test.should_fail) {
             TEST_EXCEPT(lexer_generator::validate_rules(rules), palex_except::ValidationError);
         } else {
             lexer_generator::validate_rules(rules);
