@@ -7,7 +7,7 @@
 #include <json.h>
 
 #include "lexer_generator/lexer_automaton.h"
-#include "lexer_generator/LexerRuleParser.h"
+#include "lexer_generator/lang_recognition/LexerRuleParser.h"
 
 namespace code_gen {
     using LexerCodeGenerator_t = std::function<bool (

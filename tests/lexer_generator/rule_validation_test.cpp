@@ -2,9 +2,9 @@
 #include <string>
 #include <vector>
 
-#include "lexer_generator/LexerRuleLexer.h"
-#include "lexer_generator/LexerRuleParser.h"
-#include "lexer_generator/validation.h"
+#include "lexer_generator/lang_recognition/LexerRuleLexer.h"
+#include "lexer_generator/lang_recognition/LexerRuleParser.h"
+#include "lexer_generator/lang_recognition/validation.h"
 
 #include "util/palex_except.h"
 

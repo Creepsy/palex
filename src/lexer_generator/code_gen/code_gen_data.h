@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "lexer_generator/LexerRuleParser.h"
+#include "lexer_generator/lang_recognition/LexerRuleParser.h"
 
 namespace code_gen {
     struct TokenInfos {

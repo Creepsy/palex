@@ -7,10 +7,11 @@ set(PROJECT_SOURCES
     regex/regex_ast.cpp
     regex/RegexParser.cpp
 
-    lexer_generator/LexerRuleLexer.cpp
-    lexer_generator/LexerRuleParser.cpp
     lexer_generator/lexer_automaton.cpp
-    lexer_generator/validation.cpp
+
+    lexer_generator/lang_recognition/LexerRuleLexer.cpp
+    lexer_generator/lang_recognition/LexerRuleParser.cpp
+    lexer_generator/lang_recognition/validation.cpp
 
     lexer_generator/code_gen/cpp_code_gen.cpp
     lexer_generator/code_gen/lexer_generation.cpp
@@ -18,8 +19,8 @@ set(PROJECT_SOURCES
 
     templates/template_completion.cpp
 
-    parser_generator/ParserProductionParser.cpp
-    parser_generator/validation.cpp
+    parser_generator/lang_recognition/ParserProductionParser.cpp
+    parser_generator/lang_recognition/validation.cpp
 )
 
 set(PROJECT_HEADERS
@@ -33,10 +34,11 @@ set(PROJECT_HEADERS
     regex/regex_ast.cpp
     regex/RegexParser.cpp
 
-    lexer_generator/LexerRuleLexer.h
-    lexer_generator/LexerRuleParser.h
     lexer_generator/lexer_automaton.h
-    lexer_generator/validation.h
+
+    lexer_generator/lang_recognition/LexerRuleLexer.h
+    lexer_generator/lang_recognition/LexerRuleParser.h
+    lexer_generator/lang_recognition/validation.h
 
     lexer_generator/code_gen/cpp_code_gen.h
     lexer_generator/code_gen/lexer_generation.h
@@ -51,8 +53,8 @@ set(PROJECT_HEADERS
     
     ${CMAKE_SOURCE_DIR}/vendor/json.h
 
-    parser_generator/ParserProductionParser.h
-    parser_generator/validation.h
+    parser_generator/lang_recognition/ParserProductionParser.h
+    parser_generator/lang_recognition/validation.h
 )
 
 set(PROJECT_INLINE_FILES
@@ -62,9 +64,8 @@ set(PROJECT_INLINE_FILES
 )
 
 set(AUTO_GENERATED_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.cpp
-
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang_recognition/ParserProductionLexer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang_recognition/ParserProductionLexer.h
 )
 
 include(templates/all_template_headers.cmake)
@@ -78,9 +79,9 @@ target_link_libraries(lexergen palex_objects)
 
 add_custom_command(
     OUTPUT ${AUTO_GENERATED_FILES}
-    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator
+    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang_recognition
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/ParserProductionLexer.lrules
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang_recognition/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang_recognition/ParserProductionLexer.lrules
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_link_libraries(auto_generated_objects PRIVATE palex_objects)
