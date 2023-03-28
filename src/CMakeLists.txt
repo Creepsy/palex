@@ -29,6 +29,7 @@ set(PROJECT_HEADERS
     util/palex_except.h
     util/config_getters.h
     util/config_loader.h
+    util/Visitor.h
 
     regex/character_classes.h
     regex/regex_ast.cpp
