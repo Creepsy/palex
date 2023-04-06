@@ -21,6 +21,9 @@ set(PROJECT_SOURCES
 
     parser_generator/lang_recognition/ParserProductionParser.cpp
     parser_generator/lang_recognition/validation.cpp
+
+    parser_generator/shift_reduce_parsers/parser_tables.cpp
+
 )
 
 set(PROJECT_HEADERS
@@ -56,6 +59,8 @@ set(PROJECT_HEADERS
 
     parser_generator/lang_recognition/ParserProductionParser.h
     parser_generator/lang_recognition/validation.h
+
+    parser_generator/shift_reduce_parsers/parser_tables.h
 )
 
 set(PROJECT_INLINE_FILES

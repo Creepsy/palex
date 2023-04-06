@@ -90,6 +90,14 @@ bool parser_generator::operator<(const Production& first, const Production& seco
     return first.name == second.name && first.symbols < second.symbols;
 }
 
+bool parser_generator::operator==(const Symbol& first, const Symbol& second) {
+    return first.type == second.type && first.identifier == second.identifier;
+}
+
+bool parser_generator::operator==(const Production& first, const Production& second) {
+    return first.name == second.name && first.symbols == second.symbols;
+}
+
 std::ostream& parser_generator::operator<<(std::ostream& output, const Symbol& to_print) {
     if (to_print.type == Symbol::SymbolType::TERMINAL) {
         return output << "<" << to_print.identifier << ">";
