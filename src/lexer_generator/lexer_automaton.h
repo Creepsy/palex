@@ -11,7 +11,7 @@
 
 #include "regex/regex_ast.h"
 
-#include "lang_recognition/LexerRuleParser.h"
+#include "lang/LexerRuleParser.h"
 
 namespace lexer_generator {
     typedef sm::Automaton<std::u32string, regex::CharRangeSet> LexerAutomaton_t;

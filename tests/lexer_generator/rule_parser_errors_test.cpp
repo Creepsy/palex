@@ -1,7 +1,7 @@
 #include <sstream>
 
-#include "lexer_generator/lang_recognition/LexerRuleLexer.h"
-#include "lexer_generator/lang_recognition/LexerRuleParser.h"
+#include "lexer_generator/lang/LexerRuleLexer.h"
+#include "lexer_generator/lang/LexerRuleParser.h"
 
 #include "util/palex_except.h"
 

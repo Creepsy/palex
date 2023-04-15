@@ -7,7 +7,7 @@
 
 #include "util/palex_except.h"
 
-#include "parser_generator/lang_recognition/ParserProductionLexer.h"
+#include "parser_generator/lang/ParserProductionLexer.h"
 
 namespace parser_generator {
     struct Symbol {

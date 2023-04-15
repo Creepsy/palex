@@ -1,9 +1,9 @@
 #include <vector>
 #include <sstream>
 
-#include "parser_generator/lang_recognition/ParserProductionLexer.h"
-#include "parser_generator/lang_recognition/ParserProductionParser.h"
-#include "parser_generator/lang_recognition/validation.h"
+#include "parser_generator/lang/ParserProductionLexer.h"
+#include "parser_generator/lang/ParserProductionParser.h"
+#include "parser_generator/lang/validation.h"
 
 #include "util/palex_except.h"
 

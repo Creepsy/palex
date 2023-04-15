@@ -4,8 +4,8 @@
 #include <iostream>
 #include <filesystem>
 
-#include "lexer_generator/lang_recognition/LexerRuleLexer.h"
-#include "lexer_generator/lang_recognition/validation.h"
+#include "lexer_generator/lang/LexerRuleLexer.h"
+#include "lexer_generator/lang/validation.h"
 
 #include "util/palex_except.h"
 

@@ -7,7 +7,7 @@
 #include <json.h>
 
 #include "lexer_generator/lexer_automaton.h"
-#include "lexer_generator/lang_recognition/LexerRuleParser.h"
+#include "lexer_generator/lang/LexerRuleParser.h"
 
 #include "code_gen_data.h"
 

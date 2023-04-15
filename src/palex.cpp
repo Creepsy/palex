@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "parser_generator/lang_recognition/ParserProductionLexer.h"
-#include "parser_generator/lang_recognition/ParserProductionParser.h"
-#include "parser_generator/lang_recognition/validation.h"
+#include "parser_generator/lang/ParserProductionLexer.h"
+#include "parser_generator/lang/ParserProductionParser.h"
+#include "parser_generator/lang/validation.h"
 
 int main(int argc, char* argv[]) {  
     std::ifstream input("../examples/Parser.prules");

@@ -6,7 +6,7 @@
 #include <ostream>
 #include <variant>
 
-#include "parser_generator/lang_recognition/ParserProductionParser.h"
+#include "parser_generator/lang/ParserProductionParser.h"
 
 namespace parser_generator::shift_reduce_parsers {
     using ParserStateID_t = size_t;

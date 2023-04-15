@@ -1,8 +1,8 @@
 #include <sstream>
 #include <string>
 
-#include "parser_generator/lang_recognition/ParserProductionLexer.h"
-#include "parser_generator/lang_recognition/ParserProductionParser.h"
+#include "parser_generator/lang/ParserProductionLexer.h"
+#include "parser_generator/lang/ParserProductionParser.h"
 
 #include "util/palex_except.h"
 

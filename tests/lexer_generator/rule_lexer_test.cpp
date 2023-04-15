@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "lexer_generator/lang_recognition/LexerRuleLexer.h"
+#include "lexer_generator/lang/LexerRuleLexer.h"
 
 #include "../test_utils.h"
 
