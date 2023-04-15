@@ -32,3 +32,5 @@ generate_test_executable(TemplateEscapeCharacters templates/escape_characters_te
 
 generate_test_executable(ParserProductionParser parser_generator/production_parser_test.cpp)
 generate_test_executable(ParserProductionValidation parser_generator/production_validation_test.cpp)
+
+generate_test_executable(ActionConflict parser_generator/action_conflict_test.cpp)
