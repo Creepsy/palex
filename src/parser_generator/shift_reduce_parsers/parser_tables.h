@@ -5,6 +5,7 @@
 #include <set>
 #include <ostream>
 #include <variant>
+#include <optional>
 
 #include "parser_generator/lang/ParserProductionParser.h"
 
@@ -12,7 +13,6 @@ namespace parser_generator::shift_reduce_parsers {
     using ParserStateID_t = size_t;
     using Lookahead_t = std::vector<Symbol>;
 
-    // TODO: currently only class dummies
     // how to model different parser types (LR, LALR, ...) ? -> inheritance; but only for parser table? (not for production state & parser state)
     // only differ in how states are merged; so it should be sufficient to overwrite ParserTable state_insert or pass function on construction
 
@@ -39,12 +39,15 @@ namespace parser_generator::shift_reduce_parsers {
 
     class ProductionState {
         public:
-            ProductionState(const Production& production);
+            explicit ProductionState(const Production& production);
+            void add_lookahead(const Lookahead_t& to_add);
             bool is_completed() const;
+            std::optional<Symbol> get_current_symbol() const;
+            const std::set<Lookahead_t>& get_lookaheads() const;
             ProductionState advance() const;
             ~ProductionState();
         private:
-            ProductionState(const Production& production, const size_t position);
+            ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads);
             // not quite sure whether making this const causes problems later on...
             const Production& production;
             const size_t position;
@@ -57,11 +60,13 @@ namespace parser_generator::shift_reduce_parsers {
 
     class ParserState {
         public:
-            ParserState(const ParserStateID_t id);
+            explicit ParserState(const ParserStateID_t id);
+            ParserState(const ParserStateID_t id, const std::set<ProductionState>& initial_production_states);
+            const std::set<ProductionState>& get_production_states() const;
             ~ParserState();
         private:
             const ParserStateID_t id;
-            std::set<ProductionState> production_states;
+            std::set<ProductionState> production_states; // currently lookahead sensitive -> set of lookaheads makes no sense in ProductionState; change that
             // use assertions to validate
             std::set<Action> shift_reduce_table;
             std::set<Action> goto_table; 

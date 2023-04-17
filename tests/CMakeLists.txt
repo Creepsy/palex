@@ -34,3 +34,6 @@ generate_test_executable(ParserProductionParser parser_generator/production_pars
 generate_test_executable(ParserProductionValidation parser_generator/production_validation_test.cpp)
 
 generate_test_executable(ActionConflict parser_generator/action_conflict_test.cpp)
+generate_test_executable(FirstSet parser_generator/first_set_test.cpp)
+generate_test_executable(FirstSetError parser_generator/first_set_error_test.cpp)
+generate_test_executable(FollowTerminals parser_generator/follow_terminals_test.cpp)

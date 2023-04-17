@@ -39,19 +39,34 @@ namespace parser_generator::shift_reduce_parsers {
         : production(production), position(0) {
     }
 
+    void ProductionState::add_lookahead(const Lookahead_t& to_add) {
+        this->lookaheads.insert(to_add);
+    }
+
     bool ProductionState::is_completed() const {
         return this->position == this->production.symbols.size();
+    }
+
+    std::optional<Symbol> ProductionState::get_current_symbol() const {
+        if (this->is_completed()) {
+            return std::nullopt;
+        }
+        return this->production.symbols[this->position];
+    }
+
+    const std::set<Lookahead_t>& ProductionState::get_lookaheads() const {
+        return this->lookaheads;
     }
 
     ProductionState ProductionState::advance() const {
         if (this->is_completed()) {
             throw std::runtime_error("Tried to advance the position past the end of the rule!");
         }
-        return ProductionState(this->production, this->position + 1);
+        return ProductionState(this->production, this->position + 1, this->lookaheads);
     }
 
-    ProductionState::ProductionState(const Production& production, const size_t position) 
-    : production(production), position(position) {
+    ProductionState::ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads) 
+    : production(production), position(position), lookaheads(lookaheads) {
         
     }
         
@@ -59,6 +74,15 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     ParserState::ParserState(const ParserStateID_t id) : id(id) {
+    }
+
+    ParserState::ParserState(const ParserStateID_t id, const std::set<ProductionState>& initial_production_states)
+     : id(id), production_states(initial_production_states) {
+
+    }
+
+    const std::set<ProductionState>& ParserState::get_production_states() const {
+        return this->production_states;
     }
         
     ParserState::~ParserState() {
@@ -169,9 +193,12 @@ namespace parser_generator::shift_reduce_parsers {
         output << to_print.production.name << " =";
         for (size_t i = 0; i < to_print.production.symbols.size(); i++) {
             if (i == to_print.position) {
-                output << " |";
+                output << " .";
             }
             output << " " << to_print.production.symbols[i];
+        }
+        if (to_print.is_completed()) {
+            output << " .";
         }
         return output << " " << to_print.lookaheads;
     }

@@ -23,7 +23,7 @@ set(PROJECT_SOURCES
     parser_generator/lang/validation.cpp
 
     parser_generator/shift_reduce_parsers/parser_tables.cpp
-
+    parser_generator/shift_reduce_parsers/parser_table_generation.cpp
 )
 
 set(PROJECT_HEADERS
@@ -61,6 +61,7 @@ set(PROJECT_HEADERS
     parser_generator/lang/validation.h
 
     parser_generator/shift_reduce_parsers/parser_tables.h
+    parser_generator/shift_reduce_parsers/parser_table_generation.h
 )
 
 set(PROJECT_INLINE_FILES
