@@ -18,12 +18,12 @@ namespace parser_generator {
     struct Token {
         enum class TokenType {
             UNDEFINED,
-			END_OF_FILE,
-			PRODUCTION,
-			TOKEN,
-			EQ,
-			EOL,
-			WSPACE
+            END_OF_FILE,
+            PRODUCTION,
+            TOKEN,
+            EQ,
+            EOL,
+            WSPACE
         };
 
         TokenType type;
@@ -41,12 +41,12 @@ namespace parser_generator {
             bool end() const;
         private:
             struct Fallback {
-				size_t token_length;
-				CharacterPosition next_token_position;
-				Token::TokenType type;
-			};
+                size_t token_length;
+                CharacterPosition next_token_position;
+                Token::TokenType type;
+            };
 
-			Token try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start);
+            Token try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start);
             char32_t get_char();
 
             std::istream& input;
