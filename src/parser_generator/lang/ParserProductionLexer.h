@@ -19,6 +19,7 @@ namespace parser_generator {
         enum class TokenType {
             UNDEFINED,
             END_OF_FILE,
+            ENTRY_PRODUCTION,
             PRODUCTION,
             TOKEN,
             EQ,

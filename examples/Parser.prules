@@ -1,3 +1,5 @@
+$S = addition;
+
 addition = addition <ADD> multiplication;
 addition = multiplication;
 

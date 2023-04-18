@@ -23,6 +23,7 @@ std::set<std::string> collect_production_names(const std::vector<parser_generato
 void parser_generator::validate_productions(const std::vector<Production>& to_check) {
     check_for_missing_productions(to_check);
     check_for_duplicate_productions(to_check);
+    check_for_entry(to_check);
 }
 
 void parser_generator::check_for_missing_productions(const std::vector<Production>& to_check) {
@@ -50,4 +51,13 @@ void parser_generator::check_for_duplicate_productions(const std::vector<Product
         }
         encountered_productions.insert(prod);
     }
+}
+
+void parser_generator::check_for_entry(const std::vector<Production>& to_check) {
+    for (const Production& production : to_check) {
+        if (production.is_entry()) {
+            return;
+        }
+    }
+    throw palex_except::ValidationError("No entry production found!");
 }

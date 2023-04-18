@@ -10,6 +10,8 @@
 #include "parser_generator/lang/ParserProductionLexer.h"
 
 namespace parser_generator {
+    const std::string ENTRY_PRODUCTION_NAME = "$S";
+    
     struct Symbol {
         enum class SymbolType {
             TERMINAL,
@@ -22,8 +24,9 @@ namespace parser_generator {
     
     struct Production {
         std::string name;
-
         std::vector<Symbol> symbols;
+
+        bool is_entry() const;
     };
 
     class ParserProductionParser {

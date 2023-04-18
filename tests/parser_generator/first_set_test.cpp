@@ -33,6 +33,14 @@ int main() {
                 Lookahead_t{TERMINAL("INT"), TERMINAL("MUL"), TERMINAL("INT")},
                 Lookahead_t{TERMINAL("INT"), TERMINAL("ADD"), TERMINAL("INT")}
             }
+        },
+        {
+            "$S", 
+            std::set<Lookahead_t>{
+                Lookahead_t{TERMINAL("INT")},
+                Lookahead_t{TERMINAL("INT"), TERMINAL("MUL"), TERMINAL("INT")},
+                Lookahead_t{TERMINAL("INT"), TERMINAL("ADD"), TERMINAL("INT")}
+            }
         }
     };
     std::stringstream input(
@@ -41,6 +49,7 @@ int main() {
         "multiplication = number;"
         "addition = addition <ADD> multiplication;"
         "addition = multiplication;"
+        "$S = addition;"
     );
     parser_generator::ParserProductionLexer lexer(input);
     parser_generator::ParserProductionParser parser(lexer); 

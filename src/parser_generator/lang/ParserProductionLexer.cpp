@@ -16,9 +16,10 @@ void parser_generator::CharacterPosition::advance(const char32_t consumed) {
 }
 
 
-std::array<std::string, 7> TOKEN_TYPE_TO_STRING {
+std::array<std::string, 8> TOKEN_TYPE_TO_STRING {
     "UNDEFINED",
     "END_OF_FILE",
+    "ENTRY_PRODUCTION",
     "PRODUCTION",
     "TOKEN",
     "EQ",
@@ -50,17 +51,20 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
         switch(state) {
             case 0:
                 switch(curr) {
-                    case 97 ... 122:
+                    case 36:
                         state = 1;
                         break;
-                    case 60:
+                    case 97 ... 122:
                         state = 3;
                         break;
+                    case 60:
+                        state = 5;
+                        break;
                     case 61:
-                        state = 7;
+                        state = 9;
                         break;
                     case 59:
-                        state = 8;
+                        state = 10;
                         break;
                     case 9 ... 13:
                     case 32:
@@ -72,7 +76,7 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
                     case 8239:
                     case 8297:
                     case 12288:
-                        state = 9;
+                        state = 11;
                         break;
                     default:
                         state = ERROR_STATE;
@@ -80,62 +84,44 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
                 }
                 break;
             case 1:
-                this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
                 switch(curr) {
-                    case 48 ... 57:
-                    case 95:
-                    case 97 ... 122:
+                    case 83:
                         state = 2;
                         break;
                     default:
-                        return Token{Token::TokenType::PRODUCTION, identifier, token_start};
+                        state = ERROR_STATE;
+                        break;
                 }
                 break;
             case 2:
+                return Token{Token::TokenType::ENTRY_PRODUCTION, identifier, token_start};
+            case 3:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
                 switch(curr) {
                     case 48 ... 57:
                     case 95:
                     case 97 ... 122:
-                        state = 2;
+                        state = 4;
                         break;
                     default:
                         return Token{Token::TokenType::PRODUCTION, identifier, token_start};
                 }
                 break;
-            case 3:
+            case 4:
+                this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
                 switch(curr) {
-                    case 65 ... 90:
+                    case 48 ... 57:
+                    case 95:
+                    case 97 ... 122:
                         state = 4;
                         break;
                     default:
-                        state = ERROR_STATE;
-                        break;
-                }
-                break;
-            case 4:
-                switch(curr) {
-                    case 48 ... 57:
-                    case 65 ... 90:
-                    case 95:
-                        state = 5;
-                        break;
-                    case 62:
-                        state = 6;
-                        break;
-                    default:
-                        state = ERROR_STATE;
-                        break;
+                        return Token{Token::TokenType::PRODUCTION, identifier, token_start};
                 }
                 break;
             case 5:
                 switch(curr) {
-                    case 48 ... 57:
                     case 65 ... 90:
-                    case 95:
-                        state = 5;
-                        break;
-                    case 62:
                         state = 6;
                         break;
                     default:
@@ -144,12 +130,42 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
                 }
                 break;
             case 6:
-                return Token{Token::TokenType::TOKEN, identifier, token_start};
+                switch(curr) {
+                    case 48 ... 57:
+                    case 65 ... 90:
+                    case 95:
+                        state = 7;
+                        break;
+                    case 62:
+                        state = 8;
+                        break;
+                    default:
+                        state = ERROR_STATE;
+                        break;
+                }
+                break;
             case 7:
-                return Token{Token::TokenType::EQ, identifier, token_start};
+                switch(curr) {
+                    case 48 ... 57:
+                    case 65 ... 90:
+                    case 95:
+                        state = 7;
+                        break;
+                    case 62:
+                        state = 8;
+                        break;
+                    default:
+                        state = ERROR_STATE;
+                        break;
+                }
+                break;
             case 8:
-                return Token{Token::TokenType::EOL, identifier, token_start};
+                return Token{Token::TokenType::TOKEN, identifier, token_start};
             case 9:
+                return Token{Token::TokenType::EQ, identifier, token_start};
+            case 10:
+                return Token{Token::TokenType::EOL, identifier, token_start};
+            case 11:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
                 switch(curr) {
                     case 9 ... 13:
@@ -162,13 +178,13 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
                     case 8239:
                     case 8297:
                     case 12288:
-                        state = 10;
+                        state = 12;
                         break;
                     default:
                         return Token{Token::TokenType::WSPACE, identifier, token_start};
                 }
                 break;
-            case 10:
+            case 12:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
                 switch(curr) {
                     case 9 ... 13:
@@ -181,7 +197,7 @@ parser_generator::Token parser_generator::ParserProductionLexer::next_token() {
                     case 8239:
                     case 8297:
                     case 12288:
-                        state = 10;
+                        state = 12;
                         break;
                     default:
                         return Token{Token::TokenType::WSPACE, identifier, token_start};

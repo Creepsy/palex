@@ -4,6 +4,10 @@
 
 #include "util/utf8.h"
 
+bool parser_generator::Production::is_entry() const {
+    return this->name == ENTRY_PRODUCTION_NAME;
+}
+
 parser_generator::ParserProductionParser::ParserProductionParser(ParserProductionLexer& input) : input(input) {
     this->consume();
 }
@@ -14,8 +18,11 @@ std::optional<parser_generator::Production> parser_generator::ParserProductionPa
     }
 
     Production parsed{};
-    
-    parsed.name = utf8::unicode_to_utf8(this->consume(Token::TokenType::PRODUCTION).identifier);
+    if (this->accept(Token::TokenType::PRODUCTION) || this->accept(Token::TokenType::ENTRY_PRODUCTION)) {
+        parsed.name = utf8::unicode_to_utf8(this->consume().identifier);
+    } else {
+        this->expect(Token::TokenType::PRODUCTION); // error because no production name was given
+    }
     this->consume(Token::TokenType::EQ);
 
     while (this->accept(Token::TokenType::PRODUCTION) || this->accept(Token::TokenType::TOKEN)) {

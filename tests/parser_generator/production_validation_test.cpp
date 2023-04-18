@@ -16,9 +16,10 @@ struct TestCase {
 
 int main() {
     const std::vector<TestCase> TEST_CASES = {
-        {"addition = addition <ADD> number; number = <INT>;", false},
-        {"addition = addition <ADD> unknown; number = <INT>;", true},
-        {"addition = addition <ADD> number; number = <INT>; number = <INT>;", true},
+        {"$S = addition; addition = addition <ADD> number; number = <INT>;", false},
+        {"addition = addition <ADD> number; number = <INT>;", true},
+        {"$S = addition; addition = addition <ADD> unknown; number = <INT>;", true},
+        {"$S = addition; addition = addition <ADD> number; number = <INT>; number = <INT>;", true}
     };
 
     for (const TestCase& test : TEST_CASES) {

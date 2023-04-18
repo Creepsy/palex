@@ -14,7 +14,7 @@
 #include "../test_utils.h"
 
 int main() {
-    std::stringstream input("infinite_recursion = infinite_recursion <INT>;");
+    std::stringstream input("$S = infinite_recursion; infinite_recursion = infinite_recursion <INT>;");
     parser_generator::ParserProductionLexer lexer(input);
     parser_generator::ParserProductionParser parser(lexer);
     std::vector<parser_generator::Production> productions = parser.parse_all_productions();

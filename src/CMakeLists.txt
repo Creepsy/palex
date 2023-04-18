@@ -84,8 +84,9 @@ add_executable(lexergen lexergen.cpp)
 target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(lexergen palex_objects)
 
-add_custom_command(
-    OUTPUT ${AUTO_GENERATED_FILES}
+# use add_custom_target instead of add_custom_command as it lead to build order conflicts. Is there any better solution?
+add_custom_target(
+    autogen_objects
     COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang/palex.cfg ${CMAKE_CURRENT_SOURCE_DIR}/parser_generator/lang/ParserProductionLexer.lrules
@@ -97,3 +98,4 @@ target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_D
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(palex palex_objects auto_generated_objects)
+add_dependencies(palex autogen_objects)
