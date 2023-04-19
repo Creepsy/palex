@@ -13,17 +13,12 @@ namespace parser_generator::shift_reduce_parsers {
     using ParserStateID_t = size_t;
     using Lookahead_t = std::vector<Symbol>;
 
-    // how to model different parser types (LR, LALR, ...) ? -> inheritance; but only for parser table? (not for production state & parser state)
-    // only differ in how states are merged; so it should be sufficient to overwrite ParserTable state_insert or pass function on construction
-
-    // Currently only LR(n) implementation adapt later for further types
-
     struct Action {
         struct GotoParameters {
             ParserStateID_t next_state;
             Symbol reduced_symbol;
         };
-        struct ShiftParameters { // symbol to shift is included in lookahead?
+        struct ShiftParameters { // symbol to shift is included in lookahead
             ParserStateID_t next_state;
             Lookahead_t lookahead;
         };
@@ -37,7 +32,7 @@ namespace parser_generator::shift_reduce_parsers {
         static bool conflict(const Action& first, const Action& second);
     };
 
-    class ProductionState {
+    class ProductionState { // !!! WARNING !!! operator< is NOT lookahead-sensitive -> easier to use that way
         public:
             explicit ProductionState(const Production& production);
             void add_lookahead(const Lookahead_t& to_add);
@@ -48,13 +43,12 @@ namespace parser_generator::shift_reduce_parsers {
             ~ProductionState();
         private:
             ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads);
-            // not quite sure whether making this const causes problems later on...
             const Production& production;
             const size_t position;
-            std::set<Lookahead_t> lookaheads;
+            std::set<Lookahead_t> lookaheads; 
 
             friend std::ostream& operator<<(std::ostream& output, const ProductionState& to_print);
-            friend bool operator<(const ProductionState& first, const ProductionState& second); 
+            friend bool operator<(const ProductionState& first, const ProductionState& second);  
             friend bool operator==(const ProductionState& first, const ProductionState& second);
     };
 
@@ -66,24 +60,13 @@ namespace parser_generator::shift_reduce_parsers {
             ~ParserState();
         private:
             const ParserStateID_t id;
-            std::set<ProductionState> production_states; // currently lookahead sensitive -> set of lookaheads makes no sense in ProductionState; change that
-            // use assertions to validate
+            std::set<ProductionState> production_states;
             std::set<Action> shift_reduce_table;
             std::set<Action> goto_table; 
 
             friend std::ostream& operator<<(std::ostream& output, const ParserState& to_print);
             friend bool operator<(const ParserState& first, const ParserState& second);
     };
-
-    class ParserTable {
-        public:
-            ParserTable();
-            ~ParserTable();
-        private:
-            std::set<ParserState> states;
-
-            friend std::ostream& operator<<(std::ostream& output, const ParserTable& to_print);
-    };    
 
     bool operator==(const Action::GotoParameters& first, const Action::GotoParameters& second);
     bool operator==(const Action::ShiftParameters& first, const Action::ShiftParameters& second);
@@ -105,7 +88,6 @@ namespace parser_generator::shift_reduce_parsers {
     std::ostream& operator<<(std::ostream& output, const Action& to_print);
     std::ostream& operator<<(std::ostream& output, const ProductionState& to_print);
     std::ostream& operator<<(std::ostream& output, const ParserState& to_print);
-    std::ostream& operator<<(std::ostream& output, const ParserTable& to_print);
 }
 
 namespace std {

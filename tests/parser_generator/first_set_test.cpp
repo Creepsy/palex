@@ -8,7 +8,7 @@
 #include "parser_generator/lang/validation.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
-#include "parser_generator/shift_reduce_parsers/parser_tables.h"
+#include "parser_generator/shift_reduce_parsers/parser_state.h"
 
 #include "../test_utils.h"
 

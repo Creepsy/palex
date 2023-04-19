@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "parser_generator/shift_reduce_parsers/parser_tables.h"
+#include "parser_generator/shift_reduce_parsers/parser_state.h"
 
 #include "../test_utils.h"
 

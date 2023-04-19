@@ -3,7 +3,7 @@
 #include "parser_generator/lang/ParserProductionParser.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
-#include "parser_generator/shift_reduce_parsers/parser_tables.h"
+#include "parser_generator/shift_reduce_parsers/parser_state.h"
 
 #define TERMINAL(s) parser_generator::Symbol{parser_generator::Symbol::SymbolType::TERMINAL, s}
 #define NONTERMINAL(s) parser_generator::Symbol{parser_generator::Symbol::SymbolType::NONTERMINAL, s}

@@ -1,4 +1,4 @@
-#include "parser_tables.h"
+#include "parser_state.h"
 
 #include <iterator>
 #include <cassert>
@@ -88,12 +88,6 @@ namespace parser_generator::shift_reduce_parsers {
     ParserState::~ParserState() {
     }
 
-    ParserTable::ParserTable() {
-    }
-
-    ParserTable::~ParserTable() {
-    }
-
     bool operator==(const Action::GotoParameters& first, const Action::GotoParameters& second) {
         return first.next_state == second.next_state && first.reduced_symbol == second.reduced_symbol;
     }
@@ -155,10 +149,7 @@ namespace parser_generator::shift_reduce_parsers {
         if (first.production < second.production) {
             return true;
         }
-        if (first.production == second.production && first.position < second.position) {
-            return true;
-        }
-        return first.position == second.position && first.lookaheads < second.lookaheads;
+        return first.production == second.production && first.position < second.position;
     }
 
     bool operator<(const ParserState& first, const ParserState& second) {
@@ -213,16 +204,6 @@ namespace parser_generator::shift_reduce_parsers {
         }
         for (const Action& action : to_print.goto_table) {
             output << "\t" << action << "\n";
-        }
-        return output;
-    }
-
-    std::ostream& operator<<(std::ostream& output, const ParserTable& to_print) {
-        for (auto state_iter = to_print.states.begin(); state_iter != to_print.states.end(); state_iter++) {
-            output << *state_iter;
-            if (std::distance(state_iter, to_print.states.end()) != 1) {
-                output << "\n";
-            }
         }
         return output;
     }

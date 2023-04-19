@@ -7,6 +7,8 @@
 
 #include "util/palex_except.h"
 
+#include "parser_state_comparators.h"
+
 namespace parser_generator::shift_reduce_parsers {
     // helper functions
     FirstSet_t generate_incomplete_first_set(const std::set<Production>& productions, const size_t lookahead, const FirstSet_t& previous_iter = {});
@@ -100,6 +102,16 @@ namespace parser_generator::shift_reduce_parsers {
         );
         return truncated;
     }
+
+    template<bool(*state_compare_T)(const ParserState&, const ParserState&)>
+    ParserTable<state_compare_T>::ParserTable() {
+    }
+
+    template<bool(*state_compare_T)(const ParserState&, const ParserState&)>
+    ParserTable<state_compare_T>::~ParserTable() {
+    }
+
+    template class ParserTable<lalr_state_compare>;
 
     FirstSet_t generate_first_set(const std::set<Production>& productions, const size_t lookahead) {
         FirstSet_t first_set = generate_incomplete_first_set(productions, lookahead);

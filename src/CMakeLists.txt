@@ -22,8 +22,9 @@ set(PROJECT_SOURCES
     parser_generator/lang/ParserProductionParser.cpp
     parser_generator/lang/validation.cpp
 
-    parser_generator/shift_reduce_parsers/parser_tables.cpp
+    parser_generator/shift_reduce_parsers/parser_state.cpp
     parser_generator/shift_reduce_parsers/parser_table_generation.cpp
+    parser_generator/shift_reduce_parsers/parser_state_comparators.cpp
 )
 
 set(PROJECT_HEADERS
@@ -60,8 +61,9 @@ set(PROJECT_HEADERS
     parser_generator/lang/ParserProductionParser.h
     parser_generator/lang/validation.h
 
-    parser_generator/shift_reduce_parsers/parser_tables.h
+    parser_generator/shift_reduce_parsers/parser_state.h
     parser_generator/shift_reduce_parsers/parser_table_generation.h
+    parser_generator/shift_reduce_parsers/parser_state_comparators.h
 )
 
 set(PROJECT_INLINE_FILES
