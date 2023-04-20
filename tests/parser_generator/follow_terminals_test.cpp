@@ -2,8 +2,8 @@
 
 #include "parser_generator/lang/ParserProductionParser.h"
 
-#include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
 #include "parser_generator/shift_reduce_parsers/parser_state.h"
+#include "parser_generator/shift_reduce_parsers/state_lookahead.h"
 
 #define TERMINAL(s) parser_generator::Symbol{parser_generator::Symbol::SymbolType::TERMINAL, s}
 #define NONTERMINAL(s) parser_generator::Symbol{parser_generator::Symbol::SymbolType::NONTERMINAL, s}
@@ -28,14 +28,12 @@ int main() {
     prod1_state.add_lookahead(Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
     ProductionState prod3_state = ProductionState(prod3);
     prod3_state.add_lookahead(Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
-    const ParserState state1(
-        0, 
+    const ParserState state1( 
         std::set<ProductionState>{
             prod1_state, ProductionState(prod2), ProductionState(prod3_state)
         }
     );
     const ParserState state2(
-        0, 
         std::set<ProductionState>{
             prod1_state.advance(), ProductionState(prod2), prod3_state
         }

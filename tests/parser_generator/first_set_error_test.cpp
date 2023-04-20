@@ -10,6 +10,7 @@
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
 #include "parser_generator/shift_reduce_parsers/parser_state.h"
+#include "parser_generator/shift_reduce_parsers/state_lookahead.h"
 
 #include "../test_utils.h"
 
