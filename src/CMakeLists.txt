@@ -25,6 +25,7 @@ set(PROJECT_SOURCES
     parser_generator/shift_reduce_parsers/parser_state.cpp
     parser_generator/shift_reduce_parsers/parser_table_generation.cpp
     parser_generator/shift_reduce_parsers/parser_state_comparators.cpp
+    parser_generator/shift_reduce_parsers/state_lookahead.cpp
 )
 
 set(PROJECT_HEADERS
@@ -34,6 +35,8 @@ set(PROJECT_HEADERS
     util/config_getters.h
     util/config_loader.h
     util/Visitor.h
+    util/VectorReference.h
+
 
     regex/character_classes.h
     regex/regex_ast.cpp
@@ -64,6 +67,7 @@ set(PROJECT_HEADERS
     parser_generator/shift_reduce_parsers/parser_state.h
     parser_generator/shift_reduce_parsers/parser_table_generation.h
     parser_generator/shift_reduce_parsers/parser_state_comparators.h
+    parser_generator/shift_reduce_parsers/state_lookahead.h
 )
 
 set(PROJECT_INLINE_FILES

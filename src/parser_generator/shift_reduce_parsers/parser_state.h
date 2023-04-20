@@ -23,7 +23,7 @@ namespace parser_generator::shift_reduce_parsers {
             Lookahead_t lookahead;
         };
         struct ReduceParameters {
-            const Production& to_reduce;
+            const Production to_reduce;
             Lookahead_t lookahead;
         };
 
@@ -35,15 +35,18 @@ namespace parser_generator::shift_reduce_parsers {
     class ProductionState { // !!! WARNING !!! operator< is NOT lookahead-sensitive -> easier to use that way
         public:
             explicit ProductionState(const Production& production);
-            void add_lookahead(const Lookahead_t& to_add);
+            ProductionState(const Production& production, const std::set<Lookahead_t>& lookaheads);
+            ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads);
+            bool add_lookahead(const Lookahead_t& to_add); // returns false when the lookahead already exists, otherwise true
             bool is_completed() const;
             std::optional<Symbol> get_current_symbol() const;
             const std::set<Lookahead_t>& get_lookaheads() const;
+            const Production& get_production() const;
+            size_t get_position() const;
             ProductionState advance() const;
             ~ProductionState();
         private:
-            ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads);
-            const Production& production;
+            const Production production;
             const size_t position;
             std::set<Lookahead_t> lookaheads; 
 
@@ -54,18 +57,23 @@ namespace parser_generator::shift_reduce_parsers {
 
     class ParserState {
         public:
-            explicit ParserState(const ParserStateID_t id);
-            ParserState(const ParserStateID_t id, const std::set<ProductionState>& initial_production_states);
+            explicit ParserState();
+            ParserState(const std::set<ProductionState>& initial_production_states);
+            void merge(const ParserState& to_merge);
+            void add_action(const Action& to_add);
+            bool add_production_state(const ProductionState& to_add); // returns whether the state changed
+            ParserState advance_by(const Symbol& to_advance_by) const;
             const std::set<ProductionState>& get_production_states() const;
             ~ParserState();
         private:
-            const ParserStateID_t id;
             std::set<ProductionState> production_states;
-            std::set<Action> shift_reduce_table;
-            std::set<Action> goto_table; 
+            std::set<Action> action_table;
+
+            bool conflicts_with(const Action& to_check) const;
 
             friend std::ostream& operator<<(std::ostream& output, const ParserState& to_print);
             friend bool operator<(const ParserState& first, const ParserState& second);
+            friend bool operator==(const ParserState& first, const ParserState& second);
     };
 
     bool operator==(const Action::GotoParameters& first, const Action::GotoParameters& second);
@@ -73,6 +81,7 @@ namespace parser_generator::shift_reduce_parsers {
     bool operator==(const Action::ReduceParameters& first, const Action::ReduceParameters& second);
     bool operator==(const Action& first, const Action& second);
     bool operator==(const ProductionState& first, const ProductionState& second);
+    bool operator==(const ParserState& first, const ParserState& second);
 
     bool operator!=(const Action::GotoParameters& first, const Action::GotoParameters& second);
     bool operator!=(const Action::ShiftParameters& first, const Action::ShiftParameters& second);

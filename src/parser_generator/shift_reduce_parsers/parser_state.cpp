@@ -3,6 +3,8 @@
 #include <iterator>
 #include <cassert>
 #include <stdexcept>
+#include <algorithm>
+#include <sstream>
 
 #include "util/Visitor.h"
 
@@ -26,7 +28,6 @@ namespace parser_generator::shift_reduce_parsers {
                     return f.reduced_symbol == s.reduced_symbol && f != s; 
                 },
                 [](const auto& f, const auto& s) -> bool { 
-                    assert(false && "BUG: Incompatible action types! shift- / reduce-actions should be seperated from goto-actions.");
                     return false; 
                 }
             },
@@ -35,12 +36,24 @@ namespace parser_generator::shift_reduce_parsers {
         );
     }
 
-    ProductionState::ProductionState(const Production& production)
-        : production(production), position(0) {
+    ProductionState::ProductionState(const Production& production) : ProductionState(production, 0, {}) {
     }
 
-    void ProductionState::add_lookahead(const Lookahead_t& to_add) {
+    ProductionState::ProductionState(const Production& production, const std::set<Lookahead_t>& lookaheads) : ProductionState(production, 0, lookaheads) {
+
+    }
+
+    ProductionState::ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads) 
+    : production(production), position(std::min(position, production.symbols.size())), lookaheads(lookaheads) {
+
+    }
+
+    bool ProductionState::add_lookahead(const Lookahead_t& to_add) {
+        if (this->lookaheads.find(to_add) != this->lookaheads.end()) {
+            return false;
+        }
         this->lookaheads.insert(to_add);
+        return true;
     }
 
     bool ProductionState::is_completed() const {
@@ -58,34 +71,100 @@ namespace parser_generator::shift_reduce_parsers {
         return this->lookaheads;
     }
 
+    const Production& ProductionState::get_production() const {
+        return this->production;
+    }
+
+    size_t ProductionState::get_position() const {
+        return this->position;
+    }
+
+
     ProductionState ProductionState::advance() const {
         if (this->is_completed()) {
             throw std::runtime_error("Tried to advance the position past the end of the rule!");
         }
         return ProductionState(this->production, this->position + 1, this->lookaheads);
     }
-
-    ProductionState::ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads) 
-    : production(production), position(position), lookaheads(lookaheads) {
-        
-    }
         
     ProductionState::~ProductionState() {
     }
 
-    ParserState::ParserState(const ParserStateID_t id) : id(id) {
+    ParserState::ParserState() {
     }
 
-    ParserState::ParserState(const ParserStateID_t id, const std::set<ProductionState>& initial_production_states)
-     : id(id), production_states(initial_production_states) {
+    ParserState::ParserState(const std::set<ProductionState>& initial_production_states)
+     : production_states(initial_production_states) {
 
+    }
+
+    void ParserState::merge(const ParserState& to_merge) {
+        for (const ProductionState& production_state : to_merge.production_states) {
+            this->add_production_state(production_state);
+        }
+        for (const Action& action : to_merge.action_table) {
+            if (this->conflicts_with(action)) {
+                std::stringstream err;
+                err << "Conflict occured on state merge:\n" 
+                    << "State A:\n" << *this
+                    << "State B:\n" << to_merge;
+                throw std::runtime_error(err.str());
+            }
+            this->action_table.insert(action);
+        }
+    }
+
+    void ParserState::add_action(const Action& to_add) {
+        if (this->conflicts_with(to_add)) {
+            std::stringstream err;
+            err << "The action conflicts with the state it is supposed to be in:\n" 
+                << "Action: " << to_add
+                << "State:\n" << *this;
+            throw std::runtime_error(err.str());
+        }
+        this->action_table.insert(to_add);
+    }
+
+    bool ParserState::add_production_state(const ProductionState& to_add) {
+        const auto production_ptr = this->production_states.find(to_add);
+        if (production_ptr == this->production_states.end()) {
+            this->production_states.insert(to_add);
+            return true;
+        }
+        
+        const std::set<Lookahead_t> existent_lookaheads = production_ptr->get_lookaheads();
+        std::set<Lookahead_t> union_lookaheads = existent_lookaheads;
+        union_lookaheads.insert(to_add.get_lookaheads().begin(), to_add.get_lookaheads().end());
+
+        this->production_states.erase(to_add);
+        this->production_states.insert(ProductionState(to_add.get_production(), to_add.get_position(), union_lookaheads));
+        return existent_lookaheads != union_lookaheads;
+    }
+
+    ParserState ParserState::advance_by(const Symbol& to_advance_by) const {
+        std::set<ProductionState> advanced_production_states;
+        for (const ProductionState& production_state : this->production_states) {
+            if (!production_state.is_completed() && production_state.get_current_symbol() == to_advance_by) {
+                advanced_production_states.insert(production_state.advance());
+            }
+        }
+        assert((!advanced_production_states.empty()) && "BUG: Tried to advance into an empty state!");
+        return ParserState(advanced_production_states);
     }
 
     const std::set<ProductionState>& ParserState::get_production_states() const {
         return this->production_states;
     }
-        
+
     ParserState::~ParserState() {
+    }
+
+    bool ParserState::conflicts_with(const Action& to_check) const {
+        return std::any_of(
+            this->action_table.begin(), 
+            this->action_table.end(), 
+            [&](const Action& candidate) -> bool { return Action::conflict(to_check, candidate); }
+        );
     }
 
     bool operator==(const Action::GotoParameters& first, const Action::GotoParameters& second) {
@@ -106,6 +185,11 @@ namespace parser_generator::shift_reduce_parsers {
 
     bool operator==(const ProductionState& first, const ProductionState& second) {
         return first.production == second.production && first.position == second.position && first.lookaheads == second.lookaheads;
+    }
+
+    bool operator==(const ParserState& first, const ParserState& second) {
+        // actions are defined by production states -> seperate func later
+        return first.production_states == second.production_states; // && first.shift_reduce_table == second.shift_reduce_table && first.goto_table == second.goto_table;
     }
 
     bool operator!=(const Action::GotoParameters& first, const Action::GotoParameters& second) {
@@ -156,10 +240,7 @@ namespace parser_generator::shift_reduce_parsers {
         if (first.production_states < second.production_states) {
             return true;
         }
-        if (first.production_states == second.production_states && first.shift_reduce_table < second.shift_reduce_table) {
-            return true;
-        }
-        return first.shift_reduce_table == second.shift_reduce_table && first.goto_table < second.goto_table; 
+        return first.production_states == second.production_states && first.action_table < second.action_table;
     }
 
     std::ostream& operator<<(std::ostream& output, const Action& to_print) {
@@ -195,14 +276,10 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     std::ostream& operator<<(std::ostream& output, const ParserState& to_print) {
-        output << to_print.id << ":\n";
         for (const ProductionState& production_state : to_print.production_states) {
             output << "\t" << production_state << "\n";
         }
-        for (const Action& action : to_print.shift_reduce_table) {
-            output << "\t" << action << "\n";
-        }
-        for (const Action& action : to_print.goto_table) {
+        for (const Action& action : to_print.action_table) {
             output << "\t" << action << "\n";
         }
         return output;

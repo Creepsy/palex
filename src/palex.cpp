@@ -6,6 +6,8 @@
 #include "parser_generator/lang/validation.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
+#include "parser_generator/shift_reduce_parsers/state_lookahead.h"
+#include "parser_generator/shift_reduce_parsers/parser_state_comparators.h"
 
 int main(int argc, char* argv[]) {  
     std::ifstream input("../examples/Parser.prules");
@@ -18,6 +20,11 @@ int main(int argc, char* argv[]) {
     parser_generator::shift_reduce_parsers::FirstSet_t first_set = parser_generator::shift_reduce_parsers::generate_first_set(
         std::set<parser_generator::Production>(productions.begin(), productions.end()),
         4
+    );
+    std::cout << parser_generator::shift_reduce_parsers::ParserTable::generate(
+        std::set<parser_generator::Production>(productions.begin(), productions.end()),
+        parser_generator::shift_reduce_parsers::lr_state_compare,
+        2
     );
 
     for (const parser_generator::Production& production : productions) {

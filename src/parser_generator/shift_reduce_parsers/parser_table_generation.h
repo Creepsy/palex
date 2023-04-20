@@ -4,31 +4,58 @@
 #include <cstddef>
 #include <string>
 #include <map>
+#include <vector>
 
 #include "parser_state.h"
+#include "state_lookahead.h"
 
-namespace parser_generator::shift_reduce_parsers {
-    using FirstSet_t = std::map<std::string, std::set<Lookahead_t>>;
+namespace parser_generator::shift_reduce_parsers {    
+    using NonterminalMappings_t = std::map<std::string, std::set<Production>>;
     
-    template<bool(*state_compare_T)(const ParserState&, const ParserState&)>
     class ParserTable {
         public:
-            ParserTable();
-            ~ParserTable();
-        private:
-            std::set<ParserState> states;
+            using ParserStateCompare_t = bool(*)(const ParserState&, const ParserState&);
 
-            friend std::ostream& operator<<(std::ostream& output, const ParserTable<state_compare_T>& to_print) {
-                for (auto state_iter = to_print.states.begin(); state_iter != to_print.states.end(); state_iter++) {
-                    output << *state_iter;
-                    if (std::distance(state_iter, to_print.states.end()) != 1) {
-                        output << "\n";
-                    }
-                }
-                return output;
-            }
+            ParserTable(const ParserStateCompare_t state_comparator);
+            ~ParserTable();
+
+            static ParserTable generate(const std::set<Production>& productions, const ParserTable::ParserStateCompare_t state_comparator, const size_t lookahead);
+        private:
+            const ParserStateCompare_t state_comparator;
+            std::vector<ParserState> states;
+
+            bool does_exact_state_exist(const ParserState& to_check);
+            ParserStateID_t construct_state_from_core(
+                const ParserState& state_core, 
+                const FirstSet_t& first_set,
+                const NonterminalMappings_t& nonterminal_mappings,
+                const size_t lookahead
+            );
+            void generate_actions(
+                const ParserStateID_t target_state_id,
+                const FirstSet_t& first_set,
+                const NonterminalMappings_t& nonterminal_mappings,
+                const size_t lookahead
+            );
+            void generate_shift_actions(
+                const ParserStateID_t target_state_id,
+                const FirstSet_t& first_set,
+                const NonterminalMappings_t& nonterminal_mappings,
+                const size_t lookahead
+            );
+            void generate_reduce_actions(
+                const ParserStateID_t target_state_id
+            );
+            void generate_goto_actions(
+                const ParserStateID_t target_state_id,
+                const FirstSet_t& first_set,
+                const NonterminalMappings_t& nonterminal_mappings,
+                const size_t lookahead
+            );
+            ParserStateID_t insert_state(const ParserState& to_insert);
+
+            friend std::ostream& operator<<(std::ostream& output, const ParserTable& to_print);
     };
 
-    FirstSet_t generate_first_set(const std::set<Production>& productions, const size_t lookahead);
-    std::set<Lookahead_t> follow_terminals(const Symbol& to_check, const ParserState& current_state, const FirstSet_t& first_set, const size_t lookahead);
+    std::ostream& operator<<(std::ostream& output, const ParserTable& to_print);
 }

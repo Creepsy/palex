@@ -1,154 +1,236 @@
 #include "parser_table_generation.h"
 
-#include <optional>
 #include <iterator>
-#include <cassert>
 #include <algorithm>
-
-#include "util/palex_except.h"
+#include <cassert>
+#include <functional>
 
 #include "parser_state_comparators.h"
+#include "state_lookahead.h"
 
 namespace parser_generator::shift_reduce_parsers {
+
     // helper functions
-    FirstSet_t generate_incomplete_first_set(const std::set<Production>& productions, const size_t lookahead, const FirstSet_t& previous_iter = {});
-    std::optional<std::set<Lookahead_t>> try_get_terminals(
-        const ProductionState& production_state, 
-        const size_t lookahead, 
-        const FirstSet_t& previous_iter
+    template<class T>
+    std::set<T> filter_set(const std::set<T>& to_filter, bool(*predicate)(const T&));
+    std::set<Production> filter_entry_productions(const std::set<Production>& productions);
+    std::set<ProductionState> filter_reduce_production_states(const std::set<ProductionState>& production_states);
+    std::set<Symbol> get_next_symbols(const std::set<ProductionState>& production_states);
+    NonterminalMappings_t generate_nonterminal_mappings(const std::set<Production>& productions);
+    ParserState create_entry_state(const std::set<Production>& productions, const size_t lookahead);
+    ParserState expand_parser_state(
+        const ParserState& to_expand, 
+        const FirstSet_t& first_set, 
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
     );
-    std::optional<std::set<Lookahead_t>> try_get_symbol_terminals(const ProductionState& production_state, const FirstSet_t& previous_iter);
-    bool is_first_set_valid(const FirstSet_t& to_validate, const std::set<Production>& used_productions);
-    std::set<Lookahead_t> combinations(const std::set<Lookahead_t>& base, const std::set<Lookahead_t>& to_append);
-    std::set<Lookahead_t> truncate(const std::set<Lookahead_t>& to_truncate, const size_t max_length);
+    void expand_production_state(
+        const ProductionState& to_expand, 
+        ParserState& target, 
+        const FirstSet_t& first_set, 
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    );
 
-    FirstSet_t generate_incomplete_first_set(const std::set<Production>& productions, const size_t lookahead, const FirstSet_t& previous_iter) {
-        FirstSet_t first_set;
+    template<class T>
+    std::set<T> filter_set(const std::set<T>& to_filter, bool(*predicate)(const T&)) {
+        std::set<T> filtered;
+        std::copy_if(
+            to_filter.begin(), 
+            to_filter.end(), 
+            std::inserter(filtered, filtered.begin()), 
+            predicate
+        );
+        return filtered;
+    }
+
+    std::set<Production> filter_entry_productions(const std::set<Production>& productions) {
+        return filter_set<Production>(productions, [](const Production& candidate) -> bool { return candidate.is_entry(); });
+    }
+
+    std::set<ProductionState> filter_reduce_production_states(const std::set<ProductionState>& production_states) {
+        return filter_set<ProductionState>(
+            production_states, 
+            [](const ProductionState& candidate) -> bool {
+                return candidate.is_completed(); 
+            }
+        );
+    }
+
+    std::set<Symbol> get_next_symbols(const std::set<ProductionState>& production_states) {
+        std::set<Symbol> symbols;
+        for (const ProductionState& production_state : production_states) {
+            if (!production_state.is_completed()) {
+                symbols.insert(production_state.get_current_symbol().value());
+            }
+        }
+        return symbols;
+    }
+
+    NonterminalMappings_t generate_nonterminal_mappings(const std::set<Production>& productions) {
+        NonterminalMappings_t nonterminal_mapping;
         for (const Production& production : productions) {
-            std::optional<std::set<Lookahead_t>> production_first_terminals = try_get_terminals(ProductionState(production), lookahead, previous_iter);
-            if (production_first_terminals.has_value()) {
-                first_set[production.name].insert(production_first_terminals.value().begin(), production_first_terminals.value().end());
-            }
+            nonterminal_mapping[production.name].insert(production);
         }
-        return first_set;
+        return nonterminal_mapping;
     }
 
-    std::optional<std::set<Lookahead_t>> try_get_terminals(
-        const ProductionState& production_state, 
-        const size_t lookahead, 
-        const FirstSet_t& previous_iter
-    ) {
-        if (lookahead == 0 || production_state.is_completed()) {
-            return std::set<Lookahead_t>{Lookahead_t{}};
-        }
-        std::optional<std::set<Lookahead_t>> symbol_first_terminals = try_get_symbol_terminals(production_state, previous_iter);
-        if (!symbol_first_terminals.has_value()) {
-            return std::nullopt;
-        }
-        size_t min_consumed = std::min_element(symbol_first_terminals.value().begin(), symbol_first_terminals.value().end())->size();
-        std::optional<std::set<Lookahead_t>> sub_first_terminals = try_get_terminals(production_state.advance(), lookahead - min_consumed, previous_iter);  
-        if (!sub_first_terminals.has_value()) {
-            return std::nullopt;
-        }
-        return truncate(combinations(symbol_first_terminals.value(), sub_first_terminals.value()), lookahead);
-    }
-
-    std::optional<std::set<Lookahead_t>> try_get_symbol_terminals(const ProductionState& production_state, const FirstSet_t& previous_iter) {
-        const std::optional<Symbol> curr_symbol = production_state.get_current_symbol();
-        assert(curr_symbol.has_value() && "Bug: Tried to get lookahead of already completed production!");
-        if (curr_symbol.value().type == Symbol::SymbolType::TERMINAL) {
-            return std::set<Lookahead_t>{Lookahead_t{curr_symbol.value()}};
-        }
-        const std::string& non_terminal_name = curr_symbol.value().identifier;
-        if (previous_iter.find(non_terminal_name) == previous_iter.end()) {
-            return std::nullopt; // this first-set can't be currently completed as information is still missing in this iteration
-        }
-        return previous_iter.at(non_terminal_name);
-    }
-
-    bool is_first_set_valid(const FirstSet_t& to_validate, const std::set<Production>& used_productions) {
-        for (const Production& production : used_productions) {
-            if (to_validate.find(production.name) == to_validate.end()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::set<Lookahead_t> combinations(const std::set<Lookahead_t>& base, const std::set<Lookahead_t>& to_append) {
-        std::set<Lookahead_t> all_combinations;
-        for (const Lookahead_t& base_part : base) {
-            for (const Lookahead_t& append_part : to_append) {
-                Lookahead_t combination = base_part;
-                combination.insert(combination.end(), append_part.begin(), append_part.end());
-                all_combinations.insert(combination);
-            }
-        }
-        return all_combinations;
-    }
-
-    std::set<Lookahead_t> truncate(const std::set<Lookahead_t>& to_truncate, const size_t max_length) {
-        std::set<Lookahead_t> truncated;
+    ParserState create_entry_state(const std::set<Production>& productions, const size_t lookahead) {
+        const std::set<Production> entry_productions = filter_entry_productions(productions);
+        std::set<ProductionState> entry_production_states;
         std::transform(
-            to_truncate.begin(), 
-            to_truncate.end(), 
-            std::inserter(truncated, truncated.begin()), 
-            [&](const Lookahead_t& to_truncate) -> Lookahead_t {
-                if (to_truncate.size() > max_length) {
-                    return Lookahead_t(to_truncate.begin(), to_truncate.begin() + (ssize_t)max_length);
-                }
-                return to_truncate;
+            entry_productions.begin(), 
+            entry_productions.end(), 
+            std::inserter(entry_production_states, entry_production_states.begin()),
+            [=](const Production& production) -> ProductionState { 
+                return ProductionState(production, std::set<Lookahead_t>{Lookahead_t(lookahead, Symbol{Symbol::SymbolType::TERMINAL, "EOF"})}); 
             }
         );
-        return truncated;
+        return ParserState(entry_production_states);
     }
 
-    template<bool(*state_compare_T)(const ParserState&, const ParserState&)>
-    ParserTable<state_compare_T>::ParserTable() {
+    ParserState expand_parser_state(
+        const ParserState& to_expand, 
+        const FirstSet_t& first_set, 
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        ParserState target{};
+        for (const ProductionState& production_state : to_expand.get_production_states()) {
+            expand_production_state(production_state, target, first_set, nonterminal_mappings, lookahead);
+        }
+        return target;
     }
 
-    template<bool(*state_compare_T)(const ParserState&, const ParserState&)>
-    ParserTable<state_compare_T>::~ParserTable() {
+    void expand_production_state(
+        const ProductionState& to_expand, 
+        ParserState& target, 
+        const FirstSet_t& first_set, 
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        if (!target.add_production_state(to_expand)) {
+            return;
+        }
+        if (to_expand.is_completed() || to_expand.get_current_symbol().value().type == Symbol::SymbolType::TERMINAL) {
+            return;
+        }
+        const std::string nonterminal_name = to_expand.get_current_symbol().value().identifier;
+        assert(nonterminal_mappings.find(nonterminal_name) != nonterminal_mappings.end() && "BUG: nonterminal mappings are incomplete!");
+        for (const Production& expansion : nonterminal_mappings.at(nonterminal_name)) {
+            std::set<Lookahead_t> expansion_lookaheads = follow_terminals(to_expand.get_current_symbol().value(), target, first_set, lookahead);
+            expand_production_state(ProductionState(expansion, expansion_lookaheads), target, first_set, nonterminal_mappings, lookahead);
+        }
     }
 
-    template class ParserTable<lalr_state_compare>;
+    ParserTable::ParserTable(const ParserStateCompare_t state_comparator) : state_comparator(state_comparator) {
+    }
 
-    FirstSet_t generate_first_set(const std::set<Production>& productions, const size_t lookahead) {
-        FirstSet_t first_set = generate_incomplete_first_set(productions, lookahead);
-        while (true) {
-            FirstSet_t next_iter = generate_incomplete_first_set(productions, lookahead, first_set);
-            if (next_iter == first_set) {
-                break;
+    ParserTable::~ParserTable() {
+    }
+
+    ParserTable ParserTable::generate(const std::set<Production>& productions, const ParserTable::ParserStateCompare_t state_comparator, const size_t lookahead) {
+        const FirstSet_t first_set = generate_first_set(productions, lookahead);
+        const NonterminalMappings_t nonterminal_mappings = generate_nonterminal_mappings(productions);
+        const ParserState entry_state = create_entry_state(productions, lookahead);
+        ParserTable parser_table(state_comparator);
+        parser_table.construct_state_from_core(entry_state, first_set, nonterminal_mappings, lookahead);
+        return parser_table;
+    }
+
+    bool ParserTable::does_exact_state_exist(const ParserState& to_check) {
+        return std::find(this->states.begin(), this->states.end(), to_check) != this->states.end();
+    }
+
+    ParserStateID_t ParserTable::construct_state_from_core(
+        const ParserState& state_core, 
+        const FirstSet_t& first_set,
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        const ParserStateID_t state_id = this->insert_state(expand_parser_state(state_core, first_set, nonterminal_mappings, lookahead));
+        this->generate_actions(state_id, first_set, nonterminal_mappings, lookahead);
+        return state_id;
+    }
+
+    void ParserTable::generate_actions(
+        const ParserStateID_t target_state_id,
+        const FirstSet_t& first_set,
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        this->generate_reduce_actions(target_state_id);
+        this->generate_shift_actions(target_state_id, first_set, nonterminal_mappings, lookahead);
+        this->generate_goto_actions(target_state_id, first_set, nonterminal_mappings, lookahead);
+    }
+
+    void ParserTable::generate_shift_actions(
+        const ParserStateID_t target_state_id,
+        const FirstSet_t& first_set,
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        for (const Symbol& next_symbol : get_next_symbols(this->states[target_state_id].get_production_states())) {
+            if (next_symbol.type != Symbol::SymbolType::TERMINAL) {
+                continue;
             }
-            first_set = next_iter;
-        }
-        if (!is_first_set_valid(first_set, productions)) {
-            throw palex_except::ValidationError("Unable to create first set of productions as some of them recurse infinitely!");
-        }
-        return first_set;
-    }
-
-    std::set<Lookahead_t> follow_terminals(const Symbol& to_check, const ParserState& current_state, const FirstSet_t& first_set, const size_t lookahead) {
-        std::set<Lookahead_t> follow_terminals_set;
-        for (const ProductionState& production_state : current_state.get_production_states()) {
-            if (!production_state.is_completed() && production_state.get_current_symbol() == to_check) {
-                std::optional<std::set<Lookahead_t>> production_follow_terminals = try_get_terminals(production_state.advance(), lookahead, first_set);
-                assert(production_follow_terminals.has_value() && "BUG: 'follow_tokens' got used with invalid first set!");
-                assert(
-                    !production_state.get_lookaheads().empty() && 
-                    "BUG: production state has no lookahead, which is needed for computing the follow terminals!"
-                );
-                std::set<Lookahead_t> expanded_follow_terminals = truncate(
-                    combinations(production_follow_terminals.value(), production_state.get_lookaheads()), 
-                    lookahead
-                );
-                follow_terminals_set.insert(expanded_follow_terminals.begin(), expanded_follow_terminals.end());
+            const ParserState shift_state_core = this->states[target_state_id].advance_by(next_symbol);
+            const ParserStateID_t shift_state_id = this->construct_state_from_core(shift_state_core, first_set, nonterminal_mappings, lookahead);
+            for (Lookahead_t lookahead : follow_terminals(next_symbol, this->states[target_state_id], first_set, std::max((size_t)1, lookahead) - 1)) {
+                lookahead.insert(lookahead.begin(), next_symbol);
+                this->states[target_state_id].add_action(Action{Action::ShiftParameters{shift_state_id, lookahead}});
             }
         }
-        assert(
-            !follow_terminals_set.empty() && 
-            "BUG: Supplied a symbol to 'follow_tokens' in combination with a parser state that has no production starting with that symbol!"
+    }
+
+    void ParserTable::generate_reduce_actions(
+        const ParserStateID_t target_state_id
+    ) {
+        for (const ProductionState& to_reduce : filter_reduce_production_states(this->states[target_state_id].get_production_states())) {
+            for (const Lookahead_t& lookahead : to_reduce.get_lookaheads()) {
+                this->states[target_state_id].add_action(Action{Action::ReduceParameters{to_reduce.get_production(), lookahead}});
+            }
+        }
+    }
+
+    void ParserTable::generate_goto_actions(
+        const ParserStateID_t target_state_id,
+        const FirstSet_t& first_set,
+        const NonterminalMappings_t& nonterminal_mappings,
+        const size_t lookahead
+    ) {
+        for (const Symbol& next_symbol : get_next_symbols(this->states[target_state_id].get_production_states())) {
+            if (next_symbol.type != Symbol::SymbolType::NONTERMINAL) {
+                continue;
+            }
+            const ParserState goto_state_core = this->states[target_state_id].advance_by(next_symbol);
+            const ParserStateID_t goto_state_id = this->construct_state_from_core(goto_state_core, first_set, nonterminal_mappings, lookahead);
+            this->states[target_state_id].add_action(Action{Action::GotoParameters{goto_state_id, next_symbol}});
+        }
+    }
+    
+    ParserStateID_t ParserTable::insert_state(const ParserState& to_insert) {
+        auto mergeable_state_ptr = std::find_if(
+            this->states.begin(), 
+            this->states.end(), 
+            std::bind(this->state_comparator, to_insert, std::placeholders::_1)
         );
-        return follow_terminals_set;
+        if (mergeable_state_ptr != this->states.end()) {
+            mergeable_state_ptr->merge(to_insert);
+            return mergeable_state_ptr - this->states.begin();
+        }
+        this->states.push_back(to_insert);
+        return this->states.size() - 1;
+    }
+
+    std::ostream& operator<<(std::ostream& output, const ParserTable& to_print) {
+        for (size_t id = 0; id < to_print.states.size(); id++) {
+            output << id << ":\n";
+            output << to_print.states[id];
+            if (id != to_print.states.size() - 1) {
+                output << "\n";
+            }
+        }
+        return output;
     }
 }
