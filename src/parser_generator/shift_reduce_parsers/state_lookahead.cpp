@@ -124,12 +124,8 @@ namespace parser_generator::shift_reduce_parsers {
             if (!production_state.is_completed() && production_state.get_current_symbol() == to_check) {
                 std::optional<std::set<Lookahead_t>> production_follow_terminals = try_get_terminals(production_state.advance(), lookahead, first_set);
                 assert(production_follow_terminals.has_value() && "BUG: 'follow_tokens' got used with invalid first set!");
-                assert(
-                    !production_state.get_lookaheads().empty() && 
-                    "BUG: production state has no lookahead, which is needed for computing the follow terminals!"
-                );
                 std::set<Lookahead_t> expanded_follow_terminals = truncate(
-                    combinations(production_follow_terminals.value(), production_state.get_lookaheads()), 
+                    combinations(production_follow_terminals.value(), std::set<Lookahead_t>{production_state.get_lookahead()}), 
                     lookahead
                 );
                 follow_terminals_set.insert(expanded_follow_terminals.begin(), expanded_follow_terminals.end());

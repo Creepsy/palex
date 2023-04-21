@@ -24,10 +24,8 @@ int main() {
         "test_production", 
         std::vector<parser_generator::Symbol>{TERMINAL("ADD")}
     };
-    ProductionState prod1_state = ProductionState(prod1);
-    prod1_state.add_lookahead(Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
-    ProductionState prod3_state = ProductionState(prod3);
-    prod3_state.add_lookahead(Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
+    const ProductionState prod1_state = ProductionState(prod1, Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
+    const ProductionState prod3_state = ProductionState(prod3, Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
     const ParserState state1( 
         std::set<ProductionState>{
             prod1_state, ProductionState(prod2), ProductionState(prod3_state)

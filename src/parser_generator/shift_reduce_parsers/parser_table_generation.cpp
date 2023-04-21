@@ -83,7 +83,7 @@ namespace parser_generator::shift_reduce_parsers {
             entry_productions.end(), 
             std::inserter(entry_production_states, entry_production_states.begin()),
             [=](const Production& production) -> ProductionState { 
-                return ProductionState(production, std::set<Lookahead_t>{Lookahead_t(lookahead, Symbol{Symbol::SymbolType::TERMINAL, "EOF"})}); 
+                return ProductionState(production, Lookahead_t(lookahead, Symbol{Symbol::SymbolType::TERMINAL, "EOF"})); 
             }
         );
         return ParserState(entry_production_states);
@@ -118,8 +118,9 @@ namespace parser_generator::shift_reduce_parsers {
         const std::string nonterminal_name = to_expand.get_current_symbol().value().identifier;
         assert(nonterminal_mappings.find(nonterminal_name) != nonterminal_mappings.end() && "BUG: nonterminal mappings are incomplete!");
         for (const Production& expansion : nonterminal_mappings.at(nonterminal_name)) {
-            std::set<Lookahead_t> expansion_lookaheads = follow_terminals(to_expand.get_current_symbol().value(), target, first_set, lookahead);
-            expand_production_state(ProductionState(expansion, expansion_lookaheads), target, first_set, nonterminal_mappings, lookahead);
+            for (const Lookahead_t& expansion_lookahead : follow_terminals(to_expand.get_current_symbol().value(), target, first_set, lookahead)) {
+                expand_production_state(ProductionState(expansion, expansion_lookahead), target, first_set, nonterminal_mappings, lookahead);  
+            }
         }
     }
 
@@ -187,9 +188,7 @@ namespace parser_generator::shift_reduce_parsers {
         const ParserStateID_t target_state_id
     ) {
         for (const ProductionState& to_reduce : filter_reduce_production_states(this->states[target_state_id].get_production_states())) {
-            for (const Lookahead_t& lookahead : to_reduce.get_lookaheads()) {
-                this->states[target_state_id].add_action(Action{Action::ReduceParameters{to_reduce.get_production(), lookahead}});
-            }
+            this->states[target_state_id].add_action(Action{Action::ReduceParameters{to_reduce.get_production(), to_reduce.get_lookahead()}});
         }
     }
 

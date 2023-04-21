@@ -88,13 +88,13 @@ parser_generator::Token parser_generator::ParserProductionParser::consume(const 
 }
 
 bool parser_generator::operator<(const Symbol& first, const Symbol& second) {
-    if (first.type < second.type) return true;
-    return first.type == second.type && first.identifier < second.identifier;
+    if (first.type != second.type) return first.type < second.type;
+    return first.identifier < second.identifier;
 }
 
 bool parser_generator::operator<(const Production& first, const Production& second) {
-    if (first.name < second.name) return true;
-    return first.name == second.name && first.symbols < second.symbols;
+    if (first.name != second.name) return first.name < second.name;
+    return first.symbols < second.symbols;
 }
 
 bool parser_generator::operator==(const Symbol& first, const Symbol& second) {
@@ -103,6 +103,14 @@ bool parser_generator::operator==(const Symbol& first, const Symbol& second) {
 
 bool parser_generator::operator==(const Production& first, const Production& second) {
     return first.name == second.name && first.symbols == second.symbols;
+}
+
+bool parser_generator::operator!=(const Symbol& first, const Symbol& second) {
+    return !(first == second);
+}
+
+bool parser_generator::operator!=(const Production& first, const Production& second) {
+    return !(first == second);
 }
 
 std::ostream& parser_generator::operator<<(std::ostream& output, const Symbol& to_print) {

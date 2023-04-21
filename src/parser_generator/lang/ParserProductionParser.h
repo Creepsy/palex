@@ -49,6 +49,8 @@ namespace parser_generator {
     bool operator<(const Production& first, const Production& second);
     bool operator==(const Symbol& first, const Symbol& second);
     bool operator==(const Production& first, const Production& second);
+    bool operator!=(const Symbol& first, const Symbol& second);
+    bool operator!=(const Production& first, const Production& second);
 
     std::ostream& operator<<(std::ostream& output, const Symbol& to_print);
     std::ostream& operator<<(std::ostream& output, const Production& to_print);

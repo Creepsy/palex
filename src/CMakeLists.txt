@@ -35,8 +35,6 @@ set(PROJECT_HEADERS
     util/config_getters.h
     util/config_loader.h
     util/Visitor.h
-    util/VectorReference.h
-
 
     regex/character_classes.h
     regex/regex_ast.cpp

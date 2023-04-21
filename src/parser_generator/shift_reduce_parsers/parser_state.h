@@ -32,15 +32,14 @@ namespace parser_generator::shift_reduce_parsers {
         static bool conflict(const Action& first, const Action& second);
     };
 
-    class ProductionState { // !!! WARNING !!! operator< is NOT lookahead-sensitive -> easier to use that way
+    class ProductionState {
         public:
             explicit ProductionState(const Production& production);
-            ProductionState(const Production& production, const std::set<Lookahead_t>& lookaheads);
-            ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads);
-            bool add_lookahead(const Lookahead_t& to_add); // returns false when the lookahead already exists, otherwise true
+            ProductionState(const Production& production, const Lookahead_t& lookahead);
+            ProductionState(const Production& production, const size_t position, const Lookahead_t& lookahead);
             bool is_completed() const;
             std::optional<Symbol> get_current_symbol() const;
-            const std::set<Lookahead_t>& get_lookaheads() const;
+            const Lookahead_t& get_lookahead() const;
             const Production& get_production() const;
             size_t get_position() const;
             ProductionState advance() const;
@@ -48,7 +47,7 @@ namespace parser_generator::shift_reduce_parsers {
         private:
             const Production production;
             const size_t position;
-            std::set<Lookahead_t> lookaheads; 
+            Lookahead_t lookahead; 
 
             friend std::ostream& operator<<(std::ostream& output, const ProductionState& to_print);
             friend bool operator<(const ProductionState& first, const ProductionState& second);  
@@ -86,6 +85,9 @@ namespace parser_generator::shift_reduce_parsers {
     bool operator!=(const Action::GotoParameters& first, const Action::GotoParameters& second);
     bool operator!=(const Action::ShiftParameters& first, const Action::ShiftParameters& second);
     bool operator!=(const Action::ReduceParameters& first, const Action::ReduceParameters& second);
+    bool operator!=(const Action& first, const Action& second);
+    bool operator!=(const ProductionState& first, const ProductionState& second);
+    bool operator!=(const ParserState& first, const ParserState& second);
 
     bool operator<(const Action::GotoParameters& first, const Action::GotoParameters& second);
     bool operator<(const Action::ShiftParameters& first, const Action::ShiftParameters& second);
@@ -101,5 +103,4 @@ namespace parser_generator::shift_reduce_parsers {
 
 namespace std {
     std::ostream& operator<<(std::ostream& output, const parser_generator::shift_reduce_parsers::Lookahead_t& to_print);
-    std::ostream& operator<<(std::ostream& output, const std::set<parser_generator::shift_reduce_parsers::Lookahead_t>& to_print);
 }

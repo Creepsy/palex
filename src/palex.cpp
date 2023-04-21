@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
     for (const parser_generator::Production& production : productions) {
         std::cout << production << ";" << std::endl;
     }
-    std::cout << "First Set:" << std::endl;
-    for (const std::pair<std::string, std::set<parser_generator::shift_reduce_parsers::Lookahead_t>> first_tokens : first_set) {
-        std::cout << first_tokens.first << ": " << first_tokens.second << std::endl;
-    }
+    // std::cout << "First Set:" << std::endl;
+    // for (const std::pair<std::string, std::set<parser_generator::shift_reduce_parsers::Lookahead_t>> first_tokens : first_set) {
+    //     std::cout << first_tokens.first << ": " << first_tokens.second << std::endl;
+    // }
 
     return 0;
 }

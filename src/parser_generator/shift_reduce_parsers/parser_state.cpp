@@ -39,21 +39,13 @@ namespace parser_generator::shift_reduce_parsers {
     ProductionState::ProductionState(const Production& production) : ProductionState(production, 0, {}) {
     }
 
-    ProductionState::ProductionState(const Production& production, const std::set<Lookahead_t>& lookaheads) : ProductionState(production, 0, lookaheads) {
+    ProductionState::ProductionState(const Production& production, const Lookahead_t& lookahead) : ProductionState(production, 0, lookahead) {
 
     }
 
-    ProductionState::ProductionState(const Production& production, const size_t position, const std::set<Lookahead_t>& lookaheads) 
-    : production(production), position(std::min(position, production.symbols.size())), lookaheads(lookaheads) {
+    ProductionState::ProductionState(const Production& production, const size_t position, const Lookahead_t& lookahead) 
+    : production(production), position(std::min(position, production.symbols.size())), lookahead(lookahead) {
 
-    }
-
-    bool ProductionState::add_lookahead(const Lookahead_t& to_add) {
-        if (this->lookaheads.find(to_add) != this->lookaheads.end()) {
-            return false;
-        }
-        this->lookaheads.insert(to_add);
-        return true;
     }
 
     bool ProductionState::is_completed() const {
@@ -67,8 +59,8 @@ namespace parser_generator::shift_reduce_parsers {
         return this->production.symbols[this->position];
     }
 
-    const std::set<Lookahead_t>& ProductionState::get_lookaheads() const {
-        return this->lookaheads;
+    const Lookahead_t& ProductionState::get_lookahead() const {
+        return this->lookahead;
     }
 
     const Production& ProductionState::get_production() const {
@@ -84,7 +76,7 @@ namespace parser_generator::shift_reduce_parsers {
         if (this->is_completed()) {
             throw std::runtime_error("Tried to advance the position past the end of the rule!");
         }
-        return ProductionState(this->production, this->position + 1, this->lookaheads);
+        return ProductionState(this->production, this->position + 1, this->lookahead);
     }
         
     ProductionState::~ProductionState() {
@@ -126,19 +118,11 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     bool ParserState::add_production_state(const ProductionState& to_add) {
-        const auto production_ptr = this->production_states.find(to_add);
-        if (production_ptr == this->production_states.end()) {
+        if (this->production_states.find(to_add) == this->production_states.end()) {
             this->production_states.insert(to_add);
             return true;
         }
-        
-        const std::set<Lookahead_t> existent_lookaheads = production_ptr->get_lookaheads();
-        std::set<Lookahead_t> union_lookaheads = existent_lookaheads;
-        union_lookaheads.insert(to_add.get_lookaheads().begin(), to_add.get_lookaheads().end());
-
-        this->production_states.erase(to_add);
-        this->production_states.insert(ProductionState(to_add.get_production(), to_add.get_position(), union_lookaheads));
-        return existent_lookaheads != union_lookaheads;
+        return false;
     }
 
     ParserState ParserState::advance_by(const Symbol& to_advance_by) const {
@@ -184,7 +168,7 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     bool operator==(const ProductionState& first, const ProductionState& second) {
-        return first.production == second.production && first.position == second.position && first.lookaheads == second.lookaheads;
+        return first.production == second.production && first.position == second.position && first.lookahead == second.lookahead;
     }
 
     bool operator==(const ParserState& first, const ParserState& second) {
@@ -204,25 +188,31 @@ namespace parser_generator::shift_reduce_parsers {
         return !(first == second);
     }
 
+    bool operator!=(const Action& first, const Action& second) {
+        return !(first == second);
+    }
+
+    bool operator!=(const ProductionState& first, const ProductionState& second) {
+        return !(first == second);
+    }
+
+    bool operator!=(const ParserState& first, const ParserState& second) {
+        return !(first == second);
+    }
+    
     bool operator<(const Action::GotoParameters& first, const Action::GotoParameters& second) {
-        if (first.next_state < second.next_state) {
-            return true;
-        }
-        return first.next_state == second.next_state && first.reduced_symbol < second.reduced_symbol;
+        if (first.next_state != second.next_state) return first.next_state < second.next_state;
+        return first.reduced_symbol < second.reduced_symbol;
     }
 
     bool operator<(const Action::ShiftParameters& first, const Action::ShiftParameters& second) {
-        if (first.next_state < second.next_state) {
-            return true;
-        }
-        return first.next_state == second.next_state && first.lookahead < second.lookahead;
+        if (first.next_state != second.next_state) return first.next_state < second.next_state;
+        return first.lookahead < second.lookahead;
     }
 
     bool operator<(const Action::ReduceParameters& first, const Action::ReduceParameters& second) {
-        if (first.to_reduce < second.to_reduce) {
-            return true;
-        }
-        return first.to_reduce == second.to_reduce && first.lookahead < second.lookahead;
+        if (first.to_reduce != second.to_reduce) return first.to_reduce < second.to_reduce;
+        return first.lookahead < second.lookahead;
     }
     
     bool operator<(const Action& first, const Action& second) {
@@ -230,17 +220,14 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     bool operator<(const ProductionState& first, const ProductionState& second) {
-        if (first.production < second.production) {
-            return true;
-        }
-        return first.production == second.production && first.position < second.position;
+        if (first.production != second.production) return first.production < second.production;
+        if (first.position != second.position) return first.position < second.position;
+        return first.lookahead < second.lookahead;
     }
 
     bool operator<(const ParserState& first, const ParserState& second) {
-        if (first.production_states < second.production_states) {
-            return true;
-        }
-        return first.production_states == second.production_states && first.action_table < second.action_table;
+        if (first.production_states != second.production_states) return first.production_states < second.production_states;
+        return first.action_table < second.action_table;
     }
 
     std::ostream& operator<<(std::ostream& output, const Action& to_print) {
@@ -250,10 +237,10 @@ namespace parser_generator::shift_reduce_parsers {
                     output << "goto " << goto_action.next_state << " on " << goto_action.reduced_symbol; 
                 },
                 [&](const Action::ShiftParameters& shift_action) {
-                    output << "shift " << shift_action.next_state << " on [" << shift_action.lookahead << "]"; 
+                    output << "shift " << shift_action.next_state << " on " << shift_action.lookahead; 
                 },
                 [&](const Action::ReduceParameters& reduce_action) { 
-                    output << "reduce " << reduce_action.to_reduce << " on [" << reduce_action.lookahead << "]"; 
+                    output << "reduce " << reduce_action.to_reduce << " on " << reduce_action.lookahead; 
                 }
             },
             to_print.parameters
@@ -272,7 +259,7 @@ namespace parser_generator::shift_reduce_parsers {
         if (to_print.is_completed()) {
             output << " .";
         }
-        return output << " " << to_print.lookaheads;
+        return output << " " << to_print.lookahead;
     }
 
     std::ostream& operator<<(std::ostream& output, const ParserState& to_print) {
@@ -287,22 +274,12 @@ namespace parser_generator::shift_reduce_parsers {
 }
 
 std::ostream& std::operator<<(std::ostream& output, const parser_generator::shift_reduce_parsers::Lookahead_t& to_print) {
+    output << "[";
     for(auto lookahead_iter = to_print.begin(); lookahead_iter != to_print.end(); lookahead_iter++) {
         if (lookahead_iter != to_print.begin()) {
             output << " ";
         }
         output << *lookahead_iter;
-    }
-    return output;
-}
-
-std::ostream& std::operator<<(std::ostream& output, const std::set<parser_generator::shift_reduce_parsers::Lookahead_t>& to_print) {
-    output << "[";
-    for (auto lookaheads_iter = to_print.begin(); lookaheads_iter != to_print.end(); lookaheads_iter++) {
-        if (lookaheads_iter != to_print.begin()) {
-            output << ", ";
-        }
-        output << *lookaheads_iter;
     }
     return output << "]";
 }
