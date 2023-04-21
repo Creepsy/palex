@@ -139,8 +139,9 @@ namespace parser_generator::shift_reduce_parsers {
         return parser_table;
     }
 
-    bool ParserTable::does_exact_state_exist(const ParserState& to_check) {
-        return std::find(this->states.begin(), this->states.end(), to_check) != this->states.end();
+    std::optional<ParserStateID_t> ParserTable::try_get_exact_state_id(const ParserState& to_find) {
+        const auto state_ptr = std::find(this->states.begin(), this->states.end(), to_find);
+        return (state_ptr == this->states.end()) ? std::nullopt : std::optional<ParserStateID_t>{state_ptr - this->states.begin()};
     }
 
     ParserStateID_t ParserTable::construct_state_from_core(
@@ -149,7 +150,12 @@ namespace parser_generator::shift_reduce_parsers {
         const NonterminalMappings_t& nonterminal_mappings,
         const size_t lookahead
     ) {
-        const ParserStateID_t state_id = this->insert_state(expand_parser_state(state_core, first_set, nonterminal_mappings, lookahead));
+        const ParserState expanded_state = expand_parser_state(state_core, first_set, nonterminal_mappings, lookahead);
+        std::optional<ParserStateID_t> exact_state_id = this->try_get_exact_state_id(expanded_state);
+        if (exact_state_id.has_value()) {
+            return exact_state_id.value();
+        }
+        const ParserStateID_t state_id = this->insert_state(expanded_state);
         this->generate_actions(state_id, first_set, nonterminal_mappings, lookahead);
         return state_id;
     }

@@ -110,7 +110,7 @@ namespace parser_generator::shift_reduce_parsers {
         if (this->conflicts_with(to_add)) {
             std::stringstream err;
             err << "The action conflicts with the state it is supposed to be in:\n" 
-                << "Action: " << to_add
+                << "Action: " << to_add << "\n"
                 << "State:\n" << *this;
             throw std::runtime_error(err.str());
         }
@@ -172,7 +172,7 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     bool operator==(const ParserState& first, const ParserState& second) {
-        // actions are defined by production states -> seperate func later
+        // TODO: actions are defined by production states -> seperate func later
         return first.production_states == second.production_states; // && first.shift_reduce_table == second.shift_reduce_table && first.goto_table == second.goto_table;
     }
 

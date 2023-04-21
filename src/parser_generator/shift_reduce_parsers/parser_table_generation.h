@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
 
 #include "parser_state.h"
 #include "state_lookahead.h"
@@ -24,7 +25,7 @@ namespace parser_generator::shift_reduce_parsers {
             const ParserStateCompare_t state_comparator;
             std::vector<ParserState> states;
 
-            bool does_exact_state_exist(const ParserState& to_check);
+            std::optional<ParserStateID_t> try_get_exact_state_id(const ParserState& to_find);
             ParserStateID_t construct_state_from_core(
                 const ParserState& state_core, 
                 const FirstSet_t& first_set,

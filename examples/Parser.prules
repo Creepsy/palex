@@ -1,7 +1,8 @@
-$S = addition;
+$S = to_reduce;
 
-addition = addition <ADD> multiplication;
-addition = multiplication;
-
-multiplication = multiplication <MUL> <NUMBER>;
-multiplication = <NUMBER>;
+to_reduce = r_prod to_reduce;
+to_reduce = r_prod;
+r_prod = <A> <B> t_prod;
+t_prod = ;
+t_prod = <A> t_prod;
+t_prod = <C>;
