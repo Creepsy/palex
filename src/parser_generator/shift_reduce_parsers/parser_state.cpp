@@ -172,8 +172,7 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     bool operator==(const ParserState& first, const ParserState& second) {
-        // TODO: actions are defined by production states -> seperate func later
-        return first.production_states == second.production_states; // && first.shift_reduce_table == second.shift_reduce_table && first.goto_table == second.goto_table;
+        return first.production_states == second.production_states && first.action_table == second.action_table;
     }
 
     bool operator!=(const Action::GotoParameters& first, const Action::GotoParameters& second) {

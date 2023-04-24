@@ -140,7 +140,11 @@ namespace parser_generator::shift_reduce_parsers {
     }
 
     std::optional<ParserStateID_t> ParserTable::try_get_exact_state_id(const ParserState& to_find) {
-        const auto state_ptr = std::find(this->states.begin(), this->states.end(), to_find);
+        const auto state_ptr = std::find_if(
+            this->states.begin(), 
+            this->states.end(), 
+            std::bind(lr_state_compare, to_find, std::placeholders::_1)
+        );
         return (state_ptr == this->states.end()) ? std::nullopt : std::optional<ParserStateID_t>{state_ptr - this->states.begin()};
     }
 
