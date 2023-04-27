@@ -2,9 +2,9 @@
 #include <string>
 #include <vector>
 
-#include "lexer_generator/lang/LexerRuleLexer.h"
-#include "lexer_generator/lang/LexerRuleParser.h"
-#include "lexer_generator/lang/validation.h"
+#include "input/PalexRuleLexer.h"
+#include "input/PalexRuleParser.h"
+#include "lexer_generator/validation.h"
 
 #include "util/palex_except.h"
 
@@ -19,7 +19,7 @@ struct TestCase {
 
 int main() {
     const std::vector<TestCase> TEST_CASES = {
-        {"IDENTIFIER = \"a\"; INTEGER = \"a\"; _INT = \"a\"; _123WEIRD_IDENT = \"a\";", false},
+        {"IDENTIFIER = \"a\"; INTEGER = \"a\"; INT = \"a\"; A123WEIRD_IDENT = \"a\";", false},
         {"UNDEFINED = \"a\";", true},
         {"END_OF_FILE = \"a\";", true},
         {"DUP_IDENT = \"a\"; DUP_IDENT = \"a\";", true}
@@ -27,10 +27,10 @@ int main() {
 
     for (const TestCase& test : TEST_CASES) {
         std::stringstream input(test.input);
-        lexer_generator::LexerRuleLexer lexer(input);
-        lexer_generator::LexerRuleParser parser(lexer);
+        input::PalexRuleLexer lexer(input);
+        input::PalexRuleParser parser(lexer);
         
-        std::vector<lexer_generator::TokenRegexRule> rules = parser.parse_all_rules();
+        std::vector<lexer_generator::TokenDefinition> rules = parser.parse_all_token_definitions();
 
         if (test.should_fail) {
             TEST_EXCEPT(lexer_generator::validate_rules(rules), palex_except::ValidationError);

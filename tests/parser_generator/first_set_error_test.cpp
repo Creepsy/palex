@@ -4,9 +4,9 @@
 
 #include "util/palex_except.h"
 
-#include "parser_generator/lang/ParserProductionLexer.h"
-#include "parser_generator/lang/ParserProductionParser.h"
-#include "parser_generator/lang/validation.h"
+#include "input/PalexRuleLexer.h"
+#include "input/PalexRuleParser.h"
+#include "parser_generator/validation.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
 #include "parser_generator/shift_reduce_parsers/parser_state.h"
@@ -15,9 +15,9 @@
 #include "../test_utils.h"
 
 int main() {
-    std::stringstream input("$S = infinite_recursion; infinite_recursion = infinite_recursion <INT>;");
-    parser_generator::ParserProductionLexer lexer(input);
-    parser_generator::ParserProductionParser parser(lexer);
+    std::stringstream input("$S = infinite_recursion; infinite_recursion = infinite_recursion INT;");
+    input::PalexRuleLexer lexer(input);
+    input::PalexRuleParser parser(lexer);
     std::vector<parser_generator::Production> productions = parser.parse_all_productions();
     parser_generator::validate_productions(productions);
 

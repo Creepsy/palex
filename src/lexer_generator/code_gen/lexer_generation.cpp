@@ -4,8 +4,11 @@
 #include <iostream>
 #include <filesystem>
 
-#include "lexer_generator/lang/LexerRuleLexer.h"
-#include "lexer_generator/lang/validation.h"
+#include "input/PalexRuleLexer.h"
+#include "input/PalexRuleParser.h"
+
+#include "lexer_generator/token_definition.h"
+#include "lexer_generator/validation.h"
 
 #include "util/palex_except.h"
 
@@ -19,31 +22,31 @@ const std::map<std::string, code_gen::LexerCodeGenerator_t> code_gen::LANGUAGE_C
 };
 
 // helper functions
-std::vector<lexer_generator::TokenRegexRule> parse_lexer_rules(std::istream& rule_input);
-lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenRegexRule>& lexer_rules);
+std::vector<lexer_generator::TokenDefinition> parse_lexer_rules(std::istream& rule_input);
+lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenDefinition>& lexer_rules);
 
-std::vector<lexer_generator::TokenRegexRule> parse_lexer_rules(std::istream& rule_input) {
-    lexer_generator::LexerRuleLexer lexer(rule_input);
-    lexer_generator::LexerRuleParser parser(lexer);
+std::vector<lexer_generator::TokenDefinition> parse_lexer_rules(std::istream& rule_input) {
+    input::PalexRuleLexer lexer(rule_input);
+    input::PalexRuleParser parser(lexer);
     
-    return parser.parse_all_rules();
+    return parser.parse_all_token_definitions(); // TODO
 }
 
-lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenRegexRule>& lexer_rules) {
+lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenDefinition>& lexer_rules) {
     using namespace std::placeholders;
     
     lexer_generator::LexerAutomaton_t lexer_nfa{};
-    const lexer_generator::LexerAutomaton_t::StateID_t root_state = lexer_nfa.add_state(U"");
+    const lexer_generator::LexerAutomaton_t::StateID_t root_state = lexer_nfa.add_state("");
 
 
-    for (const lexer_generator::TokenRegexRule& rule : lexer_rules) {
+    for (const lexer_generator::TokenDefinition& rule : lexer_rules) {
         lexer_generator::insert_rule_in_nfa(lexer_nfa, root_state, rule);
     }
 
-    std::map<std::u32string, size_t> token_priorities = lexer_generator::get_token_priorities(lexer_rules);
+    std::map<std::string, size_t> token_priorities = lexer_generator::get_token_priorities(lexer_rules);
     auto merge_states = std::bind(lexer_generator::merge_states_by_priority, token_priorities, _1);
 
-    return lexer_nfa.convert_to_dfa<std::u32string>(
+    return lexer_nfa.convert_to_dfa<std::string>(
         root_state,
         merge_states,
         lexer_generator::resolve_connection_collisions
@@ -63,7 +66,7 @@ bool code_gen::generate_lexer(const std::string& lexer_name, const nlohmann::jso
         return false;
     }
 
-    std::vector<lexer_generator::TokenRegexRule> lexer_rules;
+    std::vector<lexer_generator::TokenDefinition> lexer_rules;
 
     try {
         lexer_rules = parse_lexer_rules(lexer_rule_file);

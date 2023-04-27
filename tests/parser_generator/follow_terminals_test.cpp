@@ -1,6 +1,6 @@
 #include "../test_utils.h"
 
-#include "parser_generator/lang/ParserProductionParser.h"
+#include "parser_generator/production_definition.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_state.h"
 #include "parser_generator/shift_reduce_parsers/state_lookahead.h"

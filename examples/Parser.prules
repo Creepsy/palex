@@ -2,7 +2,7 @@ $S = to_reduce;
 
 to_reduce = r_prod to_reduce;
 to_reduce = r_prod;
-r_prod = <A> <B> t_prod;
+r_prod = A B t_prod;
 t_prod = ;
-t_prod = <A> t_prod;
-t_prod = <C>;
+t_prod = A t_prod;
+t_prod = C;

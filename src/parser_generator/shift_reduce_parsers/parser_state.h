@@ -7,7 +7,7 @@
 #include <variant>
 #include <optional>
 
-#include "parser_generator/lang/ParserProductionParser.h"
+#include "parser_generator/production_definition.h"
 
 namespace parser_generator::shift_reduce_parsers {
     using ParserStateID_t = size_t;

@@ -79,7 +79,7 @@ bool complete_generic_lexer_tags(std::ostream& output, const std::string_view ta
 
 
 bool code_gen::cpp::generate_cpp_lexer_files(
-    const std::vector<lexer_generator::TokenRegexRule>& lexer_rules, 
+    const std::vector<lexer_generator::TokenDefinition>& lexer_rules, 
     const lexer_generator::LexerAutomaton_t& lexer_dfa, 
     const std::string& lexer_name, 
     const nlohmann::json& json_config
@@ -163,11 +163,11 @@ void code_gen::cpp::complete_lexer_header(std::ostream& output, const std::strin
         output << "UNDEFINED,\n"
                << "            END_OF_FILE";
 
-        for (const std::u32string& token : tokens.tokens) {
+        for (const std::string& token : tokens.tokens) {
             output << ",\n            " << token;
         }
 
-        for (const std::u32string& ignored_token : tokens.ignored_tokens) {
+        for (const std::string& ignored_token : tokens.ignored_tokens) {
             output << ",\n            " << ignored_token;
         }
     } else {
@@ -192,11 +192,11 @@ void code_gen::cpp::complete_lexer_source(
         output << "\"UNDEFINED\",\n"
                << "    \"END_OF_FILE\"";
 
-        for (const std::u32string& token : tokens.tokens) {
+        for (const std::string& token : tokens.tokens) {
             output << ",\n    \"" << token << '"';
         }
 
-        for (const std::u32string& ignored_token : tokens.ignored_tokens) {
+        for (const std::string& ignored_token : tokens.ignored_tokens) {
             output << ",\n    \"" << ignored_token << '"';
         }
     } else if (tag == "LAST_NORMAL_TOKEN") {

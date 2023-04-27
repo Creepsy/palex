@@ -12,10 +12,9 @@
 #include "regex/RegexParser.h"
 
 // helper functions
+void throw_ambiguous_priority_err(const std::vector<std::string>& ambiguous_tokens, const size_t priority);
 
-void throw_ambiguous_priority_err(const std::vector<std::u32string>& ambiguous_tokens, const size_t priority);
-
-void throw_ambiguous_priority_err(const std::vector<std::u32string>& ambiguous_tokens, const size_t priority) {
+void throw_ambiguous_priority_err(const std::vector<std::string>& ambiguous_tokens, const size_t priority) {
     std::stringstream err_msg{};
     err_msg << "Tokens with ambiguous priority in the same state! The tokens ";
 
@@ -56,22 +55,22 @@ void lexer_generator::resolve_connection_collisions(
     }
 }
 
-std::map<std::u32string, size_t> lexer_generator::get_token_priorities(const std::vector<TokenRegexRule>& rules) {
-    std::map<std::u32string, size_t> token_prioritites;
+std::map<std::string, size_t> lexer_generator::get_token_priorities(const std::vector<TokenDefinition>& rules) {
+    std::map<std::string, size_t> token_prioritites;
 
-    for (const TokenRegexRule& rule : rules) {
+    for (const TokenDefinition& rule : rules) {
         token_prioritites.insert(std::make_pair(rule.name, rule.priority));
     }    
 
     return token_prioritites;
 }
 
-std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32string, size_t>& token_priorities, const std::vector<std::u32string>& to_merge) {
+std::string lexer_generator::merge_states_by_priority(const std::map<std::string, size_t>& token_priorities, const std::vector<std::string>& to_merge) {
     size_t highest_priority = 0;
-    std::vector<std::u32string> hp_tokens;
+    std::vector<std::string> hp_tokens;
 
 
-    for (const std::u32string& token : to_merge) {
+    for (const std::string& token : to_merge) {
         if (!token.empty()) {
             const size_t token_priority = token_priorities.at(token);
             
@@ -88,11 +87,11 @@ std::u32string lexer_generator::merge_states_by_priority(const std::map<std::u32
         throw_ambiguous_priority_err(hp_tokens, highest_priority);
     }
 
-    return (hp_tokens.empty()) ? U"" : hp_tokens.front();
+    return (hp_tokens.empty()) ? "" : hp_tokens.front();
 }
 
-void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenRegexRule& to_insert) {
-    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.regex_ast.get());
+void lexer_generator::insert_rule_in_nfa(LexerAutomaton_t& nfa, const LexerAutomaton_t::StateID_t root_state, const TokenDefinition& to_insert) {
+    const LexerAutomaton_t::StateID_t leaf_state = insert_regex_ast_in_nfa(nfa, root_state, to_insert.token_regex.get());
     nfa.get_state(leaf_state) = to_insert.name;
 }
 
@@ -122,7 +121,7 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_branc
     const LexerAutomaton_t::StateID_t root_state,
     const regex::RegexAlternation* const to_insert
 ) {
-    const LexerAutomaton_t::StateID_t collect_state = nfa.add_state(U"");
+    const LexerAutomaton_t::StateID_t collect_state = nfa.add_state("");
 
     for (const std::unique_ptr<regex::RegexBase>& branch : to_insert->get_branches()) {
         nfa.connect_states(insert_regex_ast_in_nfa(nfa, root_state, branch.get()), collect_state);
@@ -136,7 +135,7 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_char_
      const LexerAutomaton_t::StateID_t root_state,
       const regex::RegexCharSet* const to_insert
 ) {
-    const LexerAutomaton_t::StateID_t target_state = nfa.add_state(U"");
+    const LexerAutomaton_t::StateID_t target_state = nfa.add_state("");
 
     nfa.connect_states(root_state, target_state, to_insert->get_range_set());
 
@@ -148,7 +147,7 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_quant
     const LexerAutomaton_t::StateID_t root_state,
     const regex::RegexQuantifier* const to_insert
 ) {
-    LexerAutomaton_t::StateID_t curr_state = nfa.add_state(U"");
+    LexerAutomaton_t::StateID_t curr_state = nfa.add_state("");
     nfa.connect_states(root_state, curr_state);
 
     for (size_t i = 0; i < to_insert->get_min(); i++) {

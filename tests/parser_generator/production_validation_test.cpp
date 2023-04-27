@@ -1,9 +1,9 @@
 #include <vector>
 #include <sstream>
 
-#include "parser_generator/lang/ParserProductionLexer.h"
-#include "parser_generator/lang/ParserProductionParser.h"
-#include "parser_generator/lang/validation.h"
+#include "input/PalexRuleLexer.h"
+#include "input/PalexRuleParser.h"
+#include "parser_generator/validation.h"
 
 #include "util/palex_except.h"
 
@@ -16,16 +16,16 @@ struct TestCase {
 
 int main() {
     const std::vector<TestCase> TEST_CASES = {
-        {"$S = addition; addition = addition <ADD> number; number = <INT>;", false},
-        {"addition = addition <ADD> number; number = <INT>;", true},
-        {"$S = addition; addition = addition <ADD> unknown; number = <INT>;", true},
-        {"$S = addition; addition = addition <ADD> number; number = <INT>; number = <INT>;", true}
+        {"$S = addition; addition = addition ADD number; number = INT;", false},
+        {"addition = addition ADD number; number = INT;", true},
+        {"$S = addition; addition = addition ADD unknown; number = INT;", true},
+        {"$S = addition; addition = addition ADD number; number = INT; number = INT;", true}
     };
 
     for (const TestCase& test : TEST_CASES) {
         std::stringstream input(test.input);
-        parser_generator::ParserProductionLexer lexer(input);
-        parser_generator::ParserProductionParser parser(lexer);
+        input::PalexRuleLexer lexer(input);
+        input::PalexRuleParser parser(lexer);
 
         if (test.should_fail) {
             TEST_EXCEPT(parser_generator::validate_productions(parser.parse_all_productions()), palex_except::ValidationError);

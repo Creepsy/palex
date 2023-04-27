@@ -7,11 +7,11 @@
 #include <json.h>
 
 #include "lexer_generator/lexer_automaton.h"
-#include "lexer_generator/lang/LexerRuleParser.h"
+#include "lexer_generator/token_definition.h"
 
 namespace code_gen {
     using LexerCodeGenerator_t = std::function<bool (
-        const std::vector<lexer_generator::TokenRegexRule>&, 
+        const std::vector<lexer_generator::TokenDefinition>&, 
         const lexer_generator::LexerAutomaton_t&, 
         const std::string&, 
         const nlohmann::json&

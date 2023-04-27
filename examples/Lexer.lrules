@@ -3,4 +3,4 @@ INF = "int";
 INTEGER = "integer";
 KWIF = "if";
 KWITER = "iterator";
-$WSPACE = "\s+";
+!WSPACE = "\s+";
