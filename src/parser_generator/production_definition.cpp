@@ -33,7 +33,7 @@ namespace parser_generator {
 
     std::ostream& operator<<(std::ostream& output, const Symbol& to_print) {
         if (to_print.type == Symbol::SymbolType::TERMINAL) {
-            return output << "<" << to_print.identifier << ">";
+            return output << to_print.identifier;
         }
         return output << to_print.identifier;
     }
