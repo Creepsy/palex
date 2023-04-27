@@ -5,6 +5,10 @@ function(generate_test_executable test_name test_src)
     add_test(NAME ${test_name} COMMAND ${test_name})  
 endfunction()
 
+generate_test_executable(PalexRuleLexer input/palex_rule_lexer_test.cpp)
+generate_test_executable(PalexRuleParser input/palex_rule_parser_test.cpp)
+generate_test_executable(PalexRuleParserErrors input/palex_rule_parser_errors_test.cpp)
+
 generate_test_executable(UTF8Input util/utf8_input_test.cpp)
 generate_test_executable(UTF8Output util/utf8_output_test.cpp)
 generate_test_executable(AutomatonStates util/automaton_states_test.cpp)

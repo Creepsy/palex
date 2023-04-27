@@ -26,6 +26,9 @@ set(PROJECT_SOURCES
     parser_generator/shift_reduce_parsers/parser_table_generation.cpp
     parser_generator/shift_reduce_parsers/parser_state_comparators.cpp
     parser_generator/shift_reduce_parsers/state_lookahead.cpp
+
+    input/PalexRuleLexer.cpp
+    input/PalexRuleParser.cpp
 )
 
 set(PROJECT_HEADERS
@@ -66,6 +69,9 @@ set(PROJECT_HEADERS
     parser_generator/shift_reduce_parsers/parser_table_generation.h
     parser_generator/shift_reduce_parsers/parser_state_comparators.h
     parser_generator/shift_reduce_parsers/state_lookahead.h
+
+    input/PalexRuleLexer.h
+    input/PalexRuleParser.h
 )
 
 set(PROJECT_INLINE_FILES
