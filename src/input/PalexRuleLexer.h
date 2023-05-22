@@ -7,7 +7,7 @@
 #include <optional>
 #include <utility>
 
-namespace parser_generator {
+namespace input {
     struct CharacterPosition {
         size_t line = 1;
         size_t column = 1;
@@ -19,6 +19,9 @@ namespace parser_generator {
         enum class TokenType {
             UNDEFINED,
             END_OF_FILE,
+            IGNORE,
+            REGEX,
+            PRIORITY_TAG,
             ENTRY_PRODUCTION,
             PRODUCTION,
             TOKEN,
@@ -34,9 +37,9 @@ namespace parser_generator {
         bool is_ignored() const;
     };
 
-    class ParserProductionLexer {
+    class PalexRuleLexer {
         public:
-            ParserProductionLexer(std::istream& input);
+            PalexRuleLexer(std::istream& input);
             Token next_token();
             Token next_unignored_token();
             bool end() const;

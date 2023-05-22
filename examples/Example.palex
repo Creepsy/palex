@@ -1,0 +1,15 @@
+<7>INT = "int";
+INF = "int";
+INTEGER = "integer";
+KWIF = "if";
+KWITER = "iterator";
+!WSPACE = "\s+";
+
+$S = to_reduce;
+
+to_reduce = r_prod to_reduce;
+to_reduce = r_prod;
+r_prod = A B t_prod;
+t_prod = ;
+t_prod = A t_prod;
+t_prod = C;

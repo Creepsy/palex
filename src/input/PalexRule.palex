@@ -1,0 +1,9 @@
+IGNORE = "!";
+REGEX = "\"([^\n\"\\]|(\\.))*\"";
+PRIORITY_TAG = "<[0-9]+>";
+ENTRY_PRODUCTION = "$S";
+PRODUCTION = "[a-z][a-z0-9_]*";
+TOKEN = "[A-Z][A-Z0-9_]*";
+EQ = "=";
+EOL = ";";
+!WSPACE = "\s+";

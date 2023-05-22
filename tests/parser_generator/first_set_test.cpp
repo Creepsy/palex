@@ -3,9 +3,9 @@
 #include <vector>
 #include <set>
 
-#include "parser_generator/lang/ParserProductionLexer.h"
-#include "parser_generator/lang/ParserProductionParser.h"
-#include "parser_generator/lang/validation.h"
+#include "input/PalexRuleLexer.h"
+#include "input/PalexRuleParser.h"
+#include "parser_generator/validation.h"
 
 #include "parser_generator/shift_reduce_parsers/parser_table_generation.h"
 #include "parser_generator/shift_reduce_parsers/parser_state.h"
@@ -45,15 +45,15 @@ int main() {
         }
     };
     std::stringstream input(
-        "number = <INT>;"
-        "multiplication = multiplication <MUL> number;"
+        "number = INT;"
+        "multiplication = multiplication MUL number;"
         "multiplication = number;"
-        "addition = addition <ADD> multiplication;"
+        "addition = addition ADD multiplication;"
         "addition = multiplication;"
         "$S = addition;"
     );
-    parser_generator::ParserProductionLexer lexer(input);
-    parser_generator::ParserProductionParser parser(lexer); 
+    input::PalexRuleLexer lexer(input);
+    input::PalexRuleParser parser(lexer); 
     std::vector<parser_generator::Production> productions = parser.parse_all_productions();
     parser_generator::validate_productions(productions);
     std::set<parser_generator::Production> productions_set(productions.begin(), productions.end());

@@ -1,13 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <optional>
 #include <string>
 #include <ostream>
-
-#include "util/palex_except.h"
-
-#include "parser_generator/lang/ParserProductionLexer.h"
 
 namespace parser_generator {
     const std::string ENTRY_PRODUCTION_NAME = "$S";
@@ -28,22 +23,6 @@ namespace parser_generator {
 
         bool is_entry() const;
     };
-
-    class ParserProductionParser {
-        public:
-            ParserProductionParser(ParserProductionLexer& input);
-            std::optional<Production> parse_production();
-            std::vector<Production> parse_all_productions();            
-        private:
-            ParserProductionLexer& input;
-            Token curr;
-
-            void expect(const Token::TokenType to_expect) const;
-            bool accept(const Token::TokenType to_check) const;
-
-            Token consume();
-            Token consume(const Token::TokenType to_expect);
-    };    
 
     bool operator<(const Symbol& first, const Symbol& second);
     bool operator<(const Production& first, const Production& second);

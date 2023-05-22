@@ -16,7 +16,7 @@ void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
 }
 
 
-std::array<std::string, %TOKEN_TYPE_COUNT%> TOKEN_TYPE_TO_STRING {
+const std::array<std::string, %TOKEN_TYPE_COUNT%> TOKEN_TYPE_TO_STRING {
     %TOKEN_TYPE_STRINGS%
 };
 
