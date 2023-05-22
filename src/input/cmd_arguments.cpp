@@ -18,6 +18,7 @@ namespace input {
     void parse_lang(const std::string& language, PalexConfig& target);
     void parse_parser_type(const std::string& parser_type, PalexConfig& target);
     void parse_lookahead(const std::string& lookahead, PalexConfig& target);
+    void parse_module_name(const std::string& module_name, PalexConfig& target);
 
     std::vector<std::string> convert_args(const int argc, char* argv[]) {
         std::vector<std::string> arguments(argc, "");
@@ -63,14 +64,18 @@ namespace input {
     }
 
     void parse_option(const std::string& type, const std::string& parameter, PalexConfig& target) {
-        if (type == "o") {
+        if (type == "output-path") {
             target.output_path = parameter;
+        } else if (type == "util-path") {
+            target.util_output_path = parameter;
         } else if (type == "lang") {
             parse_lang(parameter, target);
         } else if (type == "parser-type") {
             parse_parser_type(parameter, target);
         } else if (type == "lookahead") {
             parse_lookahead(parameter, target);
+        } else if (type == "module-name") {
+            parse_module_name(parameter, target);
         } else {
             throw palex_except::ParserError("Unknown option '-" + type + " " + parameter + "' supplied!");
         }
@@ -109,10 +114,28 @@ namespace input {
         }
     }
 
+    void parse_module_name(const std::string& module_name, PalexConfig& target) {
+        const bool is_valid_identifier = 
+            !module_name.empty() && 
+            (module_name.front() == '_' || std::isalpha(module_name.front())) && 
+            std::all_of(
+                module_name.begin(), 
+                module_name.end(), 
+                [](const char to_check) -> bool { 
+                    return std::isalnum(to_check) || to_check == '_'; 
+                }
+            )
+        ;
+        if (!is_valid_identifier) {
+            throw palex_except::ParserError("'" + module_name + "' is not a valid module name!");
+        }
+        target.module_name = module_name;
+    }
+
     PalexConfig parse_config_from_args(const int argc, char* argv[]) {
         const std::vector<std::string> arguments = convert_args(argc, argv);
         PalexConfig config{};
-        for (size_t curr_arg = 1; curr_arg < arguments.size(); curr_arg++) { // skip the first arg as its the programs name
+        for (size_t curr_arg = 1; curr_arg < arguments.size(); curr_arg++) { // skip the first arg as it's the programs name
             if (is_flag(arguments[curr_arg])) {
                 parse_flag(arguments[curr_arg].substr(2), config);
             } else if (is_option(arguments[curr_arg])) {

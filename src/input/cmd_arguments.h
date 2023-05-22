@@ -18,6 +18,8 @@ namespace input {
     struct PalexConfig {
         std::vector<std::string> rule_files;
         std::string output_path = ".";
+        std::string util_output_path = ".";
+        std::string module_name = "palex";
         Language language = Language::NONE;  
         ParserType parser_type = ParserType::NONE;
         size_t lookahead = 0;
