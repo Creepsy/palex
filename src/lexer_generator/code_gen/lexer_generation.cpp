@@ -19,23 +19,10 @@
 const std::vector<code_gen::LexerCodeGenerator_t> code_gen::LANGUAGE_CODE_GENERATORS = {
     code_gen::EMPTY_LEXER_GENERATOR,
     code_gen::cpp::generate_cpp_lexer_files
-    // TODO: add cpp lexer generator
-    // {"c++", code_gen::cpp::generate_cpp_lexer_files}, // TODO: first empty
-    // {"C++", code_gen::cpp::generate_cpp_lexer_files},
-    // {"cpp", code_gen::cpp::generate_cpp_lexer_files},
-    // {"CPP", code_gen::cpp::generate_cpp_lexer_files}
 };
 
 // helper functions
-// std::vector<lexer_generator::TokenDefinition> parse_lexer_rules(std::istream& rule_input);
 lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenDefinition>& lexer_rules);
-
-// std::vector<lexer_generator::TokenDefinition> parse_lexer_rules(std::istream& rule_input) {
-//     input::PalexRuleLexer lexer(rule_input);
-//     input::PalexRuleParser parser(lexer);
-    
-//     return parser.parse_all_token_definitions(); // TODO
-// }
 
 lexer_generator::LexerAutomaton_t generate_dfa_from_rules(const std::vector<lexer_generator::TokenDefinition>& lexer_rules) {
     using namespace std::placeholders;

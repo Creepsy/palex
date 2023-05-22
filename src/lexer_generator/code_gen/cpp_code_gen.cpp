@@ -95,21 +95,6 @@ bool code_gen::cpp::generate_cpp_lexer_files(
     return true;
 }
 
-// code_gen::cpp::input::PalexConfig code_gen::cpp::create_lexer_config_from_json(const std::string& lexer_name, const input::PalexConfig& config) {
-//     input::PalexConfig lexer_config{};
-
-//     lexer_config.lexer_name = lexer_name;
-
-//     config::optional_string(json_config, "lexer_path", lexer_config.lexer_path);
-//     config::optional_string(json_config, "utf8_lib_path", lexer_config.utf8_lib_path);
-//     config::optional_string(json_config, "lexer_namespace", lexer_config.lexer_namespace);
-
-//     config::optional_bool(json_config, "create_utf8_lib", lexer_config.create_utf8_lib);
-//     config::optional_bool(json_config, "token_fallback", lexer_config.token_fallback);
-    
-//     return lexer_config;
-// }
-
 void code_gen::cpp::generate_lexer_files(
     const lexer_generator::LexerAutomaton_t& dfa, 
     const std::string& lexer_name, 

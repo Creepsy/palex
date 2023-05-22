@@ -72,7 +72,11 @@ void print_version_number() {
 
 bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept {
     std::cout << "Processing rule file '" << rule_file_path << "'..." << std::endl;
-    const std::string rule_name = std::filesystem::path(rule_file_path).stem().string() + "Lexer"; // TODO: cheking for has_stem?
+    if (!std::filesystem::path(rule_file_path).has_stem()) {
+        std::cerr << "Error: Unable to get the name of the rule file '" << rule_file_path << "'!";
+        return false;
+    }
+    const std::string rule_name = std::filesystem::path(rule_file_path).stem().string() + "Lexer";
     std::ifstream rule_file(rule_file_path);
     if (!rule_file.is_open()) {
         std::cerr << "Error: Unable to open rule file '" << rule_file_path << "'!" << std::endl;

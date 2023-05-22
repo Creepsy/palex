@@ -13,25 +13,12 @@
 
 namespace code_gen {
     namespace cpp {
-        // struct input::PalexConfig {
-        //     std::string lexer_path = ".";
-        //     std::string utf8_lib_path = ".";
-
-        //     std::string lexer_name = "Lexer";
-        //     std::string lexer_namespace = "palex";
-
-        //     bool create_utf8_lib = true;
-        //     bool token_fallback = true;
-        // };
-
         bool generate_cpp_lexer_files(
             const std::vector<lexer_generator::TokenDefinition>& lexer_rules,
             const lexer_generator::LexerAutomaton_t& lexer_dfa, 
             const std::string& lexer_name, 
             const input::PalexConfig& config
         );
-
-        // input::PalexConfig create_lexer_config_from_json(const std::string& lexer_name, const input::PalexConfig& config); 
 
         void generate_lexer_files(
             const lexer_generator::LexerAutomaton_t& dfa, 
