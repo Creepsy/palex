@@ -12,7 +12,6 @@
 
 #include "util/utf8.h"
 #include "util/palex_except.h"
-#include "util/config_getters.h"
 
 #include "cpp_lexer_source.h"
 #include "cpp_lexer_header.h"

@@ -14,7 +14,6 @@ generate_test_executable(UTF8Output util/utf8_output_test.cpp)
 generate_test_executable(AutomatonStates util/automaton_states_test.cpp)
 generate_test_executable(AutomatonConnections util/automaton_connections_test.cpp)
 generate_test_executable(AutomatonDFAConversion util/automaton_dfa_conversion_test.cpp)
-generate_test_executable(ConfigGetters util/config_getters_test.cpp)
 
 generate_test_executable(LexerRuleValidation lexer_generator/rule_validation_test.cpp)
 

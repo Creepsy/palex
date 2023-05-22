@@ -1,8 +1,6 @@
 set(PROJECT_SOURCES
     util/utf8.cpp
     util/palex_except.cpp
-    util/config_getters.cpp
-    util/config_loader.cpp
 
     regex/regex_ast.cpp
     regex/RegexParser.cpp
@@ -32,8 +30,6 @@ set(PROJECT_HEADERS
     util/Automaton.h
     util/utf8.h
     util/palex_except.h
-    util/config_getters.h
-    util/config_loader.h
     util/Visitor.h
 
     regex/character_classes.h
@@ -55,8 +51,6 @@ set(PROJECT_HEADERS
     ${CMAKE_BINARY_DIR}/cpp_utf8_header.h
     ${CMAKE_BINARY_DIR}/cpp_utf8_source.h
     
-    ${CMAKE_SOURCE_DIR}/vendor/json.h
-
     parser_generator/validation.h
     parser_generator/production_definition.h
 

@@ -8,7 +8,7 @@ add_compile_definitions(PALEX_VERSION="1.0.0")
 project(palex)
 
 include(CTest)
-include_directories(${CMAKE_SOURCE_DIR}/vendor ${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(src)
 add_subdirectory(tests)
