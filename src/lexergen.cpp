@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <cassert>
 
 #include "input/cmd_arguments.h"
 #include "input/PalexRuleLexer.h"
@@ -16,15 +17,18 @@ void print_version_number();
 bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept;
 
 int main(int argc, char* argv[]) {
-    if (argc > 1) {
-        if (std::string(argv[1]) == "--help") {
-            print_help_page(argv[0]);
-            return 0;
-        }
-        if (std::string(argv[1]) == "--version") {
-            print_version_number();
-            return 0;
-        }
+    if (argc == 1) {
+        std::cerr << "No arguments supplied! Use '" << argv[0] << " --help' to show all available arguments." << std::endl;
+        return 1;
+    }
+    assert(argc > 1 && "BUG: Check for no arguments didn't exit the program!");
+    if (std::string(argv[1]) == "--help") {
+        print_help_page(argv[0]);
+        return 0;
+    }
+    if (std::string(argv[1]) == "--version") {
+        print_version_number();
+        return 0;
     }
     try {
         const input::PalexConfig config = input::parse_config_from_args(argc, argv); 
