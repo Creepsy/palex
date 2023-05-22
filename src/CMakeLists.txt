@@ -24,8 +24,8 @@ set(PROJECT_SOURCES
     parser_generator/shift_reduce_parsers/parser_state_comparators.cpp
     parser_generator/shift_reduce_parsers/state_lookahead.cpp
 
-    input/PalexRuleLexer.cpp
     input/PalexRuleParser.cpp
+    input/cmd_arguments.cpp
 )
 
 set(PROJECT_HEADERS
@@ -64,6 +64,8 @@ set(PROJECT_HEADERS
     parser_generator/shift_reduce_parsers/parser_table_generation.h
     parser_generator/shift_reduce_parsers/parser_state_comparators.h
     parser_generator/shift_reduce_parsers/state_lookahead.h
+
+    input/cmd_arguments.h
 )
 
 set(PROJECT_INLINE_FILES
@@ -82,10 +84,6 @@ include(templates/all_template_headers.cmake)
 add_library(palex_objects ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_INLINE_FILES})
 target_include_directories(palex_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-add_executable(lexergen lexergen.cpp)
-target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(lexergen palex_objects)
-
 add_custom_command(
     OUTPUT ${AUTO_GENERATED_FILES}
     COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input
@@ -95,6 +93,11 @@ add_custom_command(
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(auto_generated_objects palex_objects)
+
+add_executable(lexergen lexergen.cpp)
+target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(lexergen palex_objects auto_generated_objects)
 
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})

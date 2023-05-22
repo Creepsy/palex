@@ -3,6 +3,7 @@
 
 #include "input/PalexRuleLexer.h"
 #include "input/PalexRuleParser.h"
+#include "input/cmd_arguments.h"
 
 #include "parser_generator/validation.h"
 
@@ -10,7 +11,8 @@
 #include "parser_generator/shift_reduce_parsers/state_lookahead.h"
 #include "parser_generator/shift_reduce_parsers/parser_state_comparators.h"
 
-int main(int argc, char* argv[]) {  
+int main(int argc, char* argv[]) { 
+    input::parse_config_from_args(argc, argv); 
     std::ifstream input("../examples/Parser.prules");
     input::PalexRuleLexer lexer(input);
     input::PalexRuleParser parser(lexer);
