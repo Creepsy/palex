@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "util/utf8.h"
+#include "../util/utf8.h"
 
 constexpr size_t ERROR_STATE = (size_t)-1;
 

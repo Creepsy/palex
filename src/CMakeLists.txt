@@ -86,10 +86,10 @@ target_include_directories(palex_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 add_custom_command(
     OUTPUT ${AUTO_GENERATED_FILES}
-    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input
+    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex -lang c++ -output-path ${CMAKE_CURRENT_SOURCE_DIR}/input 
+                -util-path util -module-name input --lexer --fallback
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input/palex.cfg 
-            ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRuleLexer.lrules 
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex 
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
