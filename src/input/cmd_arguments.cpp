@@ -112,7 +112,7 @@ namespace input {
     PalexConfig parse_config_from_args(const int argc, char* argv[]) {
         const std::vector<std::string> arguments = convert_args(argc, argv);
         PalexConfig config{};
-        for (size_t curr_arg = 0; curr_arg < arguments.size(); curr_arg++) {
+        for (size_t curr_arg = 1; curr_arg < arguments.size(); curr_arg++) { // skip the first arg as its the programs name
             if (is_flag(arguments[curr_arg])) {
                 parse_flag(arguments[curr_arg].substr(2), config);
             } else if (is_option(arguments[curr_arg])) {
