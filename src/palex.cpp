@@ -13,11 +13,11 @@
 
 int main(int argc, char* argv[]) { 
     input::parse_config_from_args(argc, argv); 
-    std::ifstream input("../examples/Parser.prules");
+    std::ifstream input("../examples/Example.palex");
     input::PalexRuleLexer lexer(input);
     input::PalexRuleParser parser(lexer);
 
-    std::vector<parser_generator::Production> productions = parser.parse_all_productions();
+    std::vector<parser_generator::Production> productions = parser.parse_all_rules().productions;
     parser_generator::validate_productions(productions);
 
     parser_generator::shift_reduce_parsers::FirstSet_t first_set = parser_generator::shift_reduce_parsers::generate_first_set(
