@@ -7,7 +7,7 @@
 int main() {
     std::stringstream output;
 
-    templates::write_template_to_stream("%%SHOULDNT_BE_REPLACED%%", output, templates::EMPTY_COMPLETER);
+    templates::write_template_to_stream("%%SHOULDNT_BE_REPLACED%%", output, {});
 
     TEST_TRUE(output.str() == "%SHOULDNT_BE_REPLACED%")
 
