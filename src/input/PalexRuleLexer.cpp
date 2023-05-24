@@ -5,17 +5,6 @@
 #include "../util/utf8.h"
 
 constexpr size_t ERROR_STATE = (size_t)-1;
-
-void input::CharacterPosition::advance(const char32_t consumed) {
-    if (consumed == (char32_t)'\n') {
-        this->line++;
-        this->column = 1;
-    } else {
-        this->column++;
-    }
-}
-
-
 const std::array<std::string, 11> TOKEN_TYPE_TO_STRING {
     "UNDEFINED",
     "END_OF_FILE",
@@ -30,6 +19,15 @@ const std::array<std::string, 11> TOKEN_TYPE_TO_STRING {
     "WSPACE"
 };
 
+void input::CharacterPosition::advance(const char32_t consumed) {
+    if (consumed == (char32_t)'\n') {
+        this->line++;
+        this->column = 1;
+    } else {
+        this->column++;
+    }
+}
+
 bool input::Token::is_ignored() const {
     return this->type > TokenType::EOL;
 }
@@ -43,17 +41,15 @@ input::Token input::PalexRuleLexer::next_token() {
     size_t state = 0;
     std::u32string identifier = U"";
     char32_t curr = this->get_char();
-
     if (this->end()) {
         return Token{Token::TokenType::END_OF_FILE, U"", token_start};
     }
 
     while (true) {
         this->cache.push(curr);
-
         switch(state) {
             case 0:
-                switch(curr) {
+                switch (curr) {
                     case 33:
                         state = 1;
                         break;
@@ -98,7 +94,7 @@ input::Token input::PalexRuleLexer::next_token() {
             case 1:
                 return Token{Token::TokenType::IGNORE, identifier, token_start};
             case 2:
-                switch(curr) {
+                switch (curr) {
                     case 0 ... 9:
                     case 11 ... 33:
                     case 35 ... 91:
@@ -117,7 +113,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 }
                 break;
             case 3:
-                switch(curr) {
+                switch (curr) {
                     case 0 ... 9:
                     case 11 ... 33:
                     case 35 ... 91:
@@ -136,7 +132,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 }
                 break;
             case 4:
-                switch(curr) {
+                switch (curr) {
                     case 0 ... 9:
                     case 11 ... 12:
                     case 14 ... 1114111:
@@ -148,7 +144,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 }
                 break;
             case 5:
-                switch(curr) {
+                switch (curr) {
                     case 0 ... 9:
                     case 11 ... 33:
                     case 35 ... 91:
@@ -169,7 +165,7 @@ input::Token input::PalexRuleLexer::next_token() {
             case 6:
                 return Token{Token::TokenType::REGEX, identifier, token_start};
             case 7:
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                         state = 8;
                         break;
@@ -179,7 +175,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 }
                 break;
             case 8:
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                         state = 9;
                         break;
@@ -192,7 +188,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 }
                 break;
             case 9:
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                         state = 9;
                         break;
@@ -207,7 +203,7 @@ input::Token input::PalexRuleLexer::next_token() {
             case 10:
                 return Token{Token::TokenType::PRIORITY_TAG, identifier, token_start};
             case 11:
-                switch(curr) {
+                switch (curr) {
                     case 83:
                         state = 12;
                         break;
@@ -220,7 +216,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 return Token{Token::TokenType::ENTRY_PRODUCTION, identifier, token_start};
             case 13:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                     case 95:
                     case 97 ... 122:
@@ -232,7 +228,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 break;
             case 14:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::PRODUCTION};
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                     case 95:
                     case 97 ... 122:
@@ -244,7 +240,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 break;
             case 15:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::TOKEN};
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                     case 65 ... 90:
                     case 95:
@@ -256,7 +252,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 break;
             case 16:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::TOKEN};
-                switch(curr) {
+                switch (curr) {
                     case 48 ... 57:
                     case 65 ... 90:
                     case 95:
@@ -272,7 +268,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 return Token{Token::TokenType::EOL, identifier, token_start};
             case 19:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
-                switch(curr) {
+                switch (curr) {
                     case 9 ... 13:
                     case 32:
                     case 133:
@@ -291,7 +287,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 break;
             case 20:
                 this->fallback = Fallback{identifier.size(), this->curr_position, Token::TokenType::WSPACE};
-                switch(curr) {
+                switch (curr) {
                     case 9 ... 13:
                     case 32:
                     case 133:
@@ -311,9 +307,7 @@ input::Token input::PalexRuleLexer::next_token() {
             case ERROR_STATE:
                 return this->try_restore_fallback(identifier, token_start);
         }
-
         identifier += this->cache.top();
-        this->curr_position.advance(this->cache.top());
         this->cache.pop();
         curr = this->get_char();
     }
@@ -346,14 +340,11 @@ char32_t input::PalexRuleLexer::get_char() {
 
 input::Token input::PalexRuleLexer::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
     if (!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};
-
     while (token_identifier.size() > this->fallback.value().token_length) {
         this->cache.push(token_identifier.back());
         token_identifier.pop_back();
     }
-
     this->curr_position = this->fallback.value().next_token_position;
-
     return Token{this->fallback.value().type, token_identifier, token_start};
 }
 
