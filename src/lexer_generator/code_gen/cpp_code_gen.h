@@ -13,56 +13,19 @@
 
 namespace code_gen {
     namespace cpp {
-        bool generate_cpp_lexer_files(
-            const std::vector<lexer_generator::TokenDefinition>& lexer_rules,
+        bool generate_lexer_files(
+            const std::vector<lexer_generator::TokenDefinition>& token_definitions,
             const lexer_generator::LexerAutomaton_t& lexer_dfa, 
             const std::string& lexer_name, 
             const input::PalexConfig& config
         );
-
-        void generate_lexer_files(
-            const lexer_generator::LexerAutomaton_t& dfa, 
-            const std::string& lexer_name, 
-            const input::PalexConfig& config, 
-            const TokenInfos& tokens
-        );
         void generate_lexer_header(const std::string& lexer_name, const input::PalexConfig& config, const TokenInfos& tokens);
         void generate_lexer_source(
-            const std::string& lexer_name, 
-            const input::PalexConfig& config, 
             const TokenInfos& tokens, 
-            const lexer_generator::LexerAutomaton_t& dfa
+            const lexer_generator::LexerAutomaton_t& lexer_dfa,
+            const std::string& lexer_name, 
+            const input::PalexConfig& config
         );
         void generate_utf8_lib(const input::PalexConfig& config);
-
-        void complete_lexer_header(
-            std::ostream& output, 
-            const std::string_view tag, 
-            const std::string& lexer_name, 
-            const input::PalexConfig& config, 
-            const TokenInfos& tokens
-        );
-        void complete_lexer_source(
-            std::ostream& output, 
-            const std::string_view tag, 
-            const std::string& lexer_name,
-            const input::PalexConfig& config, 
-            const TokenInfos& tokens, 
-            const lexer_generator::LexerAutomaton_t& dfa
-        );
-
-        void write_state_machine(std::ostream& output, const lexer_generator::LexerAutomaton_t& dfa, const input::PalexConfig& config);
-        void write_state(
-            std::ostream& output, 
-            const lexer_generator::LexerAutomaton_t& dfa, 
-            const input::PalexConfig& config, 
-            const lexer_generator::LexerAutomaton_t::StateID_t to_write
-        );
-        void write_error_state(std::ostream& output, const input::PalexConfig& config);
-        void write_state_transition_table(
-            std::ostream& output, 
-            const lexer_generator::LexerAutomaton_t& dfa, 
-            const lexer_generator::LexerAutomaton_t::StateID_t to_write
-        );
     }
 }

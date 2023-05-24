@@ -33,7 +33,7 @@ namespace %LEXER_NAMESPACE% {
             Token next_unignored_token();
             bool end() const;
         private:
-            %FALLBACK_TYPES%
+%FALLBACK_TYPES%
             char32_t get_char();
 
             std::istream& input;

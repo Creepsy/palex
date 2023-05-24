@@ -9,7 +9,7 @@
 int main() {
     std::stringstream output;
 
-    TEST_EXCEPT(templates::write_template_to_stream("a %template without tag end!", output, templates::EMPTY_COMPLETER), palex_except::ParserError)
+    TEST_EXCEPT(templates::write_template_to_stream("a %template without tag end!", output, {}), palex_except::ParserError)
 
     return 0;
 }

@@ -18,7 +18,7 @@
 
 const std::vector<code_gen::LexerCodeGenerator_t> code_gen::LANGUAGE_CODE_GENERATORS = {
     code_gen::EMPTY_LEXER_GENERATOR,
-    code_gen::cpp::generate_cpp_lexer_files
+    code_gen::cpp::generate_lexer_files
 };
 
 // helper functions
