@@ -1,6 +1,7 @@
 set(PROJECT_SOURCES
     util/utf8.cpp
     util/palex_except.cpp
+    util/stream_format.cpp
 
     regex/regex_ast.cpp
     regex/RegexParser.cpp
@@ -31,6 +32,7 @@ set(PROJECT_HEADERS
     util/utf8.h
     util/palex_except.h
     util/Visitor.h
+    util/stream_format.h
 
     regex/character_classes.h
     regex/regex_ast.cpp
