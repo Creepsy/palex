@@ -8,6 +8,8 @@ endfunction()
 generate_test_executable(PalexRuleLexer input/palex_rule_lexer_test.cpp)
 generate_test_executable(PalexRuleParser input/palex_rule_parser_test.cpp)
 generate_test_executable(PalexRuleParserErrors input/palex_rule_parser_errors_test.cpp)
+generate_test_executable(CmdArguments input/cmd_arguments_test.cpp)
+generate_test_executable(CmdArgumentsErrors input/cmd_arguments_errors_test.cpp)
 
 generate_test_executable(UTF8Input util/utf8_input_test.cpp)
 generate_test_executable(UTF8Output util/utf8_output_test.cpp)
