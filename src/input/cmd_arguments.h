@@ -30,5 +30,5 @@ namespace input {
         bool lexer_fallback = false;
     };
 
-    PalexConfig parse_config_from_args(const int argc, char* argv[]);
+    PalexConfig parse_config_from_args(const int argc, const char** argv);
 }

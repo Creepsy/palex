@@ -9,7 +9,7 @@
 
 namespace input {
     // helper functions
-    std::vector<std::string> convert_args(const int argc, char* argv[]);
+    std::vector<std::string> convert_args(const int argc, const char** argv);
     std::string lower(const std::string& to_lower);
     bool is_flag(const std::string& to_check);
     bool is_option(const std::string& to_check);
@@ -20,7 +20,7 @@ namespace input {
     void parse_lookahead(const std::string& lookahead, PalexConfig& target);
     void parse_module_name(const std::string& module_name, PalexConfig& target);
 
-    std::vector<std::string> convert_args(const int argc, char* argv[]) {
+    std::vector<std::string> convert_args(const int argc, const char** argv) {
         std::vector<std::string> arguments(argc, "");
         for (int curr_arg = 0; curr_arg < argc; curr_arg++) {
             arguments[curr_arg] = argv[curr_arg];
@@ -132,7 +132,7 @@ namespace input {
         target.module_name = module_name;
     }
 
-    PalexConfig parse_config_from_args(const int argc, char* argv[]) {
+    PalexConfig parse_config_from_args(const int argc, const char** argv) {
         const std::vector<std::string> arguments = convert_args(argc, argv);
         PalexConfig config{};
         for (size_t curr_arg = 1; curr_arg < arguments.size(); curr_arg++) { // skip the first arg as it's the programs name

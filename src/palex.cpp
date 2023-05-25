@@ -12,7 +12,7 @@
 #include "parser_generator/shift_reduce_parsers/parser_state_comparators.h"
 
 int main(int argc, char* argv[]) { 
-    input::parse_config_from_args(argc, argv); 
+    input::parse_config_from_args(argc, (const char**)argv); 
     std::ifstream input("../examples/Example.palex");
     input::PalexRuleLexer lexer(input);
     input::PalexRuleParser parser(lexer);

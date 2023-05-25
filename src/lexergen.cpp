@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     try {
-        const input::PalexConfig config = input::parse_config_from_args(argc, argv); 
+        const input::PalexConfig config = input::parse_config_from_args(argc, (const char**)argv); 
         if (config.language == input::Language::NONE) {
             throw palex_except::ValidationError("No target language supplied!");
         }
