@@ -12,12 +12,20 @@
 
 namespace parser_generator::shift_reduce_parsers {    
     using NonterminalMappings_t = std::map<std::string, std::set<Production>>;
-    
+
+    struct DebugParseTree {
+        std::string identifier;
+        std::vector<DebugParseTree> sub_nodes;
+    }; 
+    bool operator==(const DebugParseTree& first, const DebugParseTree& second);
+    std::ostream& operator<<(std::ostream& output, const DebugParseTree& to_print);
+
     class ParserTable {
         public:
             using ParserStateCompare_t = bool(*)(const ParserState&, const ParserState&);
 
             ParserTable(const ParserStateCompare_t state_comparator);
+            DebugParseTree debug_parse(const std::vector<std::string>& token_names) const;
             ~ParserTable();
 
             static ParserTable generate(const std::set<Production>& productions, const ParserTable::ParserStateCompare_t state_comparator, const size_t lookahead);
@@ -54,6 +62,8 @@ namespace parser_generator::shift_reduce_parsers {
                 const size_t lookahead
             );
             ParserStateID_t insert_state(const ParserState& to_insert);
+            const Action& debug_next_action(const std::vector<std::string>& token_names, const size_t curr_state, const size_t curr_position) const;
+            size_t debug_goto(const size_t curr_state, const std::string& reduced) const;
 
             friend std::ostream& operator<<(std::ostream& output, const ParserTable& to_print);
     };

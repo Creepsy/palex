@@ -4,6 +4,13 @@
 #include <algorithm>
 #include <cassert>
 #include <functional>
+#include <stack>
+#include <utility>
+#include <variant>
+
+#include "util/palex_except.h"
+#include "util/Visitor.h"
+#include "util/stream_format.h"
 
 #include "parser_state_comparators.h"
 #include "state_lookahead.h"
@@ -31,6 +38,9 @@ namespace parser_generator::shift_reduce_parsers {
         const NonterminalMappings_t& nonterminal_mappings,
         const size_t lookahead
     );
+    bool matches_lookahead(const std::vector<std::string>& token_names, const Lookahead_t& lookahead, const size_t curr_position);
+    size_t get_current_state(const std::stack<std::pair<size_t, DebugParseTree>>& parse_stack);
+    DebugParseTree reduce_production(const Production& to_reduce, std::stack<std::pair<size_t, DebugParseTree>>& parse_stack);
 
     template<class T>
     std::set<T> filter_set(const std::set<T>& to_filter, bool(*predicate)(const T&)) {
@@ -124,7 +134,90 @@ namespace parser_generator::shift_reduce_parsers {
         }
     }
 
+    bool matches_lookahead(const std::vector<std::string>& token_names, const Lookahead_t& lookahead, const size_t curr_position) {
+        const size_t sequence_length = std::min(lookahead.size(), token_names.size() - curr_position);
+        for (size_t i = 0; i < sequence_length; i++) {
+            if (token_names[curr_position + i] != lookahead[i].identifier) {
+                return false;
+            }
+        }
+        for (size_t i = sequence_length; i < lookahead.size(); i++) { // all remaining tokens after input end have to be EOF
+            if (lookahead[i].identifier != "EOF") {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    size_t get_current_state(const std::stack<std::pair<size_t, DebugParseTree>>& parse_stack) {
+        return parse_stack.empty() ? 0 : parse_stack.top().first;
+    }
+
+    bool operator==(const DebugParseTree& first, const DebugParseTree& second) {
+        return first.identifier == second.identifier && first.sub_nodes == second.sub_nodes;
+    }
+
+    std::ostream& operator<<(std::ostream& output, const DebugParseTree& to_print) {
+        output << to_print.identifier << "\n";
+        output << sfmt::Indentation{1};
+        for (const DebugParseTree& sub_node : to_print.sub_nodes) {
+            output << sub_node;
+        }
+        output << sfmt::Indentation{-1};
+        return output;
+    }
+
+    DebugParseTree reduce_production(const Production& to_reduce, std::stack<std::pair<size_t, DebugParseTree>>& parse_stack) {
+        std::vector<DebugParseTree> sub_nodes;
+        assert(to_reduce.symbols.size() <= parse_stack.size() && "BUG: Parse stack doesn't have enough elements for rule reduction!"); 
+        for (size_t i = 0; i < to_reduce.symbols.size(); i++) {
+            sub_nodes.push_back(parse_stack.top().second);
+            parse_stack.pop();
+        }
+        std::reverse(sub_nodes.begin(), sub_nodes.end()); // stack pop reverses order, so we have to reverse it again
+        return DebugParseTree{to_reduce.name, sub_nodes};
+    }
+
     ParserTable::ParserTable(const ParserStateCompare_t state_comparator) : state_comparator(state_comparator) {
+    }
+
+    DebugParseTree ParserTable::debug_parse(const std::vector<std::string>& token_names) const {
+        std::stack<std::pair<size_t, DebugParseTree>> parse_stack;
+        size_t curr_position = 0;
+        bool accepted = false;
+
+        while (!accepted) {
+            const Action next_action = this->debug_next_action(token_names, get_current_state(parse_stack), curr_position);
+            accepted = std::visit(
+                Visitor{
+                    [](const Action::GotoParameters& goto_action) -> bool {
+                        assert(false && "BUG: debug_next_action should never return a goto action!"); 
+                        return false;
+                    },
+                    [&](const Action::ShiftParameters& shift_action) -> bool {
+                        parse_stack.push(std::make_pair(shift_action.next_state, DebugParseTree{token_names[curr_position++]}));
+                        return false;
+                    },
+                    [&](const Action::ReduceParameters& reduce_action) -> bool {
+                        const DebugParseTree reduced = reduce_production(reduce_action.to_reduce, parse_stack);
+                        const size_t next_state = reduce_action.to_reduce.is_entry() 
+                            ? 0 // when we accept the input, the next state doesn't matter
+                            : this->debug_goto(get_current_state(parse_stack), reduce_action.to_reduce.name);
+                        parse_stack.push(std::make_pair(next_state, reduced));
+                        return reduce_action.to_reduce.is_entry();
+                    }
+                },
+                next_action.parameters
+            );
+        }
+        
+        if (parse_stack.empty()) {
+            throw palex_except::ParserError("Empty parse stack after parse!");
+        }
+        if (parse_stack.size() != 1) {
+            throw palex_except::ParserError("Parse stack contains more than one element after parse!");
+        }
+        return parse_stack.top().second;
     }
 
     ParserTable::~ParserTable() {
@@ -231,6 +324,81 @@ namespace parser_generator::shift_reduce_parsers {
         this->states.push_back(to_insert);
         return this->states.size() - 1;
     }
+
+    const Action& ParserTable::debug_next_action(const std::vector<std::string>& token_names, const size_t curr_state, const size_t curr_position) const {
+        assert(curr_state < this->states.size() && "BUG: Tried to access non-existent state!");
+        const Action* default_action = nullptr;
+        for (const Action& action : this->states[curr_state].get_actions()) {
+            bool lookahead_match = std::visit(
+                Visitor{
+                    [](const Action::GotoParameters& goto_action) -> bool {
+                        return false;
+                    },
+                    [&](const Action::ShiftParameters& shift_action) -> bool {
+                        return matches_lookahead(token_names, shift_action.lookahead, curr_position);
+                    },
+                    [&](const Action::ReduceParameters& reduce_action) -> bool {
+                        return matches_lookahead(token_names, reduce_action.lookahead, curr_position);
+                    }
+                },
+                action.parameters
+            );
+            if (!lookahead_match) {
+                continue;
+            }
+            bool empty_lookahead = std::visit(
+                Visitor{
+                    [](const Action::GotoParameters& goto_action) -> bool {
+                        return false;
+                    },
+                    [&](const Action::ShiftParameters& shift_action) -> bool {
+                        return shift_action.lookahead.empty();
+                    },
+                    [&](const Action::ReduceParameters& reduce_action) -> bool {
+                        return reduce_action.lookahead.empty();
+                    }
+                },
+                action.parameters
+            );
+            if (!empty_lookahead) {
+                return action;
+            }
+            default_action = &action;
+        }
+        if (!default_action) {
+            throw palex_except::ParserError("Invalid lookahead! No matching shift-/reduce-action found!");
+        }
+        return *default_action; 
+    }
+
+    size_t ParserTable::debug_goto(const size_t curr_state, const std::string& reduced) const {
+        assert(curr_state < this->states.size() && "BUG: Tried to access non-existent state!");
+        const auto goto_action = std::find_if(
+            this->states[curr_state].get_actions().begin(),
+            this->states[curr_state].get_actions().end(),
+            [&](const Action& action) -> bool {
+                return std::visit(
+                    Visitor{
+                        [&](const Action::GotoParameters& goto_action) -> bool {
+                            return goto_action.reduced_symbol.identifier == reduced;
+                        },
+                        [](const Action::ShiftParameters& shift_action) -> bool {
+                            return false;
+                        },
+                        [](const Action::ReduceParameters& reduce_action) -> bool {
+                            return false;
+                        }
+                    },
+                    action.parameters
+                );
+            }
+        );
+        if (goto_action == this->states[curr_state].get_actions().end()) {
+            throw palex_except::ParserError("Invalid parser state! No matching goto action found!");
+        }
+        return std::get<Action::GotoParameters>(goto_action->parameters).next_state;
+    }
+
 
     std::ostream& operator<<(std::ostream& output, const ParserTable& to_print) {
         for (size_t id = 0; id < to_print.states.size(); id++) {

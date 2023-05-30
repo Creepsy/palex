@@ -140,6 +140,10 @@ namespace parser_generator::shift_reduce_parsers {
         return this->production_states;
     }
 
+    const std::set<Action>& ParserState::get_actions() const {
+        return this->action_table;
+    }
+
     ParserState::~ParserState() {
     }
 

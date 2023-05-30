@@ -63,6 +63,7 @@ namespace parser_generator::shift_reduce_parsers {
             bool add_production_state(const ProductionState& to_add); // returns whether the state changed
             ParserState advance_by(const Symbol& to_advance_by) const;
             const std::set<ProductionState>& get_production_states() const;
+            const std::set<Action>& get_actions() const;
             ~ParserState();
         private:
             std::set<ProductionState> production_states;
