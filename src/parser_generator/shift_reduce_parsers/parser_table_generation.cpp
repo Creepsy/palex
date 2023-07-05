@@ -93,7 +93,7 @@ namespace parser_generator::shift_reduce_parsers {
             entry_productions.end(), 
             std::inserter(entry_production_states, entry_production_states.begin()),
             [=](const Production& production) -> ProductionState { 
-                return ProductionState(production, Lookahead_t(lookahead, Symbol{Symbol::SymbolType::TERMINAL, "EOF"})); 
+                return ProductionState(production, Lookahead_t(lookahead, Symbol{Symbol::SymbolType::TERMINAL, "END_OF_FILE"})); 
             }
         );
         return ParserState(entry_production_states);
@@ -142,7 +142,7 @@ namespace parser_generator::shift_reduce_parsers {
             }
         }
         for (size_t i = sequence_length; i < lookahead.size(); i++) { // all remaining tokens after input end have to be EOF
-            if (lookahead[i].identifier != "EOF") {
+            if (lookahead[i].identifier != "END_OF_FILE") {
                 return false;
             }
         }
@@ -178,7 +178,7 @@ namespace parser_generator::shift_reduce_parsers {
         return DebugParseTree{to_reduce.name, sub_nodes};
     }
 
-    ParserTable::ParserTable(const ParserStateCompare_t state_comparator) : state_comparator(state_comparator) {
+    ParserTable::ParserTable(const ParserStateComparator_t& state_comparator) : state_comparator(state_comparator) {
     }
 
     DebugParseTree ParserTable::debug_parse(const std::vector<std::string>& token_names) const {
@@ -220,10 +220,14 @@ namespace parser_generator::shift_reduce_parsers {
         return parse_stack.top().second;
     }
 
+    const std::vector<ParserState>& ParserTable::get_states() const {
+        return this->states;
+    }
+
     ParserTable::~ParserTable() {
     }
 
-    ParserTable ParserTable::generate(const std::set<Production>& productions, const ParserTable::ParserStateCompare_t state_comparator, const size_t lookahead) {
+    ParserTable ParserTable::generate(const std::set<Production>& productions, const ParserStateComparator_t& state_comparator, const size_t lookahead) {
         const FirstSet_t first_set = generate_first_set(productions, lookahead);
         const NonterminalMappings_t nonterminal_mappings = generate_nonterminal_mappings(productions);
         const ParserState entry_state = create_entry_state(productions, lookahead);
@@ -232,13 +236,26 @@ namespace parser_generator::shift_reduce_parsers {
         return parser_table;
     }
 
-    std::optional<ParserStateID_t> ParserTable::try_get_exact_state_id(const ParserState& to_find) {
+    std::optional<ParserStateID_t> ParserTable::try_get_matching_state_id(const ParserState& to_find) {
         const auto state_ptr = std::find_if(
             this->states.begin(), 
             this->states.end(), 
-            std::bind(lr_state_compare, to_find, std::placeholders::_1)
+            std::bind(this->state_comparator, to_find, std::placeholders::_1)
         );
-        return (state_ptr == this->states.end()) ? std::nullopt : std::optional<ParserStateID_t>{state_ptr - this->states.begin()};
+        if (state_ptr == this->states.end()) {
+            return std::nullopt;
+        }
+        const bool are_all_lookaheads_covered = std::includes(
+            state_ptr->get_production_states().begin(),
+            state_ptr->get_production_states().end(),
+            to_find.get_production_states().begin(),
+            to_find.get_production_states().end()
+        );
+        // if not all lookaheads are covered, we need to generate the actions for the production states to be added; therefore the states aren't matching
+        if (!are_all_lookaheads_covered) {
+            return std::nullopt;
+        }
+        return std::optional<ParserStateID_t>{state_ptr - this->states.begin()};
     }
 
     ParserStateID_t ParserTable::construct_state_from_core(
@@ -248,7 +265,7 @@ namespace parser_generator::shift_reduce_parsers {
         const size_t lookahead
     ) {
         const ParserState expanded_state = expand_parser_state(state_core, first_set, nonterminal_mappings, lookahead);
-        std::optional<ParserStateID_t> exact_state_id = this->try_get_exact_state_id(expanded_state);
+        std::optional<ParserStateID_t> exact_state_id = this->try_get_matching_state_id(expanded_state);
         if (exact_state_id.has_value()) {
             return exact_state_id.value();
         }

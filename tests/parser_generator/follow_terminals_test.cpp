@@ -24,8 +24,8 @@ int main() {
         "test_production", 
         std::vector<parser_generator::Symbol>{TERMINAL("ADD")}
     };
-    const ProductionState prod1_state = ProductionState(prod1, Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
-    const ProductionState prod3_state = ProductionState(prod3, Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")});
+    const ProductionState prod1_state = ProductionState(prod1, Lookahead_t{TERMINAL("END_OF_FILE"), TERMINAL("END_OF_FILE")});
+    const ProductionState prod3_state = ProductionState(prod3, Lookahead_t{TERMINAL("END_OF_FILE"), TERMINAL("END_OF_FILE")});
     const ParserState state1( 
         std::set<ProductionState>{
             prod1_state, ProductionState(prod2), ProductionState(prod3_state)
@@ -56,13 +56,13 @@ int main() {
     TEST_TRUE((
         follow_terminals(TERMINAL("ADD"), state1, first_set, 2) == 
         std::set<Lookahead_t>{
-            Lookahead_t{TERMINAL("EOF"), TERMINAL("EOF")}
+            Lookahead_t{TERMINAL("END_OF_FILE"), TERMINAL("END_OF_FILE")}
         }
     ));
     TEST_TRUE((
         follow_terminals(NONTERMINAL("test_production"), state2, first_set, 2) == 
         std::set<Lookahead_t>{
-            Lookahead_t{TERMINAL("INT"), TERMINAL("EOF")}
+            Lookahead_t{TERMINAL("INT"), TERMINAL("END_OF_FILE")}
         }
     ));
 
