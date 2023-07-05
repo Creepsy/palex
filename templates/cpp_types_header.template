@@ -1,0 +1,40 @@
+#pragma once
+
+#include <vector>
+#include <memory>
+
+#include "%UNIT_NAME%Lexer.h"
+
+namespace %MODULE_NAMESPACE% {
+    enum class NonterminalType {
+%NONTERMINAL_ENUM%    };
+
+    class AstNode {
+        public:
+            AstNode() = default;
+            virtual ~AstNode() = default;
+        private:
+    };
+
+    class TokenAstNode : public AstNode {
+        public:
+            TokenAstNode(const Token& token);
+            const Token& get_token() const;
+            ~TokenAstNode() = default;
+        private:
+            Token token;
+    };
+
+    class CollectionAstNode : public AstNode {
+        public:
+            CollectionAstNode(const NonterminalType type);
+            CollectionAstNode(const NonterminalType type, std::vector<std::unique_ptr<AstNode>>& collection_to_move);
+            void push_back(std::unique_ptr<AstNode>& to_push);
+            const std::vector<std::unique_ptr<AstNode>>& get_collection() const;
+            const NonterminalType get_type() const;
+            ~CollectionAstNode() = default;
+        private:
+            NonterminalType type;
+            std::vector<std::unique_ptr<AstNode>> collection;
+    };
+}

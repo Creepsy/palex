@@ -23,6 +23,9 @@ set(PROJECT_SOURCES
     parser_generator/shift_reduce_parsers/parser_state_comparators.cpp
     parser_generator/shift_reduce_parsers/state_lookahead.cpp
 
+    parser_generator/shift_reduce_parsers/code_gen/parser_generation.cpp
+    parser_generator/shift_reduce_parsers/code_gen/cpp_code_gen.cpp
+
     input/PalexRuleParser.cpp
     input/cmd_arguments.cpp
 )
@@ -52,6 +55,10 @@ set(PROJECT_HEADERS
     ${CMAKE_BINARY_DIR}/cpp_lexer_header.h
     ${CMAKE_BINARY_DIR}/cpp_utf8_header.h
     ${CMAKE_BINARY_DIR}/cpp_utf8_source.h
+    ${CMAKE_BINARY_DIR}/cpp_parser_header.h
+    ${CMAKE_BINARY_DIR}/cpp_parser_source.h
+    ${CMAKE_BINARY_DIR}/cpp_types_header.h
+    ${CMAKE_BINARY_DIR}/cpp_types_source.h
     
     parser_generator/validation.h
     parser_generator/production_definition.h
@@ -60,6 +67,9 @@ set(PROJECT_HEADERS
     parser_generator/shift_reduce_parsers/parser_table_generation.h
     parser_generator/shift_reduce_parsers/parser_state_comparators.h
     parser_generator/shift_reduce_parsers/state_lookahead.h
+
+    parser_generator/shift_reduce_parsers/code_gen/parser_generation.h
+    parser_generator/shift_reduce_parsers/code_gen/cpp_code_gen.h
 
     input/cmd_arguments.h
 )
