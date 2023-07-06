@@ -78,9 +78,6 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_sequence() {
         &RegexParser::parse_regex_quantifier
     );
 
-    if (sequence_content.empty()) {
-        this->throw_parsing_err("Empty sequences are not allowed, as they might lead to infinite matches!"); // TODO: allow this?
-    }
     if (sequence_content.size() == 1)  {
         return std::move(sequence_content.front());
     }
