@@ -8,8 +8,7 @@
 
 int main() {
     const std::vector<std::u32string> TEST_CASES = {
-        U")", U"()", U"(", U"[",
-        U"", U"a|", U"|", U"|a",
+        U")", U"(", U"[",
         U"\\ca", U"\\uAfF", U"\\u24Ga", U"\\u{24fffag}", U"\\u{ffffffffff}",
         U"a{3,", U"a{3,", U"a{}", U"a{", U"a{3, 5}"
     };

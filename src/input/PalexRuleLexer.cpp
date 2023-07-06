@@ -308,6 +308,7 @@ input::Token input::PalexRuleLexer::next_token() {
                 return this->try_restore_fallback(identifier, token_start);
         }
         identifier += this->cache.top();
+        this->curr_position.advance(this->cache.top());
         this->cache.pop();
         curr = this->get_char();
     }
