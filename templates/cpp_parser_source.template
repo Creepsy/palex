@@ -1,0 +1,62 @@
+#include "%UNIT_NAME%Parser.h"
+
+#include <map>
+#include <array>
+#include <cassert>
+#include <stdexcept>
+
+constexpr size_t ERROR_STATE = (size_t)-1;
+constexpr size_t LOOKAHEAD = %LOOKAHEAD_COUNT%;
+
+%MODULE_NAMESPACE%::%UNIT_NAME%Parser::%UNIT_NAME%Parser(%UNIT_NAME%Lexer& lexer) : lexer{lexer} {
+    this->init_lookahead();
+}
+
+std::unique_ptr<%MODULE_NAMESPACE%::AstNode> %MODULE_NAMESPACE%::%UNIT_NAME%Parser::parse() {
+    while (true) {
+        switch (this->get_current_state()) {
+%PARSER_TABLE%
+            case ERROR_STATE:
+                throw std::runtime_error("PARSER ERROR: TODO better message");
+        }
+    }
+    return nullptr; // just to make sure that the compiler is happy
+}
+
+void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::init_lookahead() {
+%INIT_LOOKAHEAD%
+}
+
+void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::shift(const StateID_t next_state) {
+%SHIFT_FUNCTION%
+}
+
+std::vector<std::unique_ptr<%MODULE_NAMESPACE%::AstNode>> %MODULE_NAMESPACE%::%UNIT_NAME%Parser::collect_n(const size_t n) {
+    std::vector<std::unique_ptr<AstNode>> collection(n);
+    assert(this->parser_stack.size() >= n && "BUG: Parser stack doesn't contain enough elements!");
+    for (size_t i = 0; i < n; i++) {
+        collection[n - i - 1] = std::move(this->parser_stack.top().first);
+        this->parser_stack.pop();
+    }
+    return std::move(collection);
+}
+
+void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::reduce_n(const size_t n, const NonterminalType reduced_production) {
+    std::vector<std::unique_ptr<AstNode>> collection = this->collect_n(n);
+    std::unique_ptr<AstNode> collection_ptr = std::move(std::make_unique<CollectionAstNode>(reduced_production, collection));
+    this->parser_stack.push(std::make_pair(std::move(collection_ptr), this->get_goto_state(reduced_production)));
+}
+
+%MODULE_NAMESPACE%::%UNIT_NAME%Parser::StateID_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_current_state() const {
+    return this->parser_stack.empty() ? 0 : this->parser_stack.top().second;
+}
+
+%MODULE_NAMESPACE%::%UNIT_NAME%Parser::StateID_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_goto_state(const NonterminalType reduced_production) const {
+    switch (this->get_current_state()) {
+%GOTO_STATES%       default:
+            return ERROR_STATE;
+    }
+    return ERROR_STATE; // just to make sure that the compiler is happy
+}
+
+%LOOKAHEAD_FUNCTION%

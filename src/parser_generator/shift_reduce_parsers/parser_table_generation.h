@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "parser_state.h"
+#include "parser_state_comparators.h"
 #include "state_lookahead.h"
 
 namespace parser_generator::shift_reduce_parsers {    
@@ -22,18 +23,17 @@ namespace parser_generator::shift_reduce_parsers {
 
     class ParserTable {
         public:
-            using ParserStateCompare_t = bool(*)(const ParserState&, const ParserState&);
-
-            ParserTable(const ParserStateCompare_t state_comparator);
+            ParserTable(const ParserStateComparator_t& state_comparator);
             DebugParseTree debug_parse(const std::vector<std::string>& token_names) const;
+            const std::vector<ParserState>& get_states() const;
             ~ParserTable();
 
-            static ParserTable generate(const std::set<Production>& productions, const ParserTable::ParserStateCompare_t state_comparator, const size_t lookahead);
+            static ParserTable generate(const std::set<Production>& productions, const ParserStateComparator_t& state_comparator, const size_t lookahead);
         private:
-            const ParserStateCompare_t state_comparator;
+            const ParserStateComparator_t& state_comparator;
             std::vector<ParserState> states;
 
-            std::optional<ParserStateID_t> try_get_exact_state_id(const ParserState& to_find);
+            std::optional<ParserStateID_t> try_get_matching_state_id(const ParserState& to_find);
             ParserStateID_t construct_state_from_core(
                 const ParserState& state_core, 
                 const FirstSet_t& first_set,

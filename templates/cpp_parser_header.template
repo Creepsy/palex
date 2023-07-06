@@ -1,0 +1,34 @@
+#pragma once
+
+#include <memory>
+#include <vector>
+#include <stack>
+#include <deque>
+#include <cstddef>
+#include <utility>
+
+#include "%UNIT_NAME%Types.h"
+#include "%UNIT_NAME%Lexer.h"
+
+namespace %MODULE_NAMESPACE% {
+    class %UNIT_NAME%Parser {
+        public:
+            %UNIT_NAME%Parser(%UNIT_NAME%Lexer& lexer);
+            std::unique_ptr<AstNode> parse();
+            ~%UNIT_NAME%Parser() = default;
+        private:
+            using StateID_t = size_t;
+
+            %UNIT_NAME%Lexer& lexer;
+            %LOOKAHEAD_TYPE%
+            std::stack<std::pair<std::unique_ptr<AstNode>, StateID_t>> parser_stack;
+
+            void init_lookahead();
+            void shift(const StateID_t next_state);
+            std::vector<std::unique_ptr<AstNode>> collect_n(const size_t n);
+            void reduce_n(const size_t n, const NonterminalType reduced_production);
+            StateID_t get_current_state() const;
+            StateID_t get_goto_state(const NonterminalType reduced_production) const;
+            %LOOKAHEAD_FUNCTION%
+    };
+}

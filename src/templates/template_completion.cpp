@@ -11,11 +11,11 @@
 
 templates::TemplateCompleter_t templates::EMPTY_COMPLETER = [](std::ostream& output) -> void {};
 
-templates::TemplateCompleter_t templates::constant_completer(const std::string_view& completer_output) {
+templates::TemplateCompleter_t templates::constant_completer(const std::string& completer_output) {
     return [=](std::ostream& output) { output << completer_output; };
 }
 
-templates::TemplateCompleter_t templates::conditional_completer(const bool enable_flag, const std::string_view& completer_output) {
+templates::TemplateCompleter_t templates::conditional_completer(const bool enable_flag, const std::string& completer_output) {
     return enable_flag ? constant_completer(completer_output) : EMPTY_COMPLETER;
 }
 

@@ -1,0 +1,32 @@
+#include "%UNIT_NAME%Types.h"
+
+#include <utility>
+
+%MODULE_NAMESPACE%::TokenAstNode::TokenAstNode(const Token& token) : AstNode(), token{token} {
+}
+
+const %MODULE_NAMESPACE%::Token& %MODULE_NAMESPACE%::TokenAstNode::get_token() const {
+    return this->token;
+}
+
+%MODULE_NAMESPACE%::CollectionAstNode::CollectionAstNode(const NonterminalType type) : AstNode(), type{type} {
+}
+
+%MODULE_NAMESPACE%::CollectionAstNode::CollectionAstNode(
+    const NonterminalType type, 
+    std::vector<std::unique_ptr<AstNode>>& collection_to_move
+) : AstNode(), type{type} {
+    this->collection = std::move(collection_to_move);
+}
+
+void %MODULE_NAMESPACE%::CollectionAstNode::push_back(std::unique_ptr<AstNode>& to_push) {
+    this->collection.push_back(std::move(to_push));
+}
+
+const std::vector<std::unique_ptr<%MODULE_NAMESPACE%::AstNode>>& %MODULE_NAMESPACE%::CollectionAstNode::get_collection() const {
+    return this->collection;
+}
+
+const %MODULE_NAMESPACE%::NonterminalType %MODULE_NAMESPACE%::CollectionAstNode::get_type() const {
+    return this->type;
+}
