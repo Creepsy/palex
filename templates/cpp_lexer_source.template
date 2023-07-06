@@ -41,6 +41,7 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
 %STATES%%ERROR_STATE%
         }
         identifier += this->cache.top();
+        this->curr_position.advance(this->cache.top());
         this->cache.pop();
         curr = this->get_char();
     }

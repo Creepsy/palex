@@ -69,7 +69,6 @@ std::string lexer_generator::merge_states_by_priority(const std::map<std::string
     size_t highest_priority = 0;
     std::vector<std::string> hp_tokens;
 
-
     for (const std::string& token : to_merge) {
         if (!token.empty()) {
             const size_t token_priority = token_priorities.at(token);
@@ -100,17 +99,19 @@ lexer_generator::LexerAutomaton_t::StateID_t lexer_generator::insert_regex_ast_i
     const LexerAutomaton_t::StateID_t root_state, 
     const regex::RegexBase* const to_insert
 ) {
+    const LexerAutomaton_t::StateID_t regex_ast_entry_state = nfa.add_state("");
+    nfa.connect_states(root_state, regex_ast_entry_state); 
     if (dynamic_cast<const regex::RegexAlternation*>(to_insert)) {
-        return insert_regex_branch_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexAlternation*>(to_insert));
+        return insert_regex_branch_in_nfa(nfa, regex_ast_entry_state, dynamic_cast<const regex::RegexAlternation*>(to_insert));
     } 
     if (dynamic_cast<const regex::RegexCharSet*>(to_insert)) {
-        return insert_regex_char_set_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexCharSet*>(to_insert));
+        return insert_regex_char_set_in_nfa(nfa, regex_ast_entry_state, dynamic_cast<const regex::RegexCharSet*>(to_insert));
     }
     if (dynamic_cast<const regex::RegexQuantifier*>(to_insert)) {
-        return insert_regex_quantifier_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexQuantifier*>(to_insert));
+        return insert_regex_quantifier_in_nfa(nfa, regex_ast_entry_state, dynamic_cast<const regex::RegexQuantifier*>(to_insert));
     }
     if (dynamic_cast<const regex::RegexSequence*>(to_insert)) {
-        return insert_regex_sequence_in_nfa(nfa, root_state, dynamic_cast<const regex::RegexSequence*>(to_insert));
+        return insert_regex_sequence_in_nfa(nfa, regex_ast_entry_state, dynamic_cast<const regex::RegexSequence*>(to_insert));
     }
 
     throw std::runtime_error("Tried to insert unknown regex type into NFA!");
