@@ -108,3 +108,5 @@ target_link_libraries(lexergen palex_objects auto_generated_objects)
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(palex palex_objects auto_generated_objects)
+
+install(TARGETS palex DESTINATION bin)
