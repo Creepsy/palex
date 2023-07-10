@@ -343,6 +343,7 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
             {"LOOKAHEAD_FUNCTION", std::bind(complete_lookahead_function_declaration, config, _1)}
         };
         const std::string parser_header_path = config.output_path + "/" + unit_name + "Parser.h";
+        std::cout << "Generating file " << parser_header_path << "..." << std::endl;
         templates::write_template_to_file(cpp_parser_header, parser_header_path, completers);
     }
 
@@ -365,6 +366,7 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
             {"PARSER_TABLE", std::bind(complete_parser_table, parser_table, config, _1)}
         };
         const std::string parser_source_path = config.output_path + "/" + unit_name + "Parser.cpp";
+        std::cout << "Generating file " << parser_source_path << "..." << std::endl;
         templates::write_template_to_file(cpp_parser_source, parser_source_path, completers);
     }            
 
@@ -381,6 +383,7 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
             {"NONTERMINAL_ENUM", std::bind(complete_nonterminal_enum, productions, _1)}
         };
         const std::string types_header_path = config.output_path + "/" + unit_name + "Types.h";
+        std::cout << "Generating file " << types_header_path << "..." << std::endl;
         templates::write_template_to_file(cpp_types_header, types_header_path, completers);
     }
 
@@ -393,6 +396,7 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
             {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)}
         };
         const std::string types_source_path = config.output_path + "/" + unit_name + "Types.cpp";
+        std::cout << "Generating file " << types_source_path << "..." << std::endl;
         templates::write_template_to_file(cpp_types_source, types_source_path, completers);
     }
 }

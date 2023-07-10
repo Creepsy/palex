@@ -1,4 +1,4 @@
-#include "%LEXER_NAME%.h"
+#include "%UNIT_NAME%Lexer.h"
 
 #include <array>
 
@@ -9,7 +9,7 @@ const std::array<std::string, %TOKEN_TYPE_COUNT%> TOKEN_TYPE_TO_STRING {
 %TOKEN_TYPE_STRINGS%
 };
 
-void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
+void %MODULE_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
     if (consumed == (char32_t)'\n') {
         this->line++;
         this->column = 1;
@@ -18,14 +18,14 @@ void %LEXER_NAMESPACE%::CharacterPosition::advance(const char32_t consumed) {
     }
 }
 
-bool %LEXER_NAMESPACE%::Token::is_ignored() const {
+bool %MODULE_NAMESPACE%::Token::is_ignored() const {
     return this->type > TokenType::%LAST_NORMAL_TOKEN%;
 }
 
-%LEXER_NAMESPACE%::%LEXER_NAME%::%LEXER_NAME%(std::istream& input) : input{input}, curr_position{} {
+%MODULE_NAMESPACE%::%UNIT_NAME%Lexer::%UNIT_NAME%Lexer(std::istream& input) : input{input}, curr_position{} {
 }
 
-%LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::next_token() {
+%MODULE_NAMESPACE%::Token %MODULE_NAMESPACE%::%UNIT_NAME%Lexer::next_token() {
     %PRE_STATE_MACHINE_FALLBACK%
     const CharacterPosition token_start = this->curr_position;
     size_t state = 0;
@@ -47,7 +47,7 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
     }
 }
 
-%LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::next_unignored_token() {
+%MODULE_NAMESPACE%::Token %MODULE_NAMESPACE%::%UNIT_NAME%Lexer::next_unignored_token() {
     Token unignored{};
 
     do {
@@ -57,11 +57,11 @@ bool %LEXER_NAMESPACE%::Token::is_ignored() const {
     return unignored;
 }
 
-bool %LEXER_NAMESPACE%::%LEXER_NAME%::end() const {
+bool %MODULE_NAMESPACE%::%UNIT_NAME%Lexer::end() const {
     return this->input.eof() && this->cache.empty();
 }
 
-char32_t %LEXER_NAMESPACE%::%LEXER_NAME%::get_char() {
+char32_t %MODULE_NAMESPACE%::%UNIT_NAME%Lexer::get_char() {
     if (!this->cache.empty()) {
         char32_t cached = this->cache.top();
         this->cache.pop();
@@ -74,14 +74,14 @@ char32_t %LEXER_NAMESPACE%::%LEXER_NAME%::get_char() {
 
 %RESTORE_FALLBACK_FUNC%
 
-std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const CharacterPosition& to_print) {
+std::ostream& %MODULE_NAMESPACE%::operator<<(std::ostream& output, const CharacterPosition& to_print) {
     return output << "[Ln " << to_print.line << ", Col " << to_print.column << "]";
 }
 
-std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Token& to_print) {
+std::ostream& %MODULE_NAMESPACE%::operator<<(std::ostream& output, const Token& to_print) {
     return output << to_print.position << " " << to_print.type << " " << to_print.identifier;
 }
 
-std::ostream& %LEXER_NAMESPACE%::operator<<(std::ostream& output, const Token::TokenType to_print) {
+std::ostream& %MODULE_NAMESPACE%::operator<<(std::ostream& output, const Token::TokenType to_print) {
     return output << TOKEN_TYPE_TO_STRING.at((size_t)to_print);
 }

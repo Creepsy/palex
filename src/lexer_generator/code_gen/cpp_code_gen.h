@@ -16,14 +16,14 @@ namespace code_gen {
         bool generate_lexer_files(
             const std::vector<lexer_generator::TokenDefinition>& token_definitions,
             const lexer_generator::LexerAutomaton_t& lexer_dfa, 
-            const std::string& lexer_name, 
+            const std::string& unit_name, 
             const input::PalexConfig& config
         );
-        void generate_lexer_header(const std::string& lexer_name, const input::PalexConfig& config, const TokenInfos& tokens);
+        void generate_lexer_header(const std::string& unit_name, const input::PalexConfig& config, const TokenInfos& tokens);
         void generate_lexer_source(
             const TokenInfos& tokens, 
             const lexer_generator::LexerAutomaton_t& lexer_dfa,
-            const std::string& lexer_name, 
+            const std::string& unit_name, 
             const input::PalexConfig& config
         );
         void generate_utf8_lib(const input::PalexConfig& config);

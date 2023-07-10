@@ -6,7 +6,7 @@
 #include <stack>
 %FALLBACK_INCLUDES%
 
-namespace %LEXER_NAMESPACE% {
+namespace %MODULE_NAMESPACE% {
     struct CharacterPosition {
         size_t line = 1;
         size_t column = 1;
@@ -26,9 +26,9 @@ namespace %LEXER_NAMESPACE% {
         bool is_ignored() const;
     };
 
-    class %LEXER_NAME% {
+    class %UNIT_NAME%Lexer {
         public:
-            %LEXER_NAME%(std::istream& input);
+            %UNIT_NAME%Lexer(std::istream& input);
             Token next_token();
             Token next_unignored_token();
             bool end() const;

@@ -76,7 +76,7 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
         std::cerr << "Error: Unable to get the name of the rule file '" << rule_file_path << "'!";
         return false;
     }
-    const std::string rule_name = std::filesystem::path(rule_file_path).stem().string() + "Lexer";
+    const std::string rule_name = std::filesystem::path(rule_file_path).stem().string();
     std::ifstream rule_file(rule_file_path);
     if (!rule_file.is_open()) {
         std::cerr << "Error: Unable to open rule file '" << rule_file_path << "'!" << std::endl;

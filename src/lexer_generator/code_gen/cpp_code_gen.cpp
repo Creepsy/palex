@@ -31,7 +31,7 @@ R"(struct Fallback {
 
 Token try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start);)";
 const std::string RESTORE_FALLBACK_FUNC_COMPLETION = 
-R"(%LEXER_NAMESPACE%::Token %LEXER_NAMESPACE%::%LEXER_NAME%::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
+R"(%MODULE_NAMESPACE%::Token %MODULE_NAMESPACE%::%UNIT_NAME%Lexer::try_restore_fallback(std::u32string& token_identifier, const CharacterPosition token_start) {
     if (!this->fallback.has_value()) return Token{Token::TokenType::UNDEFINED, token_identifier, token_start};
     while (token_identifier.size() > this->fallback.value().token_length) {
         this->cache.push(token_identifier.back());
@@ -53,7 +53,7 @@ R"(switch (curr) {
 // helper functions
 void complete_type_enum(const code_gen::TokenInfos& tokens, std::ostream& output);
 void complete_token_type_strings(const code_gen::TokenInfos& tokens, std::ostream& output);
-void complete_restore_token_fallback_function(const std::string& lexer_name, const input::PalexConfig& config, std::ostream& output);
+void complete_restore_token_fallback_function(const std::string& unit_name, const input::PalexConfig& config, std::ostream& output);
 void complete_state_machine(const lexer_generator::LexerAutomaton_t& lexer_dfa, const input::PalexConfig& config, std::ostream& output);
 void complete_state(
     const lexer_generator::LexerAutomaton_t::StateID_t state_id, 
@@ -110,10 +110,10 @@ void complete_token_type_strings(const code_gen::TokenInfos& tokens, std::ostrea
     output << sfmt::Indentation{-1}; 
 }
 
-void complete_restore_token_fallback_function(const std::string& lexer_name, const input::PalexConfig& config, std::ostream& output) {
+void complete_restore_token_fallback_function(const std::string& unit_name, const input::PalexConfig& config, std::ostream& output) {
     const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
-        {"LEXER_NAMESPACE", templates::constant_completer(config.module_name)},
-        {"LEXER_NAME", templates::constant_completer(lexer_name)}
+        {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
+        {"UNIT_NAME", templates::constant_completer(unit_name)}
     };
     templates::write_template_to_stream(RESTORE_FALLBACK_FUNC_COMPLETION.c_str(), output, completers);
 }
@@ -231,13 +231,13 @@ void complete_state_content(
 bool code_gen::cpp::generate_lexer_files(
     const std::vector<lexer_generator::TokenDefinition>& token_definitions,
     const lexer_generator::LexerAutomaton_t& lexer_dfa, 
-    const std::string& lexer_name, 
+    const std::string& unit_name, 
     const input::PalexConfig& config
 ) {
     const TokenInfos& tokens = code_gen::conv_rules_to_generation_info(token_definitions);
     try {
-        generate_lexer_header(lexer_name, config, tokens);
-        generate_lexer_source(tokens, lexer_dfa, lexer_name, config);
+        generate_lexer_header(unit_name, config, tokens);
+        generate_lexer_source(tokens, lexer_dfa, unit_name, config);
         if (config.generate_util) {
             generate_utf8_lib(config);
         }
@@ -248,15 +248,15 @@ bool code_gen::cpp::generate_lexer_files(
     return true;
 }
 
-void code_gen::cpp::generate_lexer_header(const std::string& lexer_name, const input::PalexConfig& config, const TokenInfos& tokens) {
+void code_gen::cpp::generate_lexer_header(const std::string& unit_name, const input::PalexConfig& config, const TokenInfos& tokens) {
     using namespace std::placeholders;
 
-    const std::string header_file_path = config.output_path + "/" + lexer_name + ".h";
+    const std::string header_file_path = config.output_path + "/" + unit_name + "Lexer.h";
     const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
         {"FALLBACK_INCLUDES", templates::conditional_completer(config.lexer_fallback, "#include <optional>\n#include <utility>")},
-        {"LEXER_NAMESPACE", templates::constant_completer(config.module_name)},
+        {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
         {"TOKEN_TYPE_ENUM", std::bind(complete_type_enum, tokens, _1)},
-        {"LEXER_NAME", templates::constant_completer(lexer_name)},
+        {"UNIT_NAME", templates::constant_completer(unit_name)},
         {
             "FALLBACK_TYPES", 
             [&](std::ostream& output) {
@@ -277,20 +277,20 @@ void code_gen::cpp::generate_lexer_header(const std::string& lexer_name, const i
 void code_gen::cpp::generate_lexer_source(
     const TokenInfos& tokens, 
     const lexer_generator::LexerAutomaton_t& lexer_dfa,
-    const std::string& lexer_name, 
+    const std::string& unit_name, 
     const input::PalexConfig& config
 ) {
     using namespace std::placeholders;
 
-    const std::string source_file_path = config.output_path + "/" + lexer_name + ".cpp";
+    const std::string source_file_path = config.output_path + "/" + unit_name + "Lexer.cpp";
     const std::string utf8_lib_path = std::filesystem::relative(
                 std::filesystem::absolute(config.util_output_path),
                 std::filesystem::absolute(config.output_path)
             ).string();
     const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
-        {"LEXER_NAME", templates::constant_completer(lexer_name)},
+        {"UNIT_NAME", templates::constant_completer(unit_name)},
         {"UTF8_LIB_PATH", templates::constant_completer(utf8_lib_path)},
-        {"LEXER_NAMESPACE", templates::constant_completer(config.module_name)},
+        {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
         {"TOKEN_TYPE_COUNT", templates::constant_completer(std::to_string(tokens.tokens.size() + tokens.ignored_tokens.size() + RESERVED_TOKEN_COUNT))},
         {"TOKEN_TYPE_STRINGS", std::bind(complete_token_type_strings, tokens, _1)},
         {"LAST_NORMAL_TOKEN", templates::constant_completer(tokens.tokens.empty() ? "END_OF_FILE" : tokens.tokens.back())},
@@ -306,7 +306,7 @@ void code_gen::cpp::generate_lexer_source(
         {"ERROR_STATE", std::bind(complete_error_state, config, _1)},
         {
             "RESTORE_FALLBACK_FUNC", 
-            config.lexer_fallback ? std::bind(complete_restore_token_fallback_function, lexer_name, config, _1)
+            config.lexer_fallback ? std::bind(complete_restore_token_fallback_function, unit_name, config, _1)
                                   : templates::EMPTY_COMPLETER
         }
     };
