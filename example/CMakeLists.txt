@@ -20,7 +20,7 @@ add_custom_command(
     OUTPUT ${GENERATED_FILES}
     COMMAND palex ../Example.palex 
                 -output-path ${CMAKE_CURRENT_BINARY_DIR} -util-path ${CMAKE_CURRENT_BINARY_DIR}
-                -lang C++ -lookahead 1 -parser-type LALR 
+                -lang C++ -lookahead 0 -parser-type LALR 
                 --fallback --lexer --util --parser
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Example.palex 
 )
