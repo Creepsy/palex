@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <map>
 #include <string_view>
+#include <sstream>
 #include <functional>
 #include <set>
 #include <variant>
@@ -55,10 +56,13 @@ void complete_lookahead_case(
     const parser_generator::shift_reduce_parsers::Lookahead_t& lookahead, 
     const std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t>& mappings,
     std::ostream& output);
+void complete_lookahead_printer(const input::PalexConfig& config, std::ostream& output);
+void complete_position_printer(const input::PalexConfig& config, std::ostream& output);
 std::string upper_case_str(const std::string& to_convert);
 std::set<std::string> collect_nonterminal_names(const std::vector<parser_generator::Production>& productions);
 std::set<parser_generator::shift_reduce_parsers::Lookahead_t> collect_all_lookaheads(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
 std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t> create_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
+std::string create_state_error_message(const parser_generator::shift_reduce_parsers::ParserState& state);
 
 void complete_lookahead_type(const input::PalexConfig& config, std::ostream& output) {
     if (config.lookahead <= 1) {
@@ -188,11 +192,15 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
         complete_lookahead_switch(config, output);
         output << ") {\n";
         output << sfmt::Indentation{1};
+        bool already_has_default_action = false;
         for (const Action& action : parser_table.get_states()[id].get_actions()) {
             std::visit(
                 Visitor{
                     [](const Action::GotoParameters& goto_action) {},
                     [&](const Action::ReduceParameters& reduce_action) {
+                        if (reduce_action.lookahead.empty()) {
+                            already_has_default_action = true;
+                        }
                         complete_lookahead_case(reduce_action.lookahead, mappings, output);
                         output << "\n";
                         output << sfmt::Indentation{1};
@@ -213,6 +221,9 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
                         output << sfmt::Indentation{-1};
                     },
                     [&](const Action::ShiftParameters& shift_action) {
+                        if (shift_action.lookahead.empty()) {
+                            already_has_default_action = true;
+                        }
                         complete_lookahead_case(shift_action.lookahead, mappings, output);
                         output << "\n    this->shift(" << shift_action.next_state << ");\n"
                                   "    break;\n"; 
@@ -221,8 +232,10 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
                 action.parameters
             );
         }
-        output << "default:\n"
-                  "    throw std::runtime_error(\"Parser Error, TODO better error message\");\n";
+        if (!already_has_default_action) {
+            output << "default:\n"
+                  "    this->throw_invalid_lookahead_error(\"" << create_state_error_message(parser_table.get_states()[id]) << "\");\n";
+        }
         output << sfmt::Indentation{-1};
         output << "}\n"
                   "break;\n";
@@ -251,6 +264,29 @@ void complete_lookahead_case(
         output << "case Token::TokenType::" << lookahead[0].identifier << ":";
     } else {
         output << "case " << mappings.at(lookahead) << ":"; 
+    }
+}
+
+void complete_lookahead_printer(const input::PalexConfig& config, std::ostream& output) {
+    output << sfmt::Indentation{1};
+    if (config.lookahead < 2) {
+        output << "error_message_stream << this->lookahead.type;";
+    } else {
+        output << "for (auto iter = this->lookahead.begin(); iter != this->lookahead.end(); iter++) {\n"
+               << "    if (iter != this->lookahead.begin()) {\n"
+               << "        error_message_stream << \", \";\n"
+               << "    }\n"
+               << "    error_message_stream << iter->type;\n"
+               << "}";
+    }
+    output << sfmt::Indentation{-1};
+}
+
+void complete_position_printer(const input::PalexConfig& config, std::ostream& output) {
+    if (config.lookahead < 2) {
+        output << "this->lookahead.position";
+    } else {
+        output << "this->lookahead.front().position";
     }
 }
 
@@ -289,7 +325,6 @@ std::set<parser_generator::shift_reduce_parsers::Lookahead_t> collect_all_lookah
                     [&](const Action::ShiftParameters& shift_action) {
                         lookaheads.insert(shift_action.lookahead);
                     }
-
                 },
                 action.parameters
             );
@@ -307,6 +342,38 @@ std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t> create_loo
         lookahead_mapping[lookahead] = current_id++; 
     }
     return lookahead_mapping;
+}
+
+std::string create_state_error_message(const parser_generator::shift_reduce_parsers::ParserState& state) {
+    using namespace parser_generator::shift_reduce_parsers;
+
+    std::stringstream error_message_stream{};
+    error_message_stream << "Expected one of the following: [";
+    bool first_lookahead = true;
+    for (const Action& action : state.get_actions()) {
+        std::visit(
+            Visitor{
+                [](const Action::GotoParameters& goto_action) {},
+                [&](const Action::ReduceParameters& reduce_action) {
+                    if (!first_lookahead) {
+                        error_message_stream << ", ";
+                    }
+                    first_lookahead = false;
+                    error_message_stream << reduce_action.lookahead;
+                },
+                [&](const Action::ShiftParameters& shift_action) {
+                    if (!first_lookahead) {
+                        error_message_stream << ", ";
+                    }
+                    first_lookahead = false;
+                    error_message_stream << shift_action.lookahead;
+                }
+            },
+            action.parameters
+        );
+    }
+    error_message_stream << "].";
+    return error_message_stream.str();
 }
 
 namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
@@ -363,7 +430,9 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
             {"GOTO_STATES", std::bind(complete_goto_states, parser_table, _1)},
             {"LOOKAHEAD_FUNCTION", std::bind(complete_lookahead_function, parser_table, unit_name, config, _1)},
             {"SHIFT_FUNCTION", std::bind(complete_shift_function, config, _1)},
-            {"PARSER_TABLE", std::bind(complete_parser_table, parser_table, config, _1)}
+            {"PARSER_TABLE", std::bind(complete_parser_table, parser_table, config, _1)},
+            {"LOOKAHEAD_PRINTER", std::bind(complete_lookahead_printer, config, _1)},
+            {"POSITION_PRINTER", std::bind(complete_position_printer, config, _1)}
         };
         const std::string parser_source_path = config.output_path + "/" + unit_name + "Parser.cpp";
         std::cout << "Generating file " << parser_source_path << "..." << std::endl;

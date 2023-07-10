@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include <stack>
 #include <deque>
 #include <cstddef>
@@ -29,6 +30,7 @@ namespace %MODULE_NAMESPACE% {
             void reduce_n(const size_t n, const NonterminalType reduced_production);
             StateID_t get_current_state() const;
             StateID_t get_goto_state(const NonterminalType reduced_production) const;
+            void throw_invalid_lookahead_error(const std::string& error_message);
             %LOOKAHEAD_FUNCTION%
     };
 }

@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <stdexcept>
+#include <sstream>
 
 constexpr size_t ERROR_STATE = (size_t)-1;
 constexpr size_t LOOKAHEAD = %LOOKAHEAD_COUNT%;
@@ -17,7 +18,8 @@ std::unique_ptr<%MODULE_NAMESPACE%::AstNode> %MODULE_NAMESPACE%::%UNIT_NAME%Pars
         switch (this->get_current_state()) {
 %PARSER_TABLE%
             case ERROR_STATE:
-                throw std::runtime_error("PARSER ERROR: TODO better message");
+            default:
+                throw std::runtime_error("Invalid parser state! This is (probably) a bug. Please create an issue on GitHub.");
         }
     }
     return nullptr; // just to make sure that the compiler is happy
@@ -57,6 +59,14 @@ void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::reduce_n(const size_t n, const Nonte
             return ERROR_STATE;
     }
     return ERROR_STATE; // just to make sure that the compiler is happy
+}
+
+void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::throw_invalid_lookahead_error(const std::string& error_message) {
+    std::stringstream error_message_stream{};
+    error_message_stream << %POSITION_PRINTER% << " Invalid lookahead [";
+%LOOKAHEAD_PRINTER%
+    error_message_stream << "]! " << error_message;
+    throw std::runtime_error(error_message_stream.str()); 
 }
 
 %LOOKAHEAD_FUNCTION%
