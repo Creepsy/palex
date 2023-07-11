@@ -1,36 +1,36 @@
-# PaLex
+# Palex
 ![GitHub CI](https://github.com/Creepsy/palex/actions/workflows/tests.yml/badge.svg)
 
 **<span style="color:red">This ReadMe is currently deprecated. It will get updated with palex v1.0.0.</span>**
 
-PaLex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers supporting UTF-8 input. The following languages are currently supported:
+Palex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers supporting UTF-8 input. The following languages are currently supported:
 
 | Language | Lexer Generator | Parser Generator |
 | :------: | :-------------: | :--------------: |
-| C++      | Yes             | No               |
+| C++      | Yes             | Yes              |
 
 ## Table of Contents
-- [PaLex](#palex)
+- [Palex](#palex)
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
-    - [Creating a custom PaLex project](#creating-a-custom-palex-project)
+    - [Using Palex in your project](#using-palex-in-your-project)
   - [Contributing](#contributing)
-  - [Config Files](#config-files)
-    - [Language tags](#language-tags)
-    - [Lexer Configurations](#lexer-configurations)
-      - [General Configurations](#general-configurations)
-      - [Configurations for C++ projects](#configurations-for-c-projects)
   - [Lexer Rules](#lexer-rules)
-    - [Naming of the rule file](#naming-of-the-rule-file)
     - [Token rule syntax](#token-rule-syntax)
     - [Naming limitations](#naming-limitations)
     - [Regex limitations](#regex-limitations)
     - [Token ignore list](#token-ignore-list)
     - [Special tokens](#special-tokens)
     - [Token priority](#token-priority)
+  - [Parser grammar](#parser-grammar)
+    - [Production syntax](#production-syntax)
+    - [Parser entry production](#parser-entry-production)
+  - [Command line arguments](#command-line-arguments)
+    - [Options](#options)
+    - [Flags](#flags)
 
 ## Getting Started
-In order to clone the repository and build PaLex run: 
+In order to clone the repository and build Palex run: 
 ```
 git clone https://github.com/Creepsy/palex.git
 cd palex
@@ -38,113 +38,58 @@ mkdir build && cd build
 cmake .. && make
 ```
 
-In case you want to try out the example or you already have a palex project, pass the path to the corresponding folder as argument to the program:
-
+In addition you can also install Palex in the `/usr/local/bin` directory by running 
 ```
-./palex ../examples
+sudo make install
 ```
+in your build folder.
 
-In case of the example project, the generated files can be found in the build folder.
-
-### Creating a custom PaLex project
-A PaLex project consists of a folder containing a palex config file and the corresponding rule files. To get started with creating a custom PaLex project, create a folder containing a `palex.cfg` file. This file is **mandatory** and the generator won't work when provided with a path to a folder that doesn't contain such file in the top level directory.
-
-This is the bare minimum a config file needs to contain in order to be recognized as valid by the program:
-
-```json
-{
-    "language": "C++" // of course other languages are also possible
-}
+In case you want to try out the example go to the example folder and build the project (note that the example project requires you to have palex installed on your system):
+```
+mkdir build && cd build
+cmake .. && make
 ```
 
-In order to add a custom lexer to your PaLex project, create a new entry called `lexers` which contains the configurations for all lexers of the project. To add a lexer, simply add an entry to `lexers`:
+### Using Palex in your project
+To start using Palex in your own projects you need to create a rule file first. Rule files should end with the file extension `.palex`. The name of the rule file also specifies the name of the generated lexer and parser. Consequently, a rule file named `My.palex` produces the lexer `MyLexer` and the parser `MyParser`.
 
-```json
-
-{
-    "language": "C++",
-    "lexers": {
-        "ExampleLexer": {
-        }
-    }
-}
+Every rule file begins with the token definitions which are followed by the grammar for the parser. Here is a simple rule file for recognizing additions you can use for testing:
 ```
+!WSPACE = "\s+";
+INT = "\d+";
+ADD = "+";
 
-This config file registers a lexer called `ExampleLexer`. The generator expects a lexer rule file in the same directory with the name `ExampleLexer.lrules`. As no configs for the lexer are specified, the generator will use the [default settings](#config-files) instead.
-
-Here is a simple rule file for a lexer that we will use for this example:
+$S = addition;
+addition = addition ADD number;
+addition = number;
+number = INT;
 ```
-INT = "int";
-NUMBER = "[0-9]+";
-ASSIGN = "=";
+For more information about the structure of rule files, visit the corresponding section [here](#TODO).
+Simply put these rules in a rule file and run
 ```
+palex YourRuleFile.palex -lang C++ -parser-type LALR --lexer --util --parser
+```
+Note that the lang and parser-type flags are **always** required. This command will create the lexer and parser files in the current working directory for C++. Available command line arguments and their default configurations are described in more detail [here](#TODO).
 
-Your folder structure should now look like this:
+Running the command should result in a folder structure similar to this:
 - project_folder
-  - palex.cfg
-  - ExampleLexer.lrules
-
-When supplying the project folder to the generator you should see four files popping:
-- project_folder
-  - palex.cfg
-  - ExampleLexer.lrules
-  - **ExampleLexer.h**
-  - **ExampleLexer.cpp**
+  - YourRuleFile.palex
+  - **YourRuleFileLexer.h**
+  - **YourRuleFileLexer.cpp**
+  - **YourRuleFileParser.h**
+  - **YourRuleFileParser.cpp**
   - **utf8.h**          
-  - **utf8.cpp**        
-
-Congrats! You just created your first lexer with PaLex!
+  - **utf8.cpp**   
+  - **YourRuleFileTypes.h**   
+  - **YourRuleFileTypes.cpp**  
+You can continue from here by using the generated files in your project or by integrating the generator in your build process (An example for CMake can be found in the example folder).
+Congrats! You just created your first project with Palex!
 
 ## Contributing
-You are always welcome to add support for new languages or extend the regex parser of this project.
-To submit a contribution, open a pull request on the project page.
-
-Please **follow** the naming conventions of this project, or you contribution might get **rejected**. 
-
-## Config Files
-Every PaLex project needs a config file. This file **always** needs to be named `palex.cfg` and has to be located at the top level of the project folder.
-
-Every config consists of a JSON-object that contains multiple fields:
-
-| Field Name | Required | Type   | Usage |
-| :--------: | :------: | :----: |:----- |
-| `language` | Yes      | String | This tag specifies the programming language of the generated files. You can find a list of all supported language tags [here](#language-tags). |
-| `lexers`   | No       | Object | This field contains all lexer configs of this PaLex project. Further information on lexer configs can be found [here](#lexer-configurations). |
-
-### Language tags
-All possible values for the `language` field:
-| Language | Possible Tags      |
-| :------: | :----------------- |
-| C++      | C++, c++, CPP, cpp |
-
-### Lexer Configurations
-The name of a lexer is specified through it's entry key in `lexers`. The lexer configuration itself is also a JSON-Object. It's entries are the corresponding configurations for that specific lexer only. When a configuration is not defined, default settings are applied. However, some languages may require some fields to be specified by the user.
-
-Note, that the name of the lexer also defines the name of the corresponding rule file. The generator expects a file named like the lexer with the file extension `.lrules` in the same folder as the `palex.cfg` is. Otherwise the lexer will be skipped during generation. The generated files will also be named after the lexer.
-
-
-#### General Configurations
-There are a few general settings that are supported by every target language:
-
-| Field Name       | Required | Type   | Default Value | Usage |
-| :--------------: | :------: | :----: | :-----------: | :---: |
-| `lexer_path`     | No       | String | `.`           | The output folder of the generated lexer |
-| `token_fallback` | No       | Bool   | `true`           | If this option is enabled, the lexer will try to match a shorter token if it runs into a dead end while parsing a longer one (e.g. it will match `int` when trying to parse `integer` from `integn` instead of an undefined token) |
-
-#### Configurations for C++ projects
-Here are all options to further customize C++ lexers for reference:
-
-| Field Name        | Required | Type   | Default Value     | Usage |
-| :---------------: | :------: | :----: | :---------------: | :---: |
-| `lexer_namespace` | No       | String | `palex`           | The namespace the generated lexer resides in |
-| `utf8_lib_path`   | No       | String |  `.`           | Folder where the utf8 library is located |
-| `create_utf8_lib` | No       | Bool   | `true`           | Specifies whether the utf8 library should also be generated |
+For information how you can contribute to this project visit the [contribute section](https://github.com/Creepsy/palex/blob/main/CONTRIBUTING.md) of this project.
 
 ## Lexer Rules
-
-### Naming of the rule file
-In order the be recognized by the parser, a lexer rule file has to have the file extension ".lrules". It has to be placed on the same level as the `palex.cfg` file. The file name is the same as the one of the lexer.
-
+Every rule file starts with the token definitions for the lexer which are then followed by the grammar of the language. The following section will describe the former in more detail.
 ### Token rule syntax
 A token is defined through the token name followed by an equal sign and the corresponding regex. Every token definition ends with a semicolon. A few valid examples for token definitions are:
 
@@ -153,7 +98,7 @@ INTEGER = "\d+";
 INT = "int";
 ```
 
-Token names should always be written with upper-case letters and underscores (upper snake-case). Please note that [some names are reserved](#naming-limitations) by the generator itself. Rules are allowed to use unicode characters, as long as the rule file is stored in UTF-8 format.
+Token names are required to consist of uppercase letters and underscores only (upper snake-case). Please note that [some names are reserved](#naming-limitations) by the generator itself. Rules are allowed to use unicode characters, as long as the rule file is stored in UTF-8 format.
 As the lexer isn't able to skip characters, all characters from the input stream have to be processed. However, there exists an option to [ignore specific tokens](#token-ignore-list).
 
 ### Naming limitations
@@ -164,12 +109,14 @@ This generator supports most of the commonly used regex features. Please note ho
 - anchors
 - backreferences
 - lookaheads
+If you want to extend the functionality of the regex parser, feel free to do so. For more information on how to make a contribution to the project visit the corresponding [section](#contributing).
 
 ### Token ignore list
-This feature is intended to be used for seperation tokens like whitespace. By putting a token on the ignore list, tokens of this type are no longer returned by the lexer. To put a token on the ignore list, simply add a `$` character in front of the token rule definition:
+This feature is intended to be used for seperation tokens like whitespace. By putting a token on the ignore list, tokens of this type are no longer returned by the lexer. To put a token on the ignore list, simply add a `!` character in front of the token rule definition:
 ```
-$WSPACE = "\s+";
+!WSPACE = "\s+";
 ```
+Ignored tokens are still being returned by the method `next_token()` while they are skipped by the method `next_unignored_token()`.
 
 ### Special tokens
 When an invalid input sequence is recognized by the lexer, a token with the type of UNDEFINED is returned by the lexer. The invalid tokens get consumed which allows the user to continue with parsing tokens from the input stream. A token of the type END_OF_FILE is returned when the input stream contains no more characters to read.
@@ -199,4 +146,60 @@ ALPHA_NUM = "[a-z0-9]+";
 <2>NUM = "[0-9]+";
 ```
 
-Keep in mind, that **priority levels always have to be >= 0**. In case you want to set the priority of an ignored token, the **ignore tag `$` has to stand before the priority tag**. 
+Keep in mind, that **priority levels always have to be >= 0**. In case you want to set the priority of an ignored token, the **ignore tag `!` has to stand before the priority tag**. 
+
+## Parser grammar
+This section will explain the grammar format for parsers in more detail.
+The grammar is quite similar to normal BNF-grammars. Therefore it is advised to make sure that one understands them first before continuing reading.
+
+### Production syntax
+A grammar consists out of a set of productions whereas a production is made out of terminals and nonterminals. The terminals are the tokens we defined earlier in the lexer section. The nonterminals are the results of other productions of our grammar.
+
+Every production starts with the resulting nonterminal on the left, immediately followed by an equal sign. The right side is a sequence of terminals and nonterminals and every production is terminated with a semicolon. While the terminals have the same formatting requirements as the tokens, productions can only consist of lowercase letters and underscores (lower snake-case).
+
+```
+addition = addition ADD number;
+addition = number;
+```
+As seen above, Productions can also recursively contain themselves.
+Further, empty productions are also allowed. These are mostly useful for termination of a recursive production:
+```
+program = program statement;
+program = ;
+```
+
+### Parser entry production
+The section above should enable you to write you own grammars for this Palex. However, before the parser can start parsing your provided grammar, it still needs to know which production to start with. This is where the special production `$S` comes into play. This is the so called **entry production**. The generated parser will always try to parse this production. To parse a series of additions, one could therefore write:
+```
+$S = program;
+program = program addition;
+program = ;
+addition = addition ADD number;
+addition = number;
+number = INTEGER;
+```
+Note that the entry production can not recurse on itself. We therefore need another production (program) to do that for us.
+
+## Command line arguments
+Palex expects a sequence of rule files as arguments. In addition, the following arguments that can also be passed to Palex:
+
+### Options
+| Option | Required | Default Value | Description |
+| :----------------------: | :-----------------------------: | :-----: | :----------------------------------------------------------------------: |
+| `-output-path <path>`    | No                              | `.`     | The output folder for the parser and lexer files.                        |
+| `-util-path <path>`      | No                              | `.`     | The output folder for all util files.                                    |
+| `-lang <C++/CPP>`        | Yes                             | None    | The target programming language.                                         |
+| `-parser-type <LR/LALR>` | When the `--parser` flag is set | None    | The type of the generated parsers.                                       |
+| `-lookahead <uint>`      | No                              | `0`     | Specifies the number of lookahead tokens for the parsers (integer >= 0). |
+| `-module-name <name>`    | No                              | `palex` | The name of the module/namespace the generated code resides in.          |
+
+### Flags
+
+| Flag | Description |
+| :----------: | :--------------------------------------: |
+| `--lexer`    | Enables lexer generation.                |
+| `--parser`   | Enables parser generation.               |
+| `--util`     | Enables the generation of utility files. |
+| `--fallback` | Enables token fallback for lexers.       |
+
+Furthermore, you can also use `palex --version` to get the used palex version and `palex --help` to show the table above.
