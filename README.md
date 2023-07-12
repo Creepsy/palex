@@ -1,8 +1,6 @@
 # Palex
 ![GitHub CI](https://github.com/Creepsy/palex/actions/workflows/tests.yml/badge.svg)
 
-**<span style="color:red">This ReadMe is currently deprecated. It will get updated with palex v1.0.0.</span>**
-
 Palex is a parser and lexer generator written in C++. It allows the creation of lexers and parsers supporting UTF-8 input. The following languages are currently supported:
 
 | Language | Lexer Generator | Parser Generator |
