@@ -1,8 +1,9 @@
-#include <sstream>
 #include <string>
 #include <vector>
+#include <functional>
 
-#include "input/PalexRuleLexer.h"
+#include "bootstrap/BootstrapLexer.h"
+
 #include "input/PalexRuleParser.h"
 #include "lexer_generator/validation.h"
 
@@ -26,10 +27,12 @@ int main() {
     };
 
     for (const TestCase& test : TEST_CASES) {
-        std::stringstream input(test.input);
-        input::PalexRuleLexer lexer(input);
-        input::PalexRuleParser parser(lexer);
-        
+        bootstrap::BootstrapLexer lexer(test.input.c_str());
+        input::PalexRuleParser parser(
+            std::bind(&bootstrap::BootstrapLexer::next_unignored_token, &lexer),
+            std::bind(&bootstrap::BootstrapLexer::get_token, &lexer)
+        ); 
+
         std::vector<lexer_generator::TokenDefinition> rules = parser.parse_all_token_definitions();
 
         if (test.should_fail) {

@@ -1,9 +1,10 @@
 #include <cassert>
-#include <sstream>
+#include <functional>
 #include <vector>
 #include <set>
 
-#include "input/PalexRuleLexer.h"
+#include "bootstrap/BootstrapLexer.h"
+
 #include "input/PalexRuleParser.h"
 #include "parser_generator/validation.h"
 
@@ -44,16 +45,19 @@ int main() {
             }
         }
     };
-    std::stringstream input(
+    const char* input =
         "number = INT;"
         "multiplication = multiplication MUL number;"
         "multiplication = number;"
         "addition = addition ADD multiplication;"
         "addition = multiplication;"
         "$S = addition;"
-    );
-    input::PalexRuleLexer lexer(input);
-    input::PalexRuleParser parser(lexer); 
+    ;
+    bootstrap::BootstrapLexer lexer(input);
+    input::PalexRuleParser parser(
+        std::bind(&bootstrap::BootstrapLexer::next_unignored_token, &lexer),
+        std::bind(&bootstrap::BootstrapLexer::get_token, &lexer)
+    );  
     std::vector<parser_generator::Production> productions = parser.parse_all_productions();
     parser_generator::validate_productions(productions);
     std::set<parser_generator::Production> productions_set(productions.begin(), productions.end());

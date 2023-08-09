@@ -3,8 +3,11 @@
 #include <string>
 #include <filesystem>
 #include <cassert>
+#include <functional>
+#include <sstream>
 
 #include "input/cmd_arguments.h"
+#include "input/PalexLexerAdapter.h"
 #include "input/PalexRuleLexer.h"
 #include "input/PalexRuleParser.h"
 
@@ -16,6 +19,7 @@
 void print_help_page(const std::string& program_name);
 void print_version_number();
 bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept;
+std::string load_stream(const std::istream& to_load);
 
 int main(int argc, char* argv[]) {
     if (argc == 1) {
@@ -83,8 +87,14 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
         std::cerr << "Error: Unable to open rule file '" << rule_file_path << "'!" << std::endl;
         return false;
     }
+    std::string rule_file_contents = load_stream(rule_file);
+    rule_file.close();
     input::PalexRuleLexer lexer(rule_file);
-    input::PalexRuleParser parser(lexer);
+    input::PalexLexerAdapter adapter(lexer);
+    input::PalexRuleParser parser(
+        std::bind(&input::PalexLexerAdapter::next_token, &adapter),
+        std::bind(&input::PalexLexerAdapter::get_token, &adapter)
+    );
     try {
         const input::PalexRules& palex_rules = parser.parse_all_rules();
         if (config.generate_lexer) {
@@ -101,4 +111,10 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
     rule_file.close();
     std::cout << "Processed rule file '" << rule_file_path << "' with success!" << std::endl;
     return true;
+}
+
+std::string load_stream(const std::istream& to_load) {
+    std::stringstream file_content;
+    file_content << to_load.rdbuf();
+    return file_content.str();
 }
