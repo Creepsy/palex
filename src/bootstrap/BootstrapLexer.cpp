@@ -26,7 +26,9 @@ namespace bootstrap {
     }
 
     TokenInfo::TokenType BootstrapLexer::next_unignored_token() {
-        while (this->next_token() == TokenInfo::TokenType::WSPACE) {}
+        do {
+            this->next_token();
+        } while (this->get_token().type == TokenInfo::TokenType::WSPACE);
         return this->current_token.type;
     }
 
