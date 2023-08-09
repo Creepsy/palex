@@ -1,7 +1,8 @@
 #include <vector>
-#include <sstream>
+#include <functional>
 
-#include "input/PalexRuleLexer.h"
+#include "bootstrap/BootstrapLexer.h"
+
 #include "input/PalexRuleParser.h"
 #include "parser_generator/validation.h"
 
@@ -23,9 +24,11 @@ int main() {
     };
 
     for (const TestCase& test : TEST_CASES) {
-        std::stringstream input(test.input);
-        input::PalexRuleLexer lexer(input);
-        input::PalexRuleParser parser(lexer);
+        bootstrap::BootstrapLexer lexer(test.input.c_str());
+        input::PalexRuleParser parser(
+            std::bind(&bootstrap::BootstrapLexer::next_unignored_token, &lexer),
+            std::bind(&bootstrap::BootstrapLexer::get_token, &lexer)
+        ); 
 
         if (test.should_fail) {
             TEST_EXCEPT(parser_generator::validate_productions(parser.parse_all_productions()), palex_except::ValidationError);

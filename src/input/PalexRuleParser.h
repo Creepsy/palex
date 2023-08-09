@@ -1,11 +1,12 @@
 #pragma once
 
 #include <optional>
+#include <functional>
 
 #include "lexer_generator/token_definition.h"
 #include "parser_generator/production_definition.h"
 
-#include "PalexRuleLexer.h"
+#include "bootstrap/TokenInfo.h"
 
 namespace input {
     struct PalexRules {
@@ -15,7 +16,10 @@ namespace input {
 
     class PalexRuleParser {
         public:
-            PalexRuleParser(PalexRuleLexer& lexer);
+            using NextTokenFunc_t = std::function<bootstrap::TokenInfo::TokenType()>;
+            using CurrTokenFunc_t = std::function<bootstrap::TokenInfo()>;
+
+            PalexRuleParser(NextTokenFunc_t next_token, CurrTokenFunc_t curr_token);
             PalexRules parse_all_rules();
             std::vector<lexer_generator::TokenDefinition> parse_all_token_definitions();
             std::vector<parser_generator::Production> parse_all_productions();
@@ -23,16 +27,16 @@ namespace input {
             std::optional<parser_generator::Production> try_parse_production();
             ~PalexRuleParser();
         private:
-            PalexRuleLexer& lexer;
-            Token curr;
+            NextTokenFunc_t next_token;
+            CurrTokenFunc_t curr_token;
 
             std::vector<parser_generator::Symbol> parse_symbol_sequence();
             
-            void expect(const Token::TokenType to_expect) const;
-            bool accept(const Token::TokenType to_check) const;
-            Token consume();
-            Token consume(const Token::TokenType to_expect);
-            bool consume_if(const Token::TokenType to_check);
+            void expect(const bootstrap::TokenInfo::TokenType to_expect) const;
+            bool accept(const bootstrap::TokenInfo::TokenType to_check) const;
+            bootstrap::TokenInfo consume();
+            bootstrap::TokenInfo consume(const bootstrap::TokenInfo::TokenType to_expect);
+            bool consume_if(const bootstrap::TokenInfo::TokenType to_check);
             void throw_error(const std::string& message) const;
     };    
 }

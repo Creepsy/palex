@@ -3,9 +3,11 @@
 #include <string>
 #include <filesystem>
 #include <cassert>
+#include <functional>
+#include <sstream>
 
 #include "input/cmd_arguments.h"
-#include "input/PalexRuleLexer.h"
+#include "bootstrap/BootstrapLexer.h"
 #include "input/PalexRuleParser.h"
 
 #include "util/palex_except.h"
@@ -15,6 +17,7 @@
 void print_help_page(const std::string& program_name);
 void print_version_number();
 bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept;
+std::string load_stream(const std::istream& to_load);
 
 int main(int argc, char* argv[]) {
     if (argc == 1) {
@@ -82,19 +85,28 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
         std::cerr << "Error: Unable to open rule file '" << rule_file_path << "'!" << std::endl;
         return false;
     }
-    input::PalexRuleLexer lexer(rule_file);
-    input::PalexRuleParser parser(lexer);
+    std::string rule_file_contents = load_stream(rule_file);
+    rule_file.close();
+    bootstrap::BootstrapLexer lexer(rule_file_contents.c_str());
+    input::PalexRuleParser parser(
+        std::bind(&bootstrap::BootstrapLexer::next_unignored_token, &lexer),
+        std::bind(&bootstrap::BootstrapLexer::get_token, &lexer)
+    );
     try {
         const input::PalexRules& palex_rules = parser.parse_all_rules();
         if (config.generate_lexer) {
             code_gen::generate_lexer(rule_name, palex_rules.token_definitions, config);
         }
     } catch (const std::exception& err) {
-        rule_file.close();
         std::cerr << "Error: " << err.what() << std::endl;
         return false;
     }
-    rule_file.close();
     std::cout << "Processed rule file '" << rule_file_path << "' with success!" << std::endl;
     return true;
+}
+
+std::string load_stream(const std::istream& to_load) {
+    std::stringstream file_content;
+    file_content << to_load.rdbuf();
+    return file_content.str();
 }

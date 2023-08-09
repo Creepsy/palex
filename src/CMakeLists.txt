@@ -1,6 +1,7 @@
 set(PROJECT_SOURCES
     bootstrap/utf8.cpp
     bootstrap/BootstrapLexer.cpp
+    bootstrap/TokenInfo.cpp
 
     util/utf8.cpp
     util/palex_except.cpp
@@ -31,6 +32,7 @@ set(PROJECT_SOURCES
 
     input/PalexRuleParser.cpp
     input/cmd_arguments.cpp
+    input/PalexLexerAdapter.cpp
 )
 
 set(PROJECT_HEADERS
@@ -78,7 +80,9 @@ set(PROJECT_HEADERS
     parser_generator/shift_reduce_parsers/code_gen/parser_generation.h
     parser_generator/shift_reduce_parsers/code_gen/cpp_code_gen.h
 
+    input/PalexRuleParser.h
     input/cmd_arguments.h
+    input/PalexLexerAdapter.h
 )
 
 set(PROJECT_INLINE_FILES
@@ -102,7 +106,7 @@ add_custom_command(
     COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex -lang c++ -output-path ${CMAKE_CURRENT_SOURCE_DIR}/input 
                 -util-path util -module-name input --lexer --fallback
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex 
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex lexergen
 )
 add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
 target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
@@ -110,7 +114,7 @@ target_link_libraries(auto_generated_objects palex_objects)
 
 add_executable(lexergen lexergen.cpp)
 target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(lexergen palex_objects auto_generated_objects)
+target_link_libraries(lexergen palex_objects)
 
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
