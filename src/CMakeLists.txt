@@ -36,6 +36,7 @@ set(PROJECT_SOURCES
 set(PROJECT_HEADERS
     bootstrap/utf8.h
     bootstrap/BootstrapLexer.h
+    bootstrap/TokenInfo.h
 
     util/Automaton.h
     util/utf8.h
