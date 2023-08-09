@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <string_view>
+#include <ostream>
 
 #include "utf8.h"
 
@@ -26,7 +27,6 @@ namespace bootstrap {
             EQ,
             EOL,
             WSPACE
-            // TODO? -> outsource this into extra file later (after / with lexer rework)?
         };
 
         TokenType type;
@@ -34,4 +34,8 @@ namespace bootstrap {
         FilePosition begin;
         FilePosition end;
     };
+
+    std::ostream& operator<<(std::ostream& output, const FilePosition& to_print);
+    std::ostream& operator<<(std::ostream& output, const TokenInfo& to_print);
+    std::ostream& operator<<(std::ostream& output, const TokenInfo::TokenType to_print);
 }
