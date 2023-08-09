@@ -1,4 +1,7 @@
 set(PROJECT_SOURCES
+    bootstrap/utf8.cpp
+    bootstrap/BootstrapLexer.cpp
+
     util/utf8.cpp
     util/palex_except.cpp
     util/stream_format.cpp
@@ -31,6 +34,9 @@ set(PROJECT_SOURCES
 )
 
 set(PROJECT_HEADERS
+    bootstrap/utf8.h
+    bootstrap/BootstrapLexer.h
+
     util/Automaton.h
     util/utf8.h
     util/palex_except.h
