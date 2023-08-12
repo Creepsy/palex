@@ -1,7 +1,7 @@
 function(generate_test_executable test_name test_src)
     add_executable(${test_name} ${test_src})
     target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(${test_name} palex_objects auto_generated_objects)
+    target_link_libraries(${test_name} palex_objects lexer_autogen)
     add_test(NAME ${test_name} COMMAND ${test_name})  
 endfunction()
 

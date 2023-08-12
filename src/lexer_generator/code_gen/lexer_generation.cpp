@@ -6,9 +6,6 @@
 #include <cassert>
 #include <cstddef>
 
-#include "input/PalexRuleLexer.h"
-#include "input/PalexRuleParser.h"
-
 #include "lexer_generator/token_definition.h"
 #include "lexer_generator/validation.h"
 

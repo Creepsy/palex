@@ -8,7 +8,7 @@
 
 #include "input/cmd_arguments.h"
 #include "input/PalexLexerAdapter.h"
-#include "input/PalexRuleLexer.h"
+#include "PalexRuleLexer.h"
 #include "input/PalexRuleParser.h"
 
 #include "util/palex_except.h"

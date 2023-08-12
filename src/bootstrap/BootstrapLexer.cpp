@@ -110,7 +110,7 @@ namespace bootstrap {
     }
 
     void BootstrapLexer::advance_priority_token() {
-        assert(utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'<' && "BUG: Method should only get called when this condition succeeds!");
+        assert(utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'<' && "BUG: Method should only get called when this condition succeeds!");
         this->advance_codepoints(1);
         bool consumed_number = this->advance_while(
             [](const utf8::Codepoint_t to_check) -> bool {
@@ -128,7 +128,7 @@ namespace bootstrap {
     }
 
     void BootstrapLexer::advance_regex_token() {
-        assert(utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'"' && "BUG: Method should only get called when this condition succeeds!");
+        assert(utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'"' && "BUG: Method should only get called when this condition succeeds!");
         this->advance_codepoints(1);
         while (utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'"' && *this->position != '\0') {
             if (utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'\\') {
