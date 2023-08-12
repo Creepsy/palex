@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "input/PalexRuleLexer.h"
+#include "PalexRuleLexer.h"
 
 #include "../test_utils.h"
 

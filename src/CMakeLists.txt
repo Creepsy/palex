@@ -32,7 +32,6 @@ set(PROJECT_SOURCES
 
     input/PalexRuleParser.cpp
     input/cmd_arguments.cpp
-    input/PalexLexerAdapter.cpp
 )
 
 set(PROJECT_HEADERS
@@ -82,7 +81,6 @@ set(PROJECT_HEADERS
 
     input/PalexRuleParser.h
     input/cmd_arguments.h
-    input/PalexLexerAdapter.h
 )
 
 set(PROJECT_INLINE_FILES
@@ -91,9 +89,13 @@ set(PROJECT_INLINE_FILES
     regex/RegexParser.ipp
 )
 
-set(AUTO_GENERATED_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRuleLexer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRuleLexer.h
+set(LEXER_AUTOGEN_FILES
+    ${CMAKE_BINARY_DIR}/PalexRuleLexer.cpp
+    ${CMAKE_BINARY_DIR}/PalexRuleLexer.h
+)
+set(LEXER_ADAPTER_FILES
+    input/PalexLexerAdapter.cpp
+    input/PalexLexerAdapter.h
 )
 
 include(templates/all_template_headers.cmake)
@@ -102,15 +104,15 @@ add_library(palex_objects ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_INLINE
 target_include_directories(palex_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 add_custom_command(
-    OUTPUT ${AUTO_GENERATED_FILES}
-    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex -lang c++ -output-path ${CMAKE_CURRENT_SOURCE_DIR}/input 
-                -util-path util -module-name input --lexer --fallback
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT ${LEXER_AUTOGEN_FILES}
+    COMMAND ${CMAKE_BINARY_DIR}/lexergen ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex -lang c++ -output-path ${CMAKE_BINARY_DIR}
+                -util-path ${CMAKE_CURRENT_SOURCE_DIR}/util -module-name input --lexer --fallback
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input/PalexRule.palex lexergen
 )
-add_library(auto_generated_objects ${AUTO_GENERATED_FILES})
-target_include_directories(auto_generated_objects PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(auto_generated_objects palex_objects)
+add_library(lexer_autogen ${LEXER_AUTOGEN_FILES} ${LEXER_ADAPTER_FILES})
+target_include_directories(lexer_autogen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(lexer_autogen palex_objects)
 
 add_executable(lexergen lexergen.cpp)
 target_include_directories(lexergen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
@@ -118,6 +120,6 @@ target_link_libraries(lexergen palex_objects)
 
 add_executable(palex palex.cpp)
 target_include_directories(palex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(palex palex_objects auto_generated_objects)
+target_link_libraries(palex palex_objects lexer_autogen)
 
 install(TARGETS palex DESTINATION bin)
