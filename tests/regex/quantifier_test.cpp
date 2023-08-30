@@ -1,4 +1,5 @@
 #include <vector>
+#include <string_view>
 #include <memory>
 
 #include "regex/RegexParser.h"
@@ -6,7 +7,7 @@
 #include "../test_utils.h"
 
 struct TestCase {
-    std::u32string input;
+    std::string_view input;
 
     size_t min;
     size_t max;
@@ -15,12 +16,12 @@ struct TestCase {
 
 int main() {
     const std::vector<TestCase> TEST_CASES = {
-        {U"a+", 1, regex::RegexQuantifier::INFINITE},
-        {U"a*", 0, regex::RegexQuantifier::INFINITE},
-        {U"a?", 0, 1},
-        {U"a{7}", 7, 7},
-        {U"a{3,}", 3, regex::RegexQuantifier::INFINITE},
-        {U"a{10,15}", 10, 15}
+        {"a+", 1, regex::RegexQuantifier::INFINITE},
+        {"a*", 0, regex::RegexQuantifier::INFINITE},
+        {"a?", 0, 1},
+        {"a{7}", 7, 7},
+        {"a{3,}", 3, regex::RegexQuantifier::INFINITE},
+        {"a{10,15}", 10, 15}
     };
 
     for (const TestCase& test : TEST_CASES) {

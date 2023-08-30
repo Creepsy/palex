@@ -4,7 +4,6 @@
 #include <cassert>
 
 #include "util/palex_except.h"
-#include "util/utf8.h"
 
 #include "character_classes.h"
 
@@ -33,7 +32,7 @@ const std::vector<std::string> regex::RegexParser::CHAR_TYPE_NAMES = {
 
 
 
-regex::RegexParser::RegexParser(const std::u32string& input) : input(input), curr_pos(0) {
+regex::RegexParser::RegexParser(const std::string_view& input) : input(input), curr_pos(0) {
 }
 
 // public
@@ -72,7 +71,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_alternation() 
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_sequence() {
     std::vector<std::unique_ptr<RegexBase>> sequence_content = this->parse_until<std::unique_ptr<RegexBase>>(
-        [](const char32_t to_check) -> bool {
+        [](const utf8::Codepoint_t to_check) -> bool {
             return to_check == ')' || to_check == '|';
         },
         &RegexParser::parse_regex_quantifier
@@ -92,7 +91,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_sequence() {
 }
 
 std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
-    const auto IS_DIGIT = [](const char32_t to_check) -> bool { return to_check < LAST_ASCII_CHAR && std::isdigit((int)to_check); };
+    const auto IS_DIGIT = [](const utf8::Codepoint_t to_check) -> bool { return to_check < LAST_ASCII_CHAR && std::isdigit((int)to_check); };
     
     std::unique_ptr<RegexBase> operand = nullptr;
 
@@ -120,22 +119,22 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_quantifier() {
     } else if (this->accept(CharType::BRACE_OPEN)) {
         this->consume();
 
-        std::u32string min_str = this->parse_matching_string(IS_DIGIT);
+        std::string_view min_str = this->parse_matching_string(IS_DIGIT);
         if (min_str.empty()) {
             this->throw_parsing_err("Expected a number!");
         }
-        min = std::stoul(utf8::unicode_to_utf8(min_str));
+        min = std::stoul(std::string(min_str));
         max = min;
 
         if (this->accept(CharType::COMMA)) {
             this->consume();
 
             if (IS_DIGIT(this->get_curr())) {
-                std::u32string max_str = this->parse_matching_string(IS_DIGIT);
+                std::string_view max_str = this->parse_matching_string(IS_DIGIT);
                 
                 assert(("Number string empty! Please create an issue on github containing the used input!", !max_str.empty()));
 
-                max = std::stoul(utf8::unicode_to_utf8(max_str));
+                max = std::stoul(std::string(max_str));
             } else {
                 max = RegexQuantifier::INFINITE;
             }
@@ -159,7 +158,7 @@ std::unique_ptr<regex::RegexBase> regex::RegexParser::parse_regex_charset() {
         }
 
         const std::vector<MultiRangeCharacter> set_contents = this->parse_until<MultiRangeCharacter>(
-            [](const char32_t to_check) -> bool {
+            [](const utf8::Codepoint_t to_check) -> bool {
                 return to_check == ']';
             },
             &RegexParser::parse_char
@@ -256,10 +255,10 @@ regex::RegexParser::MultiRangeCharacter regex::RegexParser::parse_escaped_char()
     }
 }
 
-char32_t regex::RegexParser::parse_unicode_value() {
-    const auto IS_HEX_DIGIT = [](const char32_t to_check) -> bool { return to_check < LAST_ASCII_CHAR && std::isxdigit((int)to_check); };
+utf8::Codepoint_t regex::RegexParser::parse_unicode_value() {
+    const auto IS_HEX_DIGIT = [](const utf8::Codepoint_t to_check) -> bool { return to_check < LAST_ASCII_CHAR && std::isxdigit((int)to_check); };
     
-    std::u32string unicode_value;
+    std::string_view unicode_value;
 
     if (this->accept(CharType::BRACE_OPEN)) {
         this->consume();
@@ -276,7 +275,7 @@ char32_t regex::RegexParser::parse_unicode_value() {
         this->throw_parsing_err("Expected a hexadecimal value!");
     }
 
-    char32_t unicode_char = (char32_t)std::stoul(utf8::unicode_to_utf8(unicode_value), nullptr, 16);
+    utf8::Codepoint_t unicode_char = (utf8::Codepoint_t)std::stoul(std::string(unicode_value), nullptr, 16);
     if (unicode_char > utf8::LAST_UNICODE_CHAR) {
         this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
     }
@@ -321,15 +320,15 @@ regex::RegexParser::CharType regex::RegexParser::get_curr_type() {
     }
 }
 
-char32_t regex::RegexParser::get_curr() {
+utf8::Codepoint_t regex::RegexParser::get_curr() {
     if (this->end()) {
         this->throw_parsing_err("Tried to read past the end of the regex!");
     }
     
-    return this->input[this->curr_pos];
+    return utf8::get_next_codepoint(this->input.begin() + this->curr_pos); // TODO: more efficient ?
 }
 
-std::u32string regex::RegexParser::parse_matching_string(Predicate_t predicate, const size_t max_count) {
+std::string_view regex::RegexParser::parse_matching_string(Predicate_t predicate, const size_t max_count) {
     size_t length = std::find_if_not(this->input.begin() + this->curr_pos, this->input.end(), predicate) - (this->input.begin() + this->curr_pos);
     if (length > max_count) {
         length = max_count;
@@ -353,14 +352,14 @@ bool regex::RegexParser::accept(const CharType type) {
     return this->get_curr_type() == type;
 }
 
-char32_t regex::RegexParser::consume() {
+utf8::Codepoint_t regex::RegexParser::consume() {
     char32_t consumed = this->get_curr();
     this->curr_pos++;
 
     return consumed;
 }
 
-char32_t regex::RegexParser::consume(const CharType type) {
+utf8::Codepoint_t regex::RegexParser::consume(const CharType type) {
     this->expect(type);
     return this->consume();
 }
@@ -374,7 +373,7 @@ void regex::RegexParser::throw_parsing_err(const CharType expected) {
 }
 
 void regex::RegexParser::throw_parsing_err(const std::string& message) {
-    throw palex_except::ParserError("Regex '" + std::string(this->input.begin(), this->input.end()) + "', Pos " + std::to_string(this->curr_pos) + ": " + message);
+    throw palex_except::ParserError("Invalid Regex '" + std::string(this->input.begin(), this->input.end()) + ": " + message);
 }
 
 // static
