@@ -1,18 +1,19 @@
 #include <vector>
 #include <memory>
+#include <string_view>
 
 #include "regex/RegexParser.h"
 
 #include "../test_utils.h"
 
 int main() {
-    const std::vector<std::pair<std::u32string, size_t>> TEST_CASES = {
-        {U"abbb", 4},
-        {U"a[abc][avb](abg)", 4},
-        {U"(abb)", 3},
-        {U"(abb[aa])([f])", 2},
-        {U"(abb)([f])", 2},
-        {U"(aab)?a", 2}
+    const std::vector<std::pair<std::string_view, size_t>> TEST_CASES = {
+        {"abbb", 4},
+        {"a[abc][avb](abg)", 4},
+        {"(abb)", 3},
+        {"(abb[aa])([f])", 2},
+        {"(abb)([f])", 2},
+        {"(aab)?a", 2}
     };
 
     for (const auto& test : TEST_CASES) {

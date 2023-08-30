@@ -1,15 +1,16 @@
 #include <vector>
 #include <memory>
+#include <string_view>
 
 #include "regex/RegexParser.h"
 
 #include "../test_utils.h"
 
 int main() {
-    const std::vector<std::pair<std::u32string, size_t>> TEST_CASES = {
-        {U"a|b", 2},
-        {U"a|b|c|d", 4},
-        {U"[abc]|ba|cddd|d", 4}
+    const std::vector<std::pair<std::string_view, size_t>> TEST_CASES = {
+        {"a|b", 2},
+        {"a|b|c|d", 4},
+        {"[abc]|ba|cddd|d", 4}
     };
 
     for (const auto& test : TEST_CASES) {

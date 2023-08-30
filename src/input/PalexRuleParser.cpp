@@ -3,6 +3,7 @@
 #include <utility>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <cassert>
 
 #include "util/palex_except.h"
@@ -70,9 +71,18 @@ namespace input {
         this->expect(bootstrap::TokenInfo::TokenType::TOKEN);
         parsed.name = this->consume().identifier;
         this->consume(bootstrap::TokenInfo::TokenType::EQ);
-        // TODO: rework regex parser
-        const std::u32string regex = utf8::utf8_to_unicode(std::string(strip_ends(this->consume(bootstrap::TokenInfo::TokenType::REGEX).identifier))); // remove "" of regex
-        parsed.token_regex = regex::RegexParser(regex).parse_regex();
+
+        this->expect(bootstrap::TokenInfo::TokenType::REGEX);
+        const std::string_view regex = strip_ends(this->curr_token().identifier); // remove "" of regex
+        try {
+            parsed.token_regex = regex::RegexParser(regex).parse_regex();
+        } catch (const palex_except::ParserError& err) {
+            std::stringstream error_message;
+            error_message << this->curr_token().begin << " " << err.what();
+            throw palex_except::ParserError(error_message.str());
+        }
+        this->consume();
+
         this->consume(bootstrap::TokenInfo::TokenType::EOL);
         if (!user_defined_priority) {
             parsed.priority = parsed.token_regex->get_priority();
