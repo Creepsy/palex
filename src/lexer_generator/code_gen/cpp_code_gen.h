@@ -26,6 +26,8 @@ namespace code_gen {
             const std::string& unit_name, 
             const input::PalexConfig& config
         );
+        void generate_token_header(const std::string& unit_name, const input::PalexConfig& config, const TokenInfos& tokens);
+        void generate_token_source(const std::string& unit_name, const input::PalexConfig& config, const TokenInfos& tokens);
         void generate_utf8_lib(const input::PalexConfig& config);
     }
 }

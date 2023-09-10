@@ -1,0 +1,36 @@
+#include "%UNIT_NAME%Token.h"
+
+#include <array>
+
+constexpr %MODULE_NAME%::%UNIT_NAME%Token::TokenType LAST_NORMAL_TOKEN = %MODULE_NAME%::%UNIT_NAME%Token::TokenType::%LAST_NORMAL_TOKEN%;
+constexpr size_t TOKEN_COUNT = %TOKEN_COUNT%;
+
+const std::array<std::string_view, TOKEN_COUNT> TOKEN_TYPE_TO_STRING {
+%TOKEN_STRINGS%
+};
+
+namespace %MODULE_NAME% {
+    void FilePosition::advance(const utf8::Codepoint_t consumed) {
+        this->column++;
+        if (consumed == (utf8::Codepoint_t)'\n') {
+            this->column = 1;
+            this->line++;
+        }
+    }
+
+    bool %UNIT_NAME%Token::is_ignored() const {
+        return this->type > LAST_NORMAL_TOKEN;
+    }
+
+    std::ostream& operator<<(std::ostream& output, const FilePosition& to_print) {
+        return output << "[Ln " << to_print.line << ", Col " << to_print.column << "]";
+    }
+
+    std::ostream& operator<<(std::ostream& output, const %UNIT_NAME%Token& to_print) {
+        return output << to_print.begin << " - " << to_print.end << " " << to_print.type << ": " << to_print.identifier;
+    }
+
+    std::ostream& operator<<(std::ostream& output, const %UNIT_NAME%Token::TokenType to_print) {
+        return output << TOKEN_TYPE_TO_STRING.at((size_t)to_print);
+    }
+}

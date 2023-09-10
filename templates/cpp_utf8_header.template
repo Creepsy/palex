@@ -1,26 +1,23 @@
 #pragma once
 
 #include <string>
-#include <iostream>
+#include <cstdint>
 
 namespace utf8 {
-    constexpr char32_t LAST_ASCII_CHAR = 0x7f;
-    constexpr char32_t LAST_UTF8_2_BIT_CHAR = 0x7ff;
-    constexpr char32_t LAST_UTF8_3_BIT_CHAR = 0xffff;
-    constexpr char32_t LAST_UNICODE_CHAR = 0x10ffff;
+    using Codepoint_t = uint32_t; 
+    constexpr Codepoint_t FIRST_ASCII_CODEPOINT = 0x0;
+    constexpr Codepoint_t FIRST_2_BYTE_CODEPOINT = 0x0080;
+    constexpr Codepoint_t FIRST_3_BYTE_CODEPOINT = 0x0800;
+    constexpr Codepoint_t FIRST_4_BYTE_CODEPOINT = 0x10000;
+    constexpr Codepoint_t LAST_ASCII_CODEPOINT = 0x007f;
+    constexpr Codepoint_t LAST_2_BYTE_CODEPOINT = 0x07ff;
+    constexpr Codepoint_t LAST_3_BYTE_CODEPOINT = 0xffff;
+    constexpr Codepoint_t LAST_4_BYTE_CODEPOINT = 0x10ffff;
 
-    char32_t get_unicode_char(std::istream& input);
-
-    std::u32string utf8_to_unicode(const std::string& to_convert);
-
-    std::string unicode_to_utf8(const char32_t to_convert);
-    std::string unicode_to_utf8(const std::u32string& to_convert);
-}
-
-namespace std {
-    std::istream& operator>>(std::istream& input, char32_t& to_read);
-    std::istream& operator>>(std::istream& input, std::u32string& to_read);
-
-    std::ostream& operator<<(std::ostream& output, const char32_t to_print);
-    std::ostream& operator<<(std::ostream& output, const std::u32string& to_print);
+    const char* advance_codepoint(const char* current, const char* const end, Codepoint_t* advanced_codepoint = nullptr);
+    const char* rewind_codepoint(const char* current, const char* const begin, const char* const end, Codepoint_t* rewound_codepoint = nullptr);
+    Codepoint_t get_next_codepoint(const char* current, const char* const end);
+    std::string codepoint_to_utf8(const Codepoint_t to_convert); 
+    bool is_error(const Codepoint_t to_check);
+    std::string get_error_kind(const Codepoint_t error);
 }

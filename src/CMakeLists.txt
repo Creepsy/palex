@@ -1,5 +1,4 @@
 set(PROJECT_SOURCES
-    bootstrap/utf8.cpp
     bootstrap/BootstrapLexer.cpp
     bootstrap/TokenInfo.cpp
 
@@ -35,7 +34,6 @@ set(PROJECT_SOURCES
 )
 
 set(PROJECT_HEADERS
-    bootstrap/utf8.h
     bootstrap/BootstrapLexer.h
     bootstrap/TokenInfo.h
 
@@ -67,6 +65,8 @@ set(PROJECT_HEADERS
     ${CMAKE_BINARY_DIR}/cpp_parser_source.h
     ${CMAKE_BINARY_DIR}/cpp_types_header.h
     ${CMAKE_BINARY_DIR}/cpp_types_source.h
+    ${CMAKE_BINARY_DIR}/cpp_token_header.h
+    ${CMAKE_BINARY_DIR}/cpp_token_source.h
     
     parser_generator/validation.h
     parser_generator/production_definition.h
@@ -92,6 +92,8 @@ set(PROJECT_INLINE_FILES
 set(LEXER_AUTOGEN_FILES
     ${CMAKE_BINARY_DIR}/PalexRuleLexer.cpp
     ${CMAKE_BINARY_DIR}/PalexRuleLexer.h
+    ${CMAKE_BINARY_DIR}/PalexRuleToken.cpp
+    ${CMAKE_BINARY_DIR}/PalexRuleToken.h
 )
 set(LEXER_ADAPTER_FILES
     input/PalexLexerAdapter.cpp
@@ -112,6 +114,7 @@ add_custom_command(
 )
 add_library(lexer_autogen ${LEXER_AUTOGEN_FILES} ${LEXER_ADAPTER_FILES})
 target_include_directories(lexer_autogen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(lexer_autogen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util) # refactor this
 target_link_libraries(lexer_autogen palex_objects)
 
 add_executable(lexergen lexergen.cpp)
