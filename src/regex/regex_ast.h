@@ -4,17 +4,18 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
-#include <string>
 #include <list>
+
+#include "util/utf8.h"
 
 namespace regex {    
     struct CharRange {
-        char32_t start;
-        char32_t end;
+        utf8::Codepoint_t start;
+        utf8::Codepoint_t end;
 
         CharRange();
-        CharRange(const char32_t single_char);
-        CharRange(const char32_t start, const char32_t end);
+        CharRange(const utf8::Codepoint_t single_char);
+        CharRange(const utf8::Codepoint_t start, const utf8::Codepoint_t end);
 
         bool is_single_char() const;
         bool empty() const;

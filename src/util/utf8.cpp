@@ -1,143 +1,154 @@
 #include "utf8.h"
 
-#include <cwctype>
-#include <cassert>
-#include <cstddef>
 #include <array>
+#include <cstddef>
+#include <cstring>
+#include <cassert>
 #include <sstream>
+#include <utility>
 
-constexpr char32_t MASK_6_BIT = 0x3f;
+constexpr uint8_t TAILING_BYTE_CHECK_MASK = 0xc0;
+constexpr uint8_t TAILING_BYTE_PADDING = 0x80;
+constexpr uint8_t CODEPOINT_2_BYTE_PADDING = 0xc0;
+constexpr uint8_t CODEPOINT_3_BYTE_PADDING = 0xe0;
+constexpr uint8_t CODEPOINT_4_BYTE_PADDING = 0xf0;
+constexpr uint8_t TAIL_DATA_MASK = 0x3f;
 
+constexpr size_t BYTE_COUNTS_INDEX_SHIFT = 3;
 constexpr size_t BYTE_SHIFT = 6;
 constexpr size_t TWO_BYTES_SHIFT = 12;
 constexpr size_t THREE_BYTES_SHIFT = 18;
+constexpr size_t INVALID_BYTE_1_SHIFT = 31;
+constexpr size_t INVALID_BYTE_2_SHIFT = 30;
+constexpr size_t INVALID_BYTE_3_SHIFT = 29;
+constexpr size_t INVALID_BYTE_4_SHIFT = 28;
+constexpr size_t INVALID_REWIND_SHIFT = 27;
+constexpr size_t NOT_ENOUGH_DATA_SHIFT = 26;
 
-const char32_t PADDING_TRAILING_BYTE = 0x80;
-const char32_t PADDING_2_BYTE_CHAR = 0xc0;
-const char32_t PADDING_3_BYTE_CHAR = 0xe0;
-const char32_t PADDING_4_BYTE_CHAR = 0xf0;
+constexpr size_t MAX_BYTE_COUNT = 4;
 
+constexpr utf8::Codepoint_t REPLACEMENT_CHAR = 0xfffd;
 
-char32_t utf8::get_unicode_char(std::istream& input) {
-    constexpr size_t BYTE_COUNT_INFO_SHIFT = 3;
-    constexpr size_t MAX_BYTE_COUNT = 4;
+// index: first 5 bytes of head_byte
+const std::array<std::size_t, 32> BYTE_COUNTS = {
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0
+};
+// index: utf8 byte count
+const std::array<unsigned char, 5> HEAD_MASKS = {
+    0x00, 0xff, 0x1f, 0x0f, 0x07
+};
 
-    // index: first 5 bytes of head_byte
-    const static std::array<std::streamsize, 32> BYTE_COUNTS = {
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0
-    };
-
-    // index: utf8 byte count
-    const static std::array<unsigned char, 5> HEAD_MASKS = {
-        0x00, 0xff, 0x1f, 0x0f, 0x07
-    };
-
-    char head_byte = (char)input.get();
-    
-    std::streamsize byte_count = BYTE_COUNTS[(unsigned char)head_byte >> BYTE_COUNT_INFO_SHIFT];
-    bool err_flag = byte_count == 0;
-    
-    std::array<char, 3> utf8_bytes = {};
-    input.read(utf8_bytes.data(), byte_count - 1);
-    err_flag |= input.eof();
-
-    char32_t unicode = 0;
-
-    unicode |= (head_byte & HEAD_MASKS[byte_count]) << THREE_BYTES_SHIFT;
-    unicode |= (MASK_6_BIT & utf8_bytes[0]) << TWO_BYTES_SHIFT;
-    unicode |= (MASK_6_BIT & utf8_bytes[1]) << BYTE_SHIFT;
-    unicode |= (MASK_6_BIT & utf8_bytes[2]);
-    unicode >>= (MAX_BYTE_COUNT - byte_count) * BYTE_SHIFT;
-
-    err_flag |= byte_count > 1 && (utf8_bytes[0] & ~MASK_6_BIT) == PADDING_TRAILING_BYTE;
-    err_flag |= byte_count > 2 && (utf8_bytes[1] & ~MASK_6_BIT) == PADDING_TRAILING_BYTE;
-    err_flag |= byte_count > 3 && (utf8_bytes[2] & ~MASK_6_BIT) == PADDING_TRAILING_BYTE;
-
-    return (err_flag) ? (char32_t)-1 : unicode;
-}
-
-std::u32string utf8::utf8_to_unicode(const std::string& to_convert) {
-    std::stringstream input(to_convert);
-
-    std::u32string unicode_string;
-
-    while (input.good()) {
-        char32_t next = get_unicode_char(input);
-
-        if (next == (char32_t)-1) {
-            break;
+namespace utf8 {
+    const char* advance_codepoint(const char* current, const char* const end, Codepoint_t* advanced_codepoint) {
+        if (current >= end) { // EOF error
+            if (advanced_codepoint) {
+                *advanced_codepoint = 0; // clear codepoint
+                *advanced_codepoint |= 1 << INVALID_BYTE_1_SHIFT;  
+                *advanced_codepoint |= 1 << NOT_ENOUGH_DATA_SHIFT; 
+            }
+            return current;
         }
+        const size_t byte_count = BYTE_COUNTS[(uint8_t)*current >> BYTE_COUNTS_INDEX_SHIFT];
+        const size_t advanced_byte_count = std::min(byte_count, (size_t)(end - current));
+        if (advanced_codepoint) {
+            std::array<char, 4> codepoint_data{};
+            std::strncpy(codepoint_data.data(), current, advanced_byte_count);
+            *advanced_codepoint = 0; // clear codepoint
+            
+            *advanced_codepoint |= (codepoint_data[0] & HEAD_MASKS[byte_count]) << THREE_BYTES_SHIFT;
+            *advanced_codepoint |= (TAIL_DATA_MASK & codepoint_data[1]) << TWO_BYTES_SHIFT;
+            *advanced_codepoint |= (TAIL_DATA_MASK & codepoint_data[2]) << BYTE_SHIFT;
+            *advanced_codepoint |= (TAIL_DATA_MASK & codepoint_data[3]);
+            *advanced_codepoint >>= (MAX_BYTE_COUNT - byte_count) * BYTE_SHIFT;
 
-        unicode_string += next;
+            *advanced_codepoint |= (byte_count == 0) << INVALID_BYTE_1_SHIFT;
+            *advanced_codepoint |= (byte_count > 1 && (codepoint_data[1] & ~TAIL_DATA_MASK) == TAILING_BYTE_PADDING) << INVALID_BYTE_2_SHIFT;
+            *advanced_codepoint |= (byte_count > 2 && (codepoint_data[2] & ~TAIL_DATA_MASK) == TAILING_BYTE_PADDING) << INVALID_BYTE_3_SHIFT;
+            *advanced_codepoint |= (byte_count > 3 && (codepoint_data[3] & ~TAIL_DATA_MASK) == TAILING_BYTE_PADDING) << INVALID_BYTE_4_SHIFT;
+            *advanced_codepoint |= (byte_count != advanced_byte_count) << NOT_ENOUGH_DATA_SHIFT;
+        }
+        return current + advanced_byte_count;
     }
 
-    return unicode_string;
-}
+    const char* rewind_codepoint(const char* current, const char* const begin, const char* const end, Codepoint_t* rewound_codepoint) {
+        if (current <= begin) {
+            return current;
+        }
+        size_t byte_count = 0;
+        do {
+            current--;
+            byte_count++;
+        } while ((*current & TAILING_BYTE_CHECK_MASK) == TAILING_BYTE_PADDING && current > begin);
+        if (rewound_codepoint) {
+            *rewound_codepoint = get_next_codepoint(current, end);
+            *rewound_codepoint |= (byte_count == BYTE_COUNTS[*current >> BYTE_COUNTS_INDEX_SHIFT]) << INVALID_REWIND_SHIFT;
+        }
+        return current;
+    }
 
-std::string utf8::unicode_to_utf8(const char32_t to_convert) {
-    if (to_convert > LAST_UNICODE_CHAR) {
+    Codepoint_t get_next_codepoint(const char* current, const char* const end) {
+        Codepoint_t next = 0;
+        advance_codepoint(current, end, &next);
+        return next;
+    }
+
+    std::string codepoint_to_utf8(const Codepoint_t to_convert) {
+        if (is_error(to_convert)) {
+            return codepoint_to_utf8(REPLACEMENT_CHAR);
+        }
+        if (to_convert <= LAST_ASCII_CODEPOINT) {
+            return {(char)to_convert};
+        }
+        if (to_convert <= LAST_2_BYTE_CODEPOINT) {
+            return {
+                (char)((to_convert >> BYTE_SHIFT) | CODEPOINT_2_BYTE_PADDING),
+                (char)((to_convert & TAIL_DATA_MASK) | TAILING_BYTE_PADDING)
+            };
+        } 
+        if (to_convert <= LAST_3_BYTE_CODEPOINT) {
+            return {
+                (char)((to_convert >> TWO_BYTES_SHIFT) | CODEPOINT_3_BYTE_PADDING),
+                (char)(((to_convert >> BYTE_SHIFT) & TAIL_DATA_MASK) | TAILING_BYTE_PADDING),
+                (char)((to_convert & TAIL_DATA_MASK) | TAILING_BYTE_PADDING)
+            };
+        }
+        if (to_convert <= LAST_4_BYTE_CODEPOINT) {
+            return {
+                (char)((to_convert >> THREE_BYTES_SHIFT) | CODEPOINT_4_BYTE_PADDING),
+                (char)(((to_convert >> TWO_BYTES_SHIFT) & TAIL_DATA_MASK) | TAILING_BYTE_PADDING),
+                (char)(((to_convert >> BYTE_SHIFT) & TAIL_DATA_MASK) | TAILING_BYTE_PADDING),
+                (char)((to_convert & TAIL_DATA_MASK) | TAILING_BYTE_PADDING)
+            };
+        }
+        assert(false && "BUG: unreachable code");
         return "";
     }
-    
-    if (to_convert <= LAST_ASCII_CHAR) {
-        return {(char)to_convert};
-    }
-    if (to_convert <= LAST_UTF8_2_BIT_CHAR) {
-        return {
-            (char)((to_convert >> BYTE_SHIFT) | PADDING_2_BYTE_CHAR),
-            (char)((to_convert & MASK_6_BIT) | PADDING_TRAILING_BYTE)
-        };
-    } 
-    if (to_convert <= LAST_UTF8_3_BIT_CHAR) {
-        return {
-            (char)((to_convert >> TWO_BYTES_SHIFT) | PADDING_3_BYTE_CHAR),
-            (char)(((to_convert >> BYTE_SHIFT) & MASK_6_BIT) | PADDING_TRAILING_BYTE),
-            (char)((to_convert & MASK_6_BIT) | PADDING_TRAILING_BYTE)
-        };
-    }
-    if (to_convert <= LAST_UNICODE_CHAR) {
-        return {
-            (char)((to_convert >> THREE_BYTES_SHIFT) | PADDING_4_BYTE_CHAR),
-            (char)(((to_convert >> TWO_BYTES_SHIFT) & MASK_6_BIT) | PADDING_TRAILING_BYTE),
-            (char)(((to_convert >> BYTE_SHIFT) & MASK_6_BIT) | PADDING_TRAILING_BYTE),
-            (char)((to_convert & MASK_6_BIT) | PADDING_TRAILING_BYTE)
-        };
+
+    bool is_error(const Codepoint_t to_check) {
+        return to_check > LAST_4_BYTE_CODEPOINT;
     }
 
-    assert(false && "Unreachable code reached!");
-
-    return "";
-}
-
-std::string utf8::unicode_to_utf8(const std::u32string& to_convert) {
-    std::string utf8_string;
-
-    for (const char32_t unicode_char : to_convert) {
-        utf8_string += unicode_to_utf8(unicode_char);
+    std::string get_error_kind(const Codepoint_t error) {
+        std::stringstream err;
+        if (error & (1 << NOT_ENOUGH_DATA_SHIFT)) {
+            err << "Reached end of input while reading codepoint!\n";
+        }
+        if (error & (1 << INVALID_BYTE_1_SHIFT)) {
+            err << "The first byte of the codepoint is invalid!\n";
+        }
+        if (error & (1 << INVALID_BYTE_2_SHIFT)) {
+            err << "The second byte of the codepoint is invalid!\n";
+        }
+        if (error & (1 << INVALID_BYTE_3_SHIFT)) {
+            err << "The third byte of the codepoint is invalid!\n";
+        }
+        if (error & (1 << INVALID_BYTE_4_SHIFT)) {
+            err << "The fourth byte of the codepoint is invalid!\n";
+        }
+        if (error & (1 << INVALID_REWIND_SHIFT)) {
+            err << "The rewound codepoint is invalid!\n";
+        }
+        return err.str();
     }
-
-    return utf8_string;
-}
-
-std::istream& std::operator>>(std::istream& input, char32_t& to_read) {
-    to_read = utf8::get_unicode_char(input);
-
-    return input;
-}
-
-std::istream& std::operator>>(std::istream& input, std::u32string& to_read) {
-    while (!std::iswspace(input.peek())) {
-        to_read += utf8::get_unicode_char(input);
-    }
-
-    return input;
-}
-
-std::ostream& std::operator<<(std::ostream& output, const char32_t to_print) {
-    return output << utf8::unicode_to_utf8(to_print);
-}
-
-std::ostream& std::operator<<(std::ostream& output, const std::u32string& to_print) {
-    return output << utf8::unicode_to_utf8(to_print);
 }

@@ -73,7 +73,7 @@ namespace regex {
             CharRange{92874, 93007}, CharRange{93018, 120781},
             CharRange{120832, 123199}, CharRange{123210, 123631},
             CharRange{123642, 125263}, CharRange{125274, 130031},
-            CharRange{130042, utf8::LAST_UNICODE_CHAR}
+            CharRange{130042, utf8::LAST_4_BYTE_CODEPOINT}
         };
 
         const std::vector<CharRange> WORD_CLASS = {
@@ -88,7 +88,7 @@ namespace regex {
             CharRange{'9' + 1, 'A' - 1},
             CharRange{'Z' + 1, '_' - 1},
             CharRange{'_' + 1, 'a' - 1},
-            CharRange{'z' + 1, utf8::LAST_UNICODE_CHAR}
+            CharRange{'z' + 1, utf8::LAST_4_BYTE_CODEPOINT}
         };
 
         const std::vector<CharRange> WHITESPACE_CLASS = {
@@ -115,13 +115,13 @@ namespace regex {
             CharRange{8234, 8238},
             CharRange{8240, 8296},
             CharRange{8298, 12287},
-            CharRange{12289, utf8::LAST_UNICODE_CHAR}
+            CharRange{12289, utf8::LAST_4_BYTE_CODEPOINT}
         };
 
         const std::vector<CharRange> DOT_CLASS = {
             CharRange{0, '\n' - 1},
             CharRange{'\n' + 1, '\r' - 1},
-            CharRange{'\r' + 1, utf8::LAST_UNICODE_CHAR}
+            CharRange{'\r' + 1, utf8::LAST_4_BYTE_CODEPOINT}
         };
     }
 }

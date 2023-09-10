@@ -24,7 +24,7 @@ int main() {
         {"\\S", regex::character_classes::NON_WHITESPACE_CLASS, false},
         {".", regex::character_classes::DOT_CLASS, false},
         {"[]", {}, false},
-        {"[^]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, true},
+        {"[^]", {regex::CharRange{0, utf8::LAST_4_BYTE_CODEPOINT}}, true},
         {"[abcd]", {regex::CharRange{'a', 'd'}}, false},
         {"[a-z]", {regex::CharRange{'a', 'z'}}, false},
         {"[^a-b\\w]", {
@@ -32,12 +32,12 @@ int main() {
             regex::CharRange{'9' + 1, 'A' - 1},
             regex::CharRange{'Z' + 1, '_' - 1},
             regex::CharRange{'_' + 1, 'a' - 1}, 
-            regex::CharRange{'z' + 1, utf8::LAST_UNICODE_CHAR}
+            regex::CharRange{'z' + 1, utf8::LAST_4_BYTE_CODEPOINT}
         }, true},
         {"[a-dc-fe-j]", {regex::CharRange{'a', 'j'}}, false},
         {"[A-Za-z]", {regex::CharRange{'A', 'Z'}, regex::CharRange{'a', 'z'}}, false},
-        {"[\\W\\w]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, false},
-        {"[\\w\\W]", {regex::CharRange{0, utf8::LAST_UNICODE_CHAR}}, false},
+        {"[\\W\\w]", {regex::CharRange{0, utf8::LAST_4_BYTE_CODEPOINT}}, false},
+        {"[\\w\\W]", {regex::CharRange{0, utf8::LAST_4_BYTE_CODEPOINT}}, false},
         {"[.]", {regex::CharRange{'.'}}, false},
         {"[a-]", {regex::CharRange{'-'}, regex::CharRange{'a'}}, false},
         {"[---]", {regex::CharRange{'-'}}, false},

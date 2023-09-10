@@ -4,7 +4,7 @@
 #include <string_view>
 #include <ostream>
 
-#include "utf8.h"
+#include "util/utf8.h"
 
 namespace bootstrap {
     struct FilePosition {
