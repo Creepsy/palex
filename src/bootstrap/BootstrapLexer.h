@@ -1,11 +1,13 @@
 #pragma once
 
+#include <string_view>
+
 #include "TokenInfo.h"
 
 namespace bootstrap {
     class BootstrapLexer {
         public:
-            BootstrapLexer(const char* const input);
+            BootstrapLexer(const std::string_view input);
             TokenInfo::TokenType next_token();
             TokenInfo::TokenType next_unignored_token();
             const TokenInfo& get_token() const;
@@ -17,7 +19,7 @@ namespace bootstrap {
             void advance_regex_token();
             bool advance_while(bool (*predicate)(const utf8::Codepoint_t));
 
-            const char* const input; // make changeable?
+            const std::string_view input; // TODO make changeable?
             const char* position;
             FilePosition file_position;
             TokenInfo current_token;

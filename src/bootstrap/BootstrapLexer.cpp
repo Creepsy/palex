@@ -2,6 +2,9 @@
 
 #include <cstring>
 #include <cassert>
+#include <iostream>
+
+constexpr utf8::Codepoint_t LAST_UNSIGNED_CHAR = 0xff;
 
 namespace bootstrap {
     void FilePosition::advance(const utf8::Codepoint_t consumed) {
@@ -12,7 +15,7 @@ namespace bootstrap {
         }
     }
 
-    BootstrapLexer::BootstrapLexer(const char* const input) : input{input}, position{input}, file_position{}, current_token{TokenInfo::TokenType::UNDEFINED, ""} {
+    BootstrapLexer::BootstrapLexer(const std::string_view input) : input{input}, position{input.begin()}, file_position{}, current_token{TokenInfo::TokenType::UNDEFINED, ""} {
     }
 
     TokenInfo::TokenType BootstrapLexer::next_token() {
@@ -49,7 +52,7 @@ namespace bootstrap {
     void BootstrapLexer::advance_codepoints(const size_t count) {
         utf8::Codepoint_t curr;
         for (int i = 0; i < count; i++) {
-            this->position = utf8::advance_codepoint(this->position, &curr);
+            this->position = utf8::advance_codepoint(this->position, this->input.end(), &curr);
             this->file_position.advance(curr);
         }
     }
@@ -73,29 +76,31 @@ namespace bootstrap {
             return;
         }
 
-        const utf8::Codepoint_t next = utf8::get_next_codepoint(this->position);
+        const utf8::Codepoint_t next = utf8::get_next_codepoint(this->position, this->input.end());
         if (std::isspace((int)next)) {
             this->advance_while(
                 [](const utf8::Codepoint_t to_check) -> bool {
-                    return std::isspace((int)to_check);
+                    return to_check <= LAST_UNSIGNED_CHAR && std::isspace((int)to_check);
                 }
             );
             this->current_token.type = TokenInfo::TokenType::WSPACE;
         } else if (std::isupper((int)next)) {
             this->advance_while(
                 [](const utf8::Codepoint_t to_check) -> bool {
-                    return std::isupper((int)to_check) || 
+                    return to_check <= LAST_UNSIGNED_CHAR && (
+                           std::isupper((int)to_check) || 
                            std::isdigit((int)to_check) || 
-                           to_check == (utf8::Codepoint_t)'_';
+                           to_check == (utf8::Codepoint_t)'_');
                 }
             );
             this->current_token.type = TokenInfo::TokenType::TOKEN;
         } else if (std::islower((int)next)) {
             this->advance_while(
                 [](const utf8::Codepoint_t to_check) -> bool {
-                    return std::islower((int)to_check) || 
+                    return to_check <= LAST_UNSIGNED_CHAR && (
+                           std::islower((int)to_check) || 
                            std::isdigit((int)to_check) || 
-                           to_check == (utf8::Codepoint_t)'_';
+                           to_check == (utf8::Codepoint_t)'_');
                 }
             );
             this->current_token.type = TokenInfo::TokenType::PRODUCTION;
@@ -110,17 +115,17 @@ namespace bootstrap {
     }
 
     void BootstrapLexer::advance_priority_token() {
-        assert(utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'<' && "BUG: Method should only get called when this condition succeeds!");
+        assert(utf8::get_next_codepoint(this->position, this->input.end()) == (utf8::Codepoint_t)'<' && "BUG: Method should only get called when this condition succeeds!");
         this->advance_codepoints(1);
         bool consumed_number = this->advance_while(
             [](const utf8::Codepoint_t to_check) -> bool {
-                return std::isdigit((int)to_check);
+                return to_check <= LAST_UNSIGNED_CHAR && std::isdigit((int)to_check);
             }
         );
         if (!consumed_number) {
             return; // Undefined token, missing number
         }
-        if (utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'>') {
+        if (utf8::get_next_codepoint(this->position, this->input.end()) != (utf8::Codepoint_t)'>') {
             return; // Undefined token, missing closing tag
         }
         this->advance_codepoints(1);
@@ -128,15 +133,15 @@ namespace bootstrap {
     }
 
     void BootstrapLexer::advance_regex_token() {
-        assert(utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'"' && "BUG: Method should only get called when this condition succeeds!");
+        assert(utf8::get_next_codepoint(this->position, this->input.end()) == (utf8::Codepoint_t)'"' && "BUG: Method should only get called when this condition succeeds!");
         this->advance_codepoints(1);
-        while (utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'"' && *this->position != '\0') {
-            if (utf8::get_next_codepoint(this->position) == (utf8::Codepoint_t)'\\') {
+        while (utf8::get_next_codepoint(this->position, this->input.end()) != (utf8::Codepoint_t)'"' && *this->position != '\0') {
+            if (utf8::get_next_codepoint(this->position, this->input.end()) == (utf8::Codepoint_t)'\\') {
                 this->advance_codepoints(1); // skip escaped char
             }
             this->advance_codepoints(1);
         }
-        if (utf8::get_next_codepoint(this->position) != (utf8::Codepoint_t)'"') {
+        if (utf8::get_next_codepoint(this->position, this->input.end()) != (utf8::Codepoint_t)'"') {
             return; // Undefined token, missing closing tag
         }
         this->advance_codepoints(1);
@@ -145,7 +150,7 @@ namespace bootstrap {
 
     bool BootstrapLexer::advance_while(bool (*predicate)(const utf8::Codepoint_t)) {
         bool consumed_codepoint = false;
-        while (predicate(utf8::get_next_codepoint(this->position)) && *this->position != '\0') {
+        while (predicate(utf8::get_next_codepoint(this->position, this->input.end()))) {
             this->advance_codepoints(1);
             consumed_codepoint = true;
         }
