@@ -89,7 +89,7 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
     }
     std::string rule_file_contents = load_stream(rule_file);
     rule_file.close();
-    input::PalexRuleLexer lexer(rule_file);
+    input::PalexRuleLexer lexer(rule_file_contents);
     input::PalexLexerAdapter adapter(lexer);
     input::PalexRuleParser parser(
         std::bind(&input::PalexLexerAdapter::next_token, &adapter),

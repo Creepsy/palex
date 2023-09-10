@@ -1,48 +1,25 @@
 #pragma once
 
-#include <cstddef>
-#include <string>
-#include <istream>
-#include <stack>
-%FALLBACK_INCLUDES%
+#include <string_view>%FALLBACK_INCLUDES%
 
-namespace %MODULE_NAMESPACE% {
-    struct CharacterPosition {
-        size_t line = 1;
-        size_t column = 1;
+#include "%UNIT_NAME%Token.h"
 
-        void advance(const char32_t consumed);
-    };
-
-    struct Token {
-        enum class TokenType {
-            %TOKEN_TYPE_ENUM%
-        };
-
-        TokenType type;
-        std::u32string identifier;
-        CharacterPosition position;
-
-        bool is_ignored() const;
-    };
-
+namespace %MODULE_NAME% {
     class %UNIT_NAME%Lexer {
         public:
-            %UNIT_NAME%Lexer(std::istream& input);
-            Token next_token();
-            Token next_unignored_token();
+            %UNIT_NAME%Lexer();
+            %UNIT_NAME%Lexer(const std::string_view input);
+            void set_input(const std::string_view new_input);
+            %UNIT_NAME%Token::TokenType next_token();
+            %UNIT_NAME%Token::TokenType next_unignored_token();
+            const %UNIT_NAME%Token& current_token() const;
             bool end() const;
         private:
-%FALLBACK_TYPES%
-            char32_t get_char();
-
-            std::istream& input;
-            CharacterPosition curr_position;
-            std::stack<char32_t> cache;
+            %FALLBACK_FUNCTION% 
+            std::string_view input;
+            const char* position;
+            FilePosition file_position;
+            %UNIT_NAME%Token curr_token;
             %FALLBACK_CACHE%
     };
-
-    std::ostream& operator<<(std::ostream& output, const CharacterPosition& to_print);
-    std::ostream& operator<<(std::ostream& output, const Token& to_print);
-    std::ostream& operator<<(std::ostream& output, const Token::TokenType to_print);
 }
