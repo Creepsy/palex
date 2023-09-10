@@ -276,7 +276,7 @@ utf8::Codepoint_t regex::RegexParser::parse_unicode_value() {
     }
 
     utf8::Codepoint_t unicode_char = (utf8::Codepoint_t)std::stoul(std::string(unicode_value), nullptr, 16);
-    if (unicode_char > utf8::LAST_UNICODE_CHAR) {
+    if (unicode_char > utf8::LAST_4_BYTE_CODEPOINT) {
         this->throw_parsing_err("Invalid unicode value with code " + std::to_string(unicode_char));
     }
 
@@ -325,7 +325,7 @@ utf8::Codepoint_t regex::RegexParser::get_curr() {
         this->throw_parsing_err("Tried to read past the end of the regex!");
     }
     
-    return utf8::get_next_codepoint(this->input.begin() + this->curr_pos); // TODO: more efficient ?
+    return utf8::get_next_codepoint(this->input.begin() + this->curr_pos, this->input.end()); // TODO: more efficient ?
 }
 
 std::string_view regex::RegexParser::parse_matching_string(Predicate_t predicate, const size_t max_count) {

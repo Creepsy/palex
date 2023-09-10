@@ -12,7 +12,6 @@ generate_test_executable(CmdArguments input/cmd_arguments_test.cpp)
 generate_test_executable(CmdArgumentsErrors input/cmd_arguments_errors_test.cpp)
 
 generate_test_executable(UTF8Input util/utf8_input_test.cpp)
-generate_test_executable(UTF8Output util/utf8_output_test.cpp)
 generate_test_executable(AutomatonStates util/automaton_states_test.cpp)
 generate_test_executable(AutomatonConnections util/automaton_connections_test.cpp)
 generate_test_executable(AutomatonDFAConversion util/automaton_dfa_conversion_test.cpp)

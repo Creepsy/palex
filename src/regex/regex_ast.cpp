@@ -4,25 +4,21 @@
 #include <cmath>
 #include <cctype>
 
-#include "util/utf8.h"
-
 // static variables
 
 const size_t regex::RegexQuantifier::INFINITE = (size_t) -1;
 
-
-
 //helper functions
 
 inline std::string get_indentation(const size_t indentation_level);
-void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print);
+void print_graphical_unicode_representation(std::ostream& output, const utf8::Codepoint_t to_print);
 
 inline std::string get_indentation(const size_t indentation_level) {
     return std::string(indentation_level, '\t');
 }
 
-void print_graphical_unicode_representation(std::ostream& output, const char32_t to_print) {
-    constexpr char32_t LAST_ASCII_CHAR = 127;
+void print_graphical_unicode_representation(std::ostream& output, const utf8::Codepoint_t to_print) {
+    constexpr utf8::Codepoint_t LAST_ASCII_CHAR = 127;
     if (to_print <= LAST_ASCII_CHAR && std::isgraph((int)to_print)) {
         output << to_print;
     } else {
@@ -36,10 +32,10 @@ regex::CharRange::CharRange() : start(1), end(0) { //empty char range (end < sta
 
 }
 
-regex::CharRange::CharRange(const char32_t single_char) : start(single_char), end(single_char) {
+regex::CharRange::CharRange(const utf8::Codepoint_t single_char) : start(single_char), end(single_char) {
 }
 
-regex::CharRange::CharRange(const char32_t start, const char32_t end) : start(start), end(end) {
+regex::CharRange::CharRange(const utf8::Codepoint_t start, const utf8::Codepoint_t end) : start(start), end(end) {
 }
 
 bool regex::CharRange::is_single_char() const {
@@ -309,7 +305,7 @@ void regex::RegexQuantifier::debug(std::ostream& output, const size_t indentatio
 
 regex::RegexCharSet::RegexCharSet(const bool negated) : negated(negated) {
     if (this->negated) {
-        this->range_set.insert_char_range(CharRange{0, utf8::LAST_UNICODE_CHAR});
+        this->range_set.insert_char_range(CharRange{0, utf8::LAST_4_BYTE_CODEPOINT});
     }
 } 
 

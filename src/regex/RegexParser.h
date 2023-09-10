@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 
-#include "bootstrap/utf8.h"
+#include "util/utf8.h"
 
 #include "regex_ast.h"
 
