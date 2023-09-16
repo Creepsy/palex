@@ -131,9 +131,9 @@ void complete_state(
             }
         }
     };
-    output << sfmt::Indentation{3};
+    output << sfmt::Indentation{4};
     templates::write_template_to_stream(STATE_COMPLETION.c_str(), output, completers);
-    output << sfmt::Indentation{-3};
+    output << sfmt::Indentation{-4};
 }
 
 void complete_error_state(const std::string& unit_name, const input::PalexConfig& config, std::ostream& output) {
