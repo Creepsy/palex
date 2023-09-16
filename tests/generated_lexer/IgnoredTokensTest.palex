@@ -1,0 +1,2 @@
+!IDENTIFIER = "\w+";
+!WSPACE = "\s+";

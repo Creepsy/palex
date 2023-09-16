@@ -1,5 +1,5 @@
 function (create_lexer_test_dependencies TEST_NAME TEST_SRC PALEX_RULEFILE ADDITIONAL_FLAGS)
-    if ( TARGET ${TEST_NAME})
+    if(TARGET ${TEST_NAME})
         return()
     endif()
     get_filename_component(NAME ${PALEX_RULEFILE} NAME_WLE)
@@ -22,11 +22,11 @@ function (create_lexer_test_dependencies TEST_NAME TEST_SRC PALEX_RULEFILE ADDIT
 endfunction()
 
 function(create_lexer_output_test TEST_NAME TEST_SRC PALEX_RULEFILE ADDITIONAL_FLAGS TEST_OUTPUT)
-    create_lexer_test_dependencies(${TEST_NAME} ${TEST_SRC} ${PALEX_RULEFILE} ${ADDITIONAL_FLAGS})
+    create_lexer_test_dependencies(${TEST_NAME} ${TEST_SRC} ${PALEX_RULEFILE} "${ADDITIONAL_FLAGS}")
     add_test(NAME "${TEST_NAME}Output" COMMAND bash -c "${CMAKE_BINARY_DIR}/${TEST_NAME} | diff ${TEST_OUTPUT} -") 
 endfunction()
 
 function(create_lexer_test TEST_NAME TEST_SRC PALEX_RULEFILE ADDITIONAL_FLAGS)
-    create_lexer_test_dependencies(${TEST_NAME} ${TEST_SRC} ${PALEX_RULEFILE} ${ADDITIONAL_FLAGS})
+    create_lexer_test_dependencies(${TEST_NAME} ${TEST_SRC} ${PALEX_RULEFILE} "${ADDITIONAL_FLAGS}")
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME}) 
 endfunction()
