@@ -21,7 +21,7 @@ namespace %MODULE_NAME% {
         size_t state = 0;
         const char* identifier_begin = this->position;
         const auto create_token = [&, this](const %UNIT_NAME%Token::TokenType type) -> %UNIT_NAME%Token {
-            return PalexRuleToken{type, std::string_view(identifier_begin, (size_t)(this->position - identifier_begin)), token_file_position, this->file_position};
+            return %UNIT_NAME%Token{type, std::string_view(identifier_begin, (size_t)(this->position - identifier_begin)), token_file_position, this->file_position};
         };
         if (this->end()) {
             this->curr_token = create_token(%UNIT_NAME%Token::TokenType::END_OF_FILE);
