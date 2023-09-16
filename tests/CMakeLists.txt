@@ -55,3 +55,24 @@ create_lexer_output_test(
     "--fallback"
     ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/int_ident_test.out
 )
+create_lexer_output_test(
+    IgnoredTokensTest
+    generated_lexer/ignored_tokens_test.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/IgnoredTokensTest.palex 
+    "--fallback"
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/ignored_tokens_test.out
+)
+create_lexer_output_test(
+    FallbackTest
+    generated_lexer/fallback_test.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/FallbackTest.palex 
+    "--fallback"
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/fallback_test.out
+)
+create_lexer_output_test(
+    NoFallbackTest
+    generated_lexer/no_fallback_test.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/NoFallbackTest.palex 
+    ""
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/no_fallback_test.out
+)
