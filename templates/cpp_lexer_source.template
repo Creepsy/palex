@@ -34,9 +34,11 @@ namespace %MODULE_NAME% {
             switch (state) {
 %STATES%%ERROR_STATE%
             }
-            this->file_position.advance(current_codepoint);
-            this->position = next_position;
-            next_position = utf8::advance_codepoint(this->position, this->input.end(), &current_codepoint);
+            if (!this->end()) {
+                this->file_position.advance(current_codepoint);
+                this->position = next_position;
+                next_position = utf8::advance_codepoint(this->position, this->input.end(), &current_codepoint);
+            }
         }
     }
 
