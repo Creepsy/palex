@@ -1,3 +1,5 @@
+include(generated_lexer/create_lexer_test.cmake)
+
 function(generate_test_executable test_name test_src)
     add_executable(${test_name} ${test_src})
     target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src)
@@ -39,3 +41,17 @@ generate_test_executable(FollowTerminals parser_generator/follow_terminals_test.
 generate_test_executable(GrammarConflictLALR parser_generator/grammar_conflict_test.cpp)
 generate_test_executable(ParserTableTest parser_generator/parser_table_test.cpp)
 generate_test_executable(ParserTableErrorTest parser_generator/parser_table_error_test.cpp)
+
+create_lexer_test(
+    LexerIntIdentTest
+    generated_lexer/int_ident_test.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/IntIdentTest.palex 
+    "--fallback"
+)
+create_lexer_output_test(
+    LexerIntIdentTest
+    generated_lexer/int_ident_test.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/IntIdentTest.palex 
+    "--fallback"
+    ${CMAKE_CURRENT_SOURCE_DIR}/generated_lexer/int_ident_test.out
+)

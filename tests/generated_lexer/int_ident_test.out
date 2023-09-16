@@ -1,0 +1,9 @@
+[Ln 1, Col 1] - [Ln 1, Col 5] INT: 1000
+[Ln 1, Col 6] - [Ln 1, Col 13] IDENTIFIER: anIdent
+[Ln 1, Col 14] - [Ln 1, Col 21] IDENTIFIER: another
+[Ln 1, Col 22] - [Ln 1, Col 32] IDENTIFIER: identifier
+[Ln 1, Col 33] - [Ln 1, Col 37] INT: 2000
+[Ln 2, Col 2] - [Ln 2, Col 6] INT: 1999
+[Ln 2, Col 7] - [Ln 2, Col 13] IDENTIFIER: number
+[Ln 2, Col 14] - [Ln 2, Col 16] INT: 99
+[Ln 2, Col 16] - [Ln 2, Col 16] END_OF_FILE: 

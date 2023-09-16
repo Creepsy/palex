@@ -1,0 +1,3 @@
+INT = "\d+";
+IDENTIFIER = "[a-zA-Z_]\w*";
+!WSPACE = "\s+";
