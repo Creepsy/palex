@@ -14,7 +14,7 @@ function (create_lexer_test_dependencies TEST_NAME TEST_SRC PALEX_RULEFILE ADDIT
         COMMAND ${CMAKE_BINARY_DIR}/lexergen ${PALEX_RULEFILE} -lang c++ -output-path ${CMAKE_CURRENT_BINARY_DIR} --lexer ${ADDITIONAL_FLAGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating ${LEXER_FILES}"
-        DEPENDS ${PALEX_RULEFILE}
+        DEPENDS ${PALEX_RULEFILE} ${CMAKE_BINARY_DIR}/lexergen
     )
     add_executable(${TEST_NAME} ${TEST_SRC} ${LEXER_FILES})
     target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/util ${CMAKE_CURRENT_BINARY_DIR})
