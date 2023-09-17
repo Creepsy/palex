@@ -1,4 +1,6 @@
 set(PROJECT_SOURCES
+    command_line_interface.cpp
+
     bootstrap/BootstrapLexer.cpp
     bootstrap/TokenInfo.cpp
 
@@ -34,6 +36,8 @@ set(PROJECT_SOURCES
 )
 
 set(PROJECT_HEADERS
+    command_line_interface.h
+
     bootstrap/BootstrapLexer.h
     bootstrap/TokenInfo.h
 
