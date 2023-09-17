@@ -1,95 +1,27 @@
+#include <string_view>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <filesystem>
-#include <cassert>
 #include <functional>
-#include <sstream>
 
-#include "input/cmd_arguments.h"
 #include "input/PalexLexerAdapter.h"
 #include "PalexRuleLexer.h"
+
 #include "input/PalexRuleParser.h"
 
-#include "util/palex_except.h"
-
 #include "lexer_generator/code_gen/lexer_generation.h"
+
 #include "parser_generator/shift_reduce_parsers/code_gen/parser_generation.h"
 
-void print_help_page(const std::string& program_name);
-void print_version_number();
-bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept;
-std::string load_stream(const std::istream& to_load);
+#include "command_line_interface.h"
+
+bool process_rule_file(const std::string_view& module_name, const std::string_view file_contents, const input::PalexConfig& config);
 
 int main(int argc, char* argv[]) {
-    if (argc == 1) {
-        std::cerr << "No arguments supplied! Use '" << argv[0] << " --help' to show all available arguments." << std::endl;
-        return 1;
-    }
-    assert(argc > 1 && "BUG: Check for no arguments didn't exit the program!");
-    if (std::string(argv[1]) == "--help") {
-        print_help_page(argv[0]);
-        return 0;
-    }
-    if (std::string(argv[1]) == "--version") {
-        print_version_number();
-        return 0;
-    }
-    try {
-        const input::PalexConfig config = input::parse_config_from_args(argc, (const char**)argv); 
-        if (config.language == input::Language::NONE) {
-            throw palex_except::ValidationError("No target language supplied!");
-        }
-        for (const std::string& rule_file_path : config.rule_files) {
-            process_rule_file(rule_file_path, config);
-        }
-    } catch (const std::exception& err) {
-        std::cerr << "Fatal error: " << err.what() << std::endl;
-        std::cerr << "Exiting program..." << std::endl;
-        return 1;
-    }
-    return 0;
+    return cli::process_args(argc, (const char**)argv, process_rule_file);
 }
 
-void print_help_page(const std::string& program_name) {
-    std::cout << "Usage:\n"
-              << "  " << program_name << " [FILE]... [OPTION]... [FLAG]...  Runs the generator with the specified arguments.\n"
-              << "  " << program_name << " --version                        Prints the version number of palex.\n"
-              << "  " << program_name << " --help                           Prints this help page.\n\n"
-              << "Options:\n"
-              << "  -output-path <path>         Output folder for lexer and parser files (default: current directory).\n"
-              << "  -util-path <path>           Output (and import) folder for util files (default: current directory).\n"
-              << "  -lang <C++|CPP>             The target programming language (mandatory).\n"
-              << "  -parser-type <LR|LALR>      The type of the generated parsers (mandatory when --parser flag is set).\n"
-              << "  -lookahead <uint>           Lookahead token count (integer >= 0).\n"
-              << "  -module-name <name>         The name of the module/namespace of the generated code (default: palex).\n\n"
-              << "Flags:\n"
-              << "  --lexer                     Enable lexer generation.\n"
-              << "  --parser                    Enable parser generation.\n"
-              << "  --util                      Enable generation of utility files.\n"
-              << "  --fallback                  Enables token fallback for lexers. \n"
-    ;         
-}
-
-void print_version_number() {
-    std::cout << "palex v" << PALEX_VERSION << std::endl; 
-}
-
-bool process_rule_file(const std::string& rule_file_path, const input::PalexConfig& config) noexcept {
-    std::cout << "Processing rule file '" << rule_file_path << "'..." << std::endl;
-    if (!std::filesystem::path(rule_file_path).has_stem()) {
-        std::cerr << "Error: Unable to get the name of the rule file '" << rule_file_path << "'!";
-        return false;
-    }
-    const std::string rule_name = std::filesystem::path(rule_file_path).stem().string();
-    std::ifstream rule_file(rule_file_path);
-    if (!rule_file.is_open()) {
-        std::cerr << "Error: Unable to open rule file '" << rule_file_path << "'!" << std::endl;
-        return false;
-    }
-    std::string rule_file_contents = load_stream(rule_file);
-    rule_file.close();
-    input::PalexRuleLexer lexer(rule_file_contents);
+bool process_rule_file(const std::string_view& module_name, const std::string_view file_contents, const input::PalexConfig& config) {
+    input::PalexRuleLexer lexer(file_contents.data());
     input::PalexLexerAdapter adapter(lexer);
     input::PalexRuleParser parser(
         std::bind(&input::PalexLexerAdapter::next_token, &adapter),
@@ -98,23 +30,14 @@ bool process_rule_file(const std::string& rule_file_path, const input::PalexConf
     try {
         const input::PalexRules& palex_rules = parser.parse_all_rules();
         if (config.generate_lexer) {
-            code_gen::generate_lexer(rule_name, palex_rules.token_definitions, config);
+            code_gen::generate_lexer(std::string(module_name), palex_rules.token_definitions, config);
         }
         if (config.generate_parser) {
-            parser_generator::shift_reduce_parsers::code_gen::generate_parser(rule_name, palex_rules.productions, config);
+            parser_generator::shift_reduce_parsers::code_gen::generate_parser(std::string(module_name), palex_rules.productions, config);
         }
     } catch (const std::exception& err) {
-        rule_file.close();
         std::cerr << "Error: " << err.what() << std::endl;
         return false;
     }
-    rule_file.close();
-    std::cout << "Processed rule file '" << rule_file_path << "' with success!" << std::endl;
     return true;
-}
-
-std::string load_stream(const std::istream& to_load) {
-    std::stringstream file_content;
-    file_content << to_load.rdbuf();
-    return file_content.str();
 }
