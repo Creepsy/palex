@@ -118,7 +118,7 @@ add_custom_command(
 )
 add_library(lexer_autogen ${LEXER_AUTOGEN_FILES} ${LEXER_ADAPTER_FILES})
 target_include_directories(lexer_autogen PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_include_directories(lexer_autogen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util) # refactor this
+target_include_directories(lexer_autogen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/util) # for utf8 library linking of generated lexer
 target_link_libraries(lexer_autogen palex_objects)
 
 add_executable(lexergen lexergen.cpp)
