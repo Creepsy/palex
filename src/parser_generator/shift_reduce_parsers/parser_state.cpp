@@ -277,12 +277,12 @@ namespace parser_generator::shift_reduce_parsers {
 }
 
 std::ostream& std::operator<<(std::ostream& output, const parser_generator::shift_reduce_parsers::Lookahead_t& to_print) {
-    output << "[";
+    output << "'";
     for(auto lookahead_iter = to_print.begin(); lookahead_iter != to_print.end(); lookahead_iter++) {
         if (lookahead_iter != to_print.begin()) {
-            output << " ";
+            output << ", ";
         }
         output << *lookahead_iter;
     }
-    return output << "]";
+    return output << "'";
 }
