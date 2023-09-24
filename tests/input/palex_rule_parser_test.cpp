@@ -12,7 +12,7 @@ int main() {
         "!<7>ANOTHER_1 = \"a\";\n"
         "$S = some_prod;\n"
         "some_prod = ANOTHER_1 some_prod;\n"
-        "some_prod = ;\n"
+        "some_prod#production_tag = ;\n"
     ;
     bootstrap::BootstrapLexer lexer(input);
     input::PalexRuleParser parser(
@@ -35,6 +35,7 @@ int main() {
     TEST_TRUE(palex_rules.productions[1].name == "some_prod")
     TEST_TRUE(palex_rules.productions[1].symbols.size() == 2)
     TEST_TRUE(palex_rules.productions[2].name == "some_prod")
+    TEST_TRUE(palex_rules.productions[2].tag == "production_tag")
     TEST_TRUE(palex_rules.productions[2].symbols.empty())
     return 0;
 }

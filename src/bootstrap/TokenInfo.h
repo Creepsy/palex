@@ -26,6 +26,7 @@ namespace bootstrap {
             TOKEN,
             EQ,
             EOL,
+            PRODUCTION_TAG,
             WSPACE
         };
 

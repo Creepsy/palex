@@ -61,6 +61,7 @@ void complete_lookahead_printer(const input::PalexConfig& config, std::ostream& 
 void complete_position_printer(const input::PalexConfig& config, std::ostream& output);
 std::string upper_case_str(const std::string& to_convert);
 std::set<std::string> collect_nonterminal_names(const std::vector<parser_generator::Production>& productions);
+std::set<std::string> collect_production_representations(const std::vector<parser_generator::Production>& productions);
 std::set<parser_generator::shift_reduce_parsers::Lookahead_t> collect_all_lookaheads(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
 std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t> create_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
 std::string create_state_error_message(const parser_generator::shift_reduce_parsers::ParserState& state);
@@ -77,8 +78,13 @@ void complete_lookahead_function_declaration(const input::PalexConfig& config, s
 
 void complete_nonterminal_enum(const std::vector<parser_generator::Production>& productions, std::ostream& output) {
     output << sfmt::Indentation{2};
+    bool first = true;
     for (const std::string& nonterminal_name : collect_nonterminal_names(productions)) {
-        output << upper_case_str(nonterminal_name) << ",\n";
+        if (!first) {
+            output << ",\n";
+        }
+        output << upper_case_str(nonterminal_name);
+        first = false;
     }
     output << sfmt::Indentation{-2};
 }
@@ -207,10 +213,9 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
                         output << sfmt::Indentation{1};
                         if (!reduce_action.to_reduce.is_entry()) {
                             const size_t symbol_count = reduce_action.to_reduce.symbols.size(); 
-                            const std::string production_name = reduce_action.to_reduce.name;
-                            output << "this->reduce_stack(" << unit_name << "NonterminalType::" << upper_case_str(production_name)
+                            output << "this->reduce_stack(" << unit_name << "NonterminalType::" << upper_case_str(reduce_action.to_reduce.name)
                                    << ", " << symbol_count << ");\n"
-                                   << "this->ast_builder.reduce_" << production_name << "(" << symbol_count << ");\n"
+                                   << "this->ast_builder.reduce_" << reduce_action.to_reduce.get_representation() << "(" << symbol_count << ");\n"
                                    << "break;\n";
                         } else {
                             output << "this->pop_many(" << reduce_action.to_reduce.symbols.size() << ");\n"
@@ -309,6 +314,16 @@ std::set<std::string> collect_nonterminal_names(const std::vector<parser_generat
         }
     }
     return nonterminals;
+}
+
+std::set<std::string> collect_production_representations(const std::vector<parser_generator::Production>& productions) {
+    std::set<std::string> production_representations;
+    for (const parser_generator::Production& production : productions) {
+        if (!production.is_entry()) {
+            production_representations.insert(production.get_representation());
+        }
+    }
+    return production_representations;
 }
 
 std::set<parser_generator::shift_reduce_parsers::Lookahead_t> collect_all_lookaheads(const parser_generator::shift_reduce_parsers::ParserTable& parser_table) {
@@ -421,8 +436,8 @@ std::string expected_tokens_to_string(const parser_generator::shift_reduce_parse
 
 void complete_reduce_methods(const std::vector<parser_generator::Production>& productions, std::ostream& output) {
     output << sfmt::Indentation{3};
-    for (const std::string& nonterminal_name : collect_nonterminal_names(productions)) {
-        output << "virtual void reduce_" << nonterminal_name << "(const size_t child_count) = 0;\n";
+    for (const std::string& production_representation : collect_production_representations(productions)) {
+        output << "virtual void reduce_" << production_representation << "(const size_t child_count) = 0;\n";
     }
     output << sfmt::Indentation{-3};
 }

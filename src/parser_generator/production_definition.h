@@ -20,8 +20,10 @@ namespace parser_generator {
     struct Production {
         std::string name;
         std::vector<Symbol> symbols;
+        std::string tag;
 
         bool is_entry() const;
+        std::string get_representation() const;
     };
 
     bool operator<(const Symbol& first, const Symbol& second);
