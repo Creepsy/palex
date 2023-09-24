@@ -13,7 +13,7 @@ Palex is a parser and lexer generator written in C++. It allows the creation of 
   - [Getting Started](#getting-started)
     - [Using Palex in your project](#using-palex-in-your-project)
   - [Contributing](#contributing)
-  - [Lexer Rules](#lexer-rules)
+  - [Lexer grammar](#lexer-grammar)
     - [Token rule syntax](#token-rule-syntax)
     - [Naming limitations](#naming-limitations)
     - [Regex limitations](#regex-limitations)
@@ -23,6 +23,7 @@ Palex is a parser and lexer generator written in C++. It allows the creation of 
   - [Parser grammar](#parser-grammar)
     - [Production syntax](#production-syntax)
     - [Parser entry production](#parser-entry-production)
+    - [Production tags](#production-tags)
   - [Command line arguments](#command-line-arguments)
     - [Options](#options)
     - [Flags](#flags)
@@ -62,12 +63,12 @@ addition = addition ADD number;
 addition = number;
 number = INT;
 ```
-For more information about the structure of rule files, visit the corresponding section [here](#TODO).
+For more information about the structure of rule files, visit the corresponding sections for [lexer grammar](#lexer-grammar) and [parser grammar](#parser-grammar).
 Simply put these rules in a rule file and run
 ```
 palex YourRuleFile.palex -lang C++ -parser-type LALR --lexer --util --parser
 ```
-Note that the lang and parser-type flags are **always** required. This command will create the lexer and parser files in the current working directory for C++. Available command line arguments and their default configurations are described in more detail [here](#TODO).
+Note that the lang and parser-type flags are **always** required. This command will create the lexer and parser files in the current working directory for C++. Available command line arguments and their default configurations are described in more detail [here](#command-line-arguments).
 
 Running the command should result in a folder structure similar to this:
 - project_folder
@@ -86,7 +87,7 @@ Congrats! You just created your first project with Palex!
 ## Contributing
 For information how you can contribute to this project visit the [contribute section](https://github.com/Creepsy/palex/blob/main/CONTRIBUTING.md) of this project.
 
-## Lexer Rules
+## Lexer grammar
 Every rule file starts with the token definitions for the lexer which are then followed by the grammar of the language. The following section will describe the former in more detail.
 ### Token rule syntax
 A token is defined through the token name followed by an equal sign and the corresponding regex. Every token definition ends with a semicolon. A few valid examples for token definitions are:
@@ -177,6 +178,22 @@ addition = number;
 number = INTEGER;
 ```
 Note that the entry production can not recurse on itself. We therefore need another production (program) to do that for us.
+
+### Production tags
+By default, all productions that produce the same nonterminal type have a shared reduce method. In case you want to split the into multiple ones, you can use tags:
+```
+$S = addition;
+addition#recursive_case = addition ADD number;
+addition#base_case = number;
+number = INTEGER;
+```
+
+Of course, multiple productions of the same type can share a tag, like so:
+```
+binary_expr#recursive = binary_expr ADD number;
+binary_expr#recursive = binary_expr SUB number;
+number = INTEGER;
+```
 
 ## Command line arguments
 Palex expects a sequence of rule files as arguments. In addition, the following arguments that can also be passed to Palex:
