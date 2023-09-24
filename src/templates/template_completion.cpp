@@ -19,6 +19,10 @@ templates::TemplateCompleter_t templates::conditional_completer(const bool enabl
     return enable_flag ? constant_completer(completer_output) : EMPTY_COMPLETER;
 }
 
+templates::TemplateCompleter_t templates::choice_completer(const bool toggle_flag, const std::string& on_true, const std::string& on_false) {
+    return constant_completer(toggle_flag ? on_true : on_false);
+}
+
 void templates::write_template_to_stream(
     const char* const to_write, 
     std::ostream& output, 

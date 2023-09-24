@@ -21,13 +21,14 @@
 #include "cpp_parser_source.h"
 #include "cpp_types_header.h"
 #include "cpp_types_source.h"
+#include "cpp_ast_builder_header.h"
 
 const std::string LOOKAHEAD_FUNCTION_COMPLETION = 
 R"(size_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_lookahead_id() const {
-    const static std::map<std::array<Token::TokenType, LOOKAHEAD>, size_t> lookahead_mappings = {
+    const static std::map<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD>, size_t> lookahead_mappings = {
 %LOOKAHEAD_MAPPINGS%    };
 
-    std::array<Token::TokenType, LOOKAHEAD> lookahead_key;
+    std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD> lookahead_key;
     size_t i = 0;
     for (auto iter = this->lookahead.begin(); iter != this->lookahead.end(); iter++) {
         lookahead_key[i++] = iter->type;
@@ -37,7 +38,6 @@ R"(size_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_lookahead_id() const {
 })";
 
 // helper functions
-void complete_lookahead_type(const input::PalexConfig& config, std::ostream& output);
 void complete_lookahead_function_declaration(const input::PalexConfig& config, std::ostream& output);
 void complete_nonterminal_enum(const std::vector<parser_generator::Production>& productions, std::ostream& output);
 void complete_init_lookahead(const input::PalexConfig& config, std::ostream& output);
@@ -48,12 +48,13 @@ void complete_lookahead_function(
     const input::PalexConfig& config, 
     std::ostream& output
 );
-void complete_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, std::ostream& output);
-void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, std::ostream& output);
-void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const input::PalexConfig& config, std::ostream& output);
+void complete_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, std::ostream& output);
+void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, std::ostream& output);
+void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, const input::PalexConfig& config, std::ostream& output);
 void complete_lookahead_switch(const input::PalexConfig& config, std::ostream& output);
 void complete_lookahead_case(
     const parser_generator::shift_reduce_parsers::Lookahead_t& lookahead, 
+    const std::string& unit_name,
     const std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t>& mappings,
     std::ostream& output);
 void complete_lookahead_printer(const input::PalexConfig& config, std::ostream& output);
@@ -63,14 +64,9 @@ std::set<std::string> collect_nonterminal_names(const std::vector<parser_generat
 std::set<parser_generator::shift_reduce_parsers::Lookahead_t> collect_all_lookaheads(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
 std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t> create_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table);
 std::string create_state_error_message(const parser_generator::shift_reduce_parsers::ParserState& state);
-
-void complete_lookahead_type(const input::PalexConfig& config, std::ostream& output) {
-    if (config.lookahead <= 1) {
-        output << "Token lookahead;";
-    } else {
-        output << "std::deque<Token> lookahead;";
-    }
-}
+std::string expected_tokens_to_string(const parser_generator::shift_reduce_parsers::ParserState& state, const std::string& unit_name);
+void complete_reduce_methods(const std::vector<parser_generator::Production>& productions, std::ostream& output);
+void complete_lookahead_to_string(const input::PalexConfig& config, std::ostream& output);
 
 void complete_lookahead_function_declaration(const input::PalexConfig& config, std::ostream& output) {
     if (config.lookahead <= 1) {
@@ -84,35 +80,40 @@ void complete_nonterminal_enum(const std::vector<parser_generator::Production>& 
     for (const std::string& nonterminal_name : collect_nonterminal_names(productions)) {
         output << upper_case_str(nonterminal_name) << ",\n";
     }
-    output << "_START\n";
     output << sfmt::Indentation{-2};
 }
 
 void complete_init_lookahead(const input::PalexConfig& config, std::ostream& output) {
-    output << sfmt::Indentation{1};
+    output << sfmt::Indentation{2};
     if (config.lookahead <= 1) {
-        output << "this->lookahead = this->lexer.next_unignored_token();";
+        output << "this->next_token();\n"
+                  "this->lookahead = this->current_token();";
     } else {
-        output << "for (size_t _ = 0; _ < LOOKAHEAD; _++) {\n"
-                  "    this->lookahead.push_back(this->lexer.next_unignored_token());\n"
+        output << "while (this->lookahead.size() < LOOKAHEAD) {\n"
+                  "    this->next_token();\n"
+                  "    this->lookahead.push_back(this->current_token());\n"
                   "}";
     }
-    output << sfmt::Indentation{-1};
+    output << sfmt::Indentation{-2};
 }
 
 void complete_shift_function(const input::PalexConfig& config, std::ostream& output) {
-    output << sfmt::Indentation{1};
+    output << sfmt::Indentation{2};
     if (config.lookahead <= 1) {
-        output << "std::unique_ptr<TokenAstNode> token_ast = std::make_unique<TokenAstNode>(this->lookahead);\n"
-                  "this->lookahead = this->lexer.next_unignored_token();\n"
-                  "this->parser_stack.push(std::make_pair(std::move(token_ast), next_state));";
+        output << "this->parser_stack.push(ParserStackInfo{next_state, ((size_t)this->lookahead.type << 1) | TERMINAL_SYMBOL_TYPE_FLAG});\n"
+                  "this->ast_builder.shift_token(this->lookahead);\n"
+                  "this->next_token();\n"
+                  "this->lookahead = this->current_token();";
     } else {
-        output << "std::unique_ptr<TokenAstNode> token_ast = std::make_unique<TokenAstNode>(this->lookahead.front());\n"
+        output << "this->parser_stack.push(ParserStackInfo{next_state, ((size_t)this->lookahead.front().type << 1) | TERMINAL_SYMBOL_TYPE_FLAG});\n"
+                  "this->ast_builder.shift_token(this->lookahead.front());\n"
                   "this->lookahead.pop_front();\n"
-                  "this->lookahead.push_back(this->lexer.next_unignored_token());\n"
-                  "this->parser_stack.push(std::make_pair(std::move(token_ast), next_state));";
+                  "if (this->lookahead.size() < LOOKAHEAD) {\n"
+                  "    this->next_token();\n"
+                  "    this->lookahead.push_back(this->current_token());\n"
+                  "}";
     }
-    output << sfmt::Indentation{-1};
+    output << sfmt::Indentation{-2};
 }
 
 void complete_lookahead_function(
@@ -129,12 +130,12 @@ void complete_lookahead_function(
     const std::map<std::string_view, templates::TemplateCompleter_t> completers = { 
         {"UNIT_NAME", templates::constant_completer(unit_name)},
         {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
-        {"LOOKAHEAD_MAPPINGS", std::bind(complete_lookahead_mappings, parser_table, _1)}
+        {"LOOKAHEAD_MAPPINGS", std::bind(complete_lookahead_mappings, parser_table, unit_name, _1)}
     };
     templates::write_template_to_stream(LOOKAHEAD_FUNCTION_COMPLETION.c_str(), output, completers);
 }
 
-void complete_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, std::ostream& output) {
+void complete_lookahead_mappings(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, std::ostream& output) {
     output << sfmt::Indentation{2};
     for (const auto& [lookahead, id] : create_lookahead_mappings(parser_table)) {
         output << "{{";
@@ -142,17 +143,17 @@ void complete_lookahead_mappings(const parser_generator::shift_reduce_parsers::P
             if (i != 0) {
                 output << ", ";
             }
-            output << "Token::TokenType::" << lookahead[i].identifier;
+            output << unit_name << "Token::TokenType::" << lookahead[i].identifier;
         }
         output << "}, " << id << "},\n";
     }
     output << sfmt::Indentation{-2};
 }
 
-void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, std::ostream& output) {
+void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, std::ostream& output) {
     using namespace parser_generator::shift_reduce_parsers;
 
-    output << sfmt::Indentation{2};
+    output << sfmt::Indentation{3};
     for (size_t id = 0; id < parser_table.get_states().size(); id++) {
         output << "case " << id << ":\n";
         output << sfmt::Indentation{1};
@@ -162,7 +163,7 @@ void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTa
             std::visit(
                 Visitor{
                     [&](const Action::GotoParameters& goto_action) {
-                        output << "case NonterminalType::" << upper_case_str(goto_action.reduced_symbol.identifier) << ":\n"
+                        output << "case "<< unit_name << "NonterminalType::" << upper_case_str(goto_action.reduced_symbol.identifier) << ":\n"
                                   "    return " << goto_action.next_state << ";\n";
                     },
                     [](const Action::ReduceParameters& reduce_action) {},
@@ -177,13 +178,13 @@ void complete_goto_states(const parser_generator::shift_reduce_parsers::ParserTa
         output << "}\n";
         output << sfmt::Indentation{-1};
     }
-    output << sfmt::Indentation{-2};
+    output << sfmt::Indentation{-3};
 }
 
-void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const input::PalexConfig& config, std::ostream& output) {
+void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserTable& parser_table, const std::string& unit_name, const input::PalexConfig& config, std::ostream& output) {
     using namespace parser_generator::shift_reduce_parsers;
    
-    output << sfmt::Indentation{3};
+    output << sfmt::Indentation{4};
     const std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t> mappings = create_lookahead_mappings(parser_table);
     for (size_t id = 0; id < parser_table.get_states().size(); id++) {
         output << "case " << id << ":\n";
@@ -201,22 +202,19 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
                         if (reduce_action.lookahead.empty()) {
                             already_has_default_action = true;
                         }
-                        complete_lookahead_case(reduce_action.lookahead, mappings, output);
+                        complete_lookahead_case(reduce_action.lookahead, unit_name, mappings, output);
                         output << "\n";
                         output << sfmt::Indentation{1};
-                        const std::string production_name = reduce_action.to_reduce.is_entry() ? "_START" : upper_case_str(reduce_action.to_reduce.name);
-                        output << "this->reduce_n(" << reduce_action.to_reduce.symbols.size() 
-                               << ", NonterminalType::" << production_name << ");\n";
-                        if (reduce_action.to_reduce.is_entry()) {
-                            output << "{\n";
-                            output << sfmt::Indentation{1};
-                            output << "std::unique_ptr<AstNode> result = std::move(this->parser_stack.top().first);\n"
-                                      "this->parser_stack.pop();\n"
-                                      "return std::move(result);\n";
-                            output << sfmt::Indentation{-1};
-                            output << "}\n";
+                        if (!reduce_action.to_reduce.is_entry()) {
+                            const size_t symbol_count = reduce_action.to_reduce.symbols.size(); 
+                            const std::string production_name = reduce_action.to_reduce.name;
+                            output << "this->reduce_stack(" << unit_name << "NonterminalType::" << upper_case_str(production_name)
+                                   << ", " << symbol_count << ");\n"
+                                   << "this->ast_builder.reduce_" << production_name << "(" << symbol_count << ");\n"
+                                   << "break;\n";
                         } else {
-                            output << "break;\n";
+                            output << "this->pop_many(" << reduce_action.to_reduce.symbols.size() << ");\n"
+                                   << "return;\n";
                         }
                         output << sfmt::Indentation{-1};
                     },
@@ -224,7 +222,7 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
                         if (shift_action.lookahead.empty()) {
                             already_has_default_action = true;
                         }
-                        complete_lookahead_case(shift_action.lookahead, mappings, output);
+                        complete_lookahead_case(shift_action.lookahead, unit_name, mappings, output);
                         output << "\n    this->shift(" << shift_action.next_state << ");\n"
                                   "    break;\n"; 
                     }
@@ -234,7 +232,9 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
         }
         if (!already_has_default_action) {
             output << "default:\n"
-                  "    this->throw_invalid_lookahead_error(\"" << create_state_error_message(parser_table.get_states()[id]) << "\");\n";
+                      "    this->call_error_handler(" << create_state_error_message(parser_table.get_states()[id]) << ", " 
+                   << expected_tokens_to_string(parser_table.get_states()[id], unit_name) << ");\n";
+            output << "    break;\n";
         }
         output << sfmt::Indentation{-1};
         output << "}\n"
@@ -242,7 +242,7 @@ void complete_parser_table(const parser_generator::shift_reduce_parsers::ParserT
 
         output << sfmt::Indentation{-1};
     }
-    output << sfmt::Indentation{-3};
+    output << sfmt::Indentation{-4};
 }
 
 void complete_lookahead_switch(const input::PalexConfig& config, std::ostream& output) {
@@ -255,13 +255,14 @@ void complete_lookahead_switch(const input::PalexConfig& config, std::ostream& o
 
 void complete_lookahead_case(
     const parser_generator::shift_reduce_parsers::Lookahead_t& lookahead, 
+    const std::string& unit_name,
     const std::map<parser_generator::shift_reduce_parsers::Lookahead_t, size_t>& mappings,
     std::ostream& output
 ) {
     if (lookahead.empty()) {
         output << "default:";
     } else if (lookahead.size() == 1) {
-        output << "case Token::TokenType::" << lookahead[0].identifier << ":";
+        output << "case "<< unit_name << "Token::TokenType::" << lookahead[0].identifier << ":";
     } else {
         output << "case " << mappings.at(lookahead) << ":"; 
     }
@@ -348,7 +349,7 @@ std::string create_state_error_message(const parser_generator::shift_reduce_pars
     using namespace parser_generator::shift_reduce_parsers;
 
     std::stringstream error_message_stream{};
-    error_message_stream << "Expected one of the following: [";
+    error_message_stream << "\"Received '\" + lookahead_to_string(this->lookahead) + \"', but expected one of the following: ";
     bool first_lookahead = true;
     for (const Action& action : state.get_actions()) {
         std::visit(
@@ -372,8 +373,76 @@ std::string create_state_error_message(const parser_generator::shift_reduce_pars
             action.parameters
         );
     }
-    error_message_stream << "].";
+    error_message_stream << ".\"";
     return error_message_stream.str();
+}
+
+std::string expected_tokens_to_string(const parser_generator::shift_reduce_parsers::ParserState& state, const std::string& unit_name) {
+    using namespace parser_generator::shift_reduce_parsers;
+    const auto output_lookahead_as_array = [&](const Lookahead_t& to_output, std::ostream& output) {
+        output << "{";
+        for (size_t i = 0; i < to_output.size(); i++) {
+            if (i != 0) {
+                output << ", ";
+            }
+            output << unit_name << "Token::TokenType::" << to_output[i].identifier;
+        }
+        output << "}";
+    };
+
+    std::stringstream expected_tokens{};
+    expected_tokens << "{";
+    bool first_lookahead = true;
+    for (const Action& action : state.get_actions()) {
+        std::visit(
+            Visitor{
+                [](const Action::GotoParameters& goto_action) {},
+                [&](const Action::ReduceParameters& reduce_action) {
+                    if (!first_lookahead) {
+                        expected_tokens << ", ";
+                    }
+                    output_lookahead_as_array(reduce_action.lookahead, expected_tokens);
+                    first_lookahead = false;
+                },
+                [&](const Action::ShiftParameters& shift_action) {
+                    if (!first_lookahead) {
+                        expected_tokens << ", ";
+                    }
+                    output_lookahead_as_array(shift_action.lookahead, expected_tokens);
+                    first_lookahead = false;
+                }
+            },
+            action.parameters
+        );
+    }
+    expected_tokens << "}";
+    return expected_tokens.str();
+}
+
+void complete_reduce_methods(const std::vector<parser_generator::Production>& productions, std::ostream& output) {
+    output << sfmt::Indentation{3};
+    for (const std::string& nonterminal_name : collect_nonterminal_names(productions)) {
+        output << "virtual void reduce_" << nonterminal_name << "(const size_t child_count) = 0;\n";
+    }
+    output << sfmt::Indentation{-3};
+}
+
+void complete_lookahead_to_string(const input::PalexConfig& config, std::ostream& output) {
+    output << sfmt::Indentation{1};
+    if (config.lookahead <= 1) {
+        output << "string_repr << lookahead.type;";
+        output << sfmt::Indentation{-1};
+        return;
+    }
+    output << "for (auto iter = lookahead.begin(); iter != lookahead.end(); iter++) {\n";
+    output << sfmt::Indentation{1};
+    output << "if (iter != lookahead.begin()) {\n"
+              "    string_repr << \", \";\n"
+              "}\n"
+              "string_repr << iter->type;\n";
+    output << sfmt::Indentation{-1};
+    output << "}";
+    output << sfmt::Indentation{-1};
 }
 
 namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
@@ -384,12 +453,9 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
         const input::PalexConfig& config
     ) {
         try {
-            generate_parser_header(unit_name, config);
+            generate_parser_header(unit_name, productions, config);
             generate_parser_source(unit_name, productions, parser_table, config);
-            if (config.generate_util) {
-                generate_types_header(unit_name, productions, config);
-                generate_types_source(unit_name, config);
-            }
+            generate_ast_builder_header(unit_name, productions, config);
         } catch (const std::exception& err) {
             std::cerr << "Parser code generation failed: " << err.what() << std::endl;
             return false;
@@ -399,14 +465,21 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
 
     void generate_parser_header(
         const std::string& unit_name,
+        const std::vector<Production>& productions,
         const input::PalexConfig& config
     ) {
         using namespace std::placeholders;
 
         const std::map<std::string_view, templates::TemplateCompleter_t> completers = { 
+            {"LOOKAHEAD_INCLUDES", templates::conditional_completer(config.lookahead > 1, "#include <deque>")},
             {"UNIT_NAME", templates::constant_completer(unit_name)},
             {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
-            {"LOOKAHEAD_TYPE", std::bind(complete_lookahead_type, config, _1)},
+            {"LOOKAHEAD_COUNT", templates::constant_completer(std::to_string(config.lookahead))},
+            {"NONTERMINAL_TYPES", std::bind(complete_nonterminal_enum, productions, _1)},
+            {
+                "LOOKAHEAD_TYPE",
+                templates::choice_completer(config.lookahead > 1, "std::deque<" + unit_name + "Token>", unit_name + "Token")
+            },
             {"LOOKAHEAD_FUNCTION", std::bind(complete_lookahead_function_declaration, config, _1)}
         };
         const std::string parser_header_path = config.output_path + "/" + unit_name + "Parser.h";
@@ -425,21 +498,38 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
         const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
             {"UNIT_NAME", templates::constant_completer(unit_name)},
             {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
-            {"LOOKAHEAD_COUNT", templates::constant_completer(std::to_string(config.lookahead))},
+            {"PARSER_TABLE", std::bind(complete_parser_table, parser_table, unit_name, config, _1)},
             {"INIT_LOOKAHEAD", std::bind(complete_init_lookahead, config, _1)},
-            {"GOTO_STATES", std::bind(complete_goto_states, parser_table, _1)},
-            {"LOOKAHEAD_FUNCTION", std::bind(complete_lookahead_function, parser_table, unit_name, config, _1)},
             {"SHIFT_FUNCTION", std::bind(complete_shift_function, config, _1)},
-            {"PARSER_TABLE", std::bind(complete_parser_table, parser_table, config, _1)},
-            {"LOOKAHEAD_PRINTER", std::bind(complete_lookahead_printer, config, _1)},
-            {"POSITION_PRINTER", std::bind(complete_position_printer, config, _1)}
+            {"GOTO_STATES", std::bind(complete_goto_states, parser_table, unit_name, _1)},
+            {"REFILL_QUEUE", templates::conditional_completer(config.lookahead > 1, "this->init_lookahead();")},
+            {"LOOKAHEAD_FUNCTION", std::bind(complete_lookahead_function, parser_table, unit_name, config, _1)},
+            {
+                "LOOKAHEAD_TYPE",
+                templates::choice_completer(config.lookahead > 1, "std::deque<" + unit_name + "Token>", unit_name + "Token")
+            },
+            {"ERROR_REPORT_BEGIN", templates::choice_completer(config.lookahead > 1, "lookahead.front().begin", "lookahead.begin")},
+            {"ERROR_REPORT_END", templates::choice_completer(config.lookahead > 1, "lookahead.front().end", "lookahead.end")},
+            {
+                "LOOKAHEAD_TO_STRING_FUNCTION", 
+                std::bind(complete_lookahead_to_string, config, _1)
+            },
+            {
+                "LOOKAHEAD_TYPE_OUTSIDE_NAMESPACE", 
+                templates::choice_completer(
+                    config.lookahead > 1, 
+                    "std::deque<" + config.module_name + "::" +  unit_name + "Token>", 
+                    config.module_name + "::" + unit_name + "Token"
+                )
+            },
+            {"LOOKAHEAD_INCLUDES", templates::conditional_completer(config.lookahead > 1, "#include <map>")}
         };
         const std::string parser_source_path = config.output_path + "/" + unit_name + "Parser.cpp";
         std::cout << "Generating file " << parser_source_path << "..." << std::endl;
         templates::write_template_to_file(cpp_parser_source, parser_source_path, completers);
-    }            
+    }      
 
-    void generate_types_header(
+    void generate_ast_builder_header(
         const std::string& unit_name,
         const std::vector<Production>& productions,
         const input::PalexConfig& config
@@ -449,23 +539,10 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
         const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
             {"UNIT_NAME", templates::constant_completer(unit_name)},
             {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)},
-            {"NONTERMINAL_ENUM", std::bind(complete_nonterminal_enum, productions, _1)}
+            {"REDUCE_METHODS", std::bind(complete_reduce_methods, productions, _1)}
         };
-        const std::string types_header_path = config.output_path + "/" + unit_name + "Types.h";
-        std::cout << "Generating file " << types_header_path << "..." << std::endl;
-        templates::write_template_to_file(cpp_types_header, types_header_path, completers);
-    }
-
-    void generate_types_source(
-        const std::string& unit_name,
-        const input::PalexConfig& config
-    ) {
-        const std::map<std::string_view, templates::TemplateCompleter_t> completers = {
-            {"UNIT_NAME", templates::constant_completer(unit_name)},
-            {"MODULE_NAMESPACE", templates::constant_completer(config.module_name)}
-        };
-        const std::string types_source_path = config.output_path + "/" + unit_name + "Types.cpp";
-        std::cout << "Generating file " << types_source_path << "..." << std::endl;
-        templates::write_template_to_file(cpp_types_source, types_source_path, completers);
-    }
+        const std::string ast_builder_header_path = config.output_path + "/" + unit_name + "ASTBuilderBase.h";
+        std::cout << "Generating file " << ast_builder_header_path << "..." << std::endl;
+        templates::write_template_to_file(cpp_ast_builder_header, ast_builder_header_path, completers);
+    }      
 }

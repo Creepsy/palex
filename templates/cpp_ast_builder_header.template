@@ -1,0 +1,13 @@
+#pragma once
+
+#include <cstddef>
+
+#include "%UNIT_NAME%Token.h"
+
+namespace %MODULE_NAMESPACE% {
+    class %UNIT_NAME%ASTBuilderBase {
+        public:
+            virtual void shift_token(const %UNIT_NAME%Token to_shift) = 0;
+%REDUCE_METHODS%
+    };
+}
