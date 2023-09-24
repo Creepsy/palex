@@ -23,6 +23,10 @@ class ExampleASTBuilder : public palex::ExampleASTBuilderBase {
             std::cout << "reduce addition" << std::endl;
         }
 
+        void reduce_addition_sub(const size_t child_count) override {
+            std::cout << "reduce subtraction" << std::endl;
+        }
+
         void reduce_assignment(const size_t child_count) override {
             std::cout << "reduce assignment" << std::endl;
         }

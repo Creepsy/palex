@@ -10,7 +10,7 @@ int main() {
         "<7>ANOTHER_1 = \"\";\n"
         "$S = some_prod;\n"
         "some_prod = ANOTHER_1 some_prod;\n"
-        "some_prod = ;\n"
+        "some_prod#production_tag = ;\n"
         ;
     bootstrap::BootstrapLexer lexer(input);
 
@@ -38,6 +38,7 @@ int main() {
     TEST_TRUE(lexer.next_unignored_token() == bootstrap::TokenInfo::TokenType::EOL)
 
     TEST_TRUE(lexer.next_unignored_token() == bootstrap::TokenInfo::TokenType::PRODUCTION)
+    TEST_TRUE(lexer.next_unignored_token() == bootstrap::TokenInfo::TokenType::PRODUCTION_TAG)
     TEST_TRUE(lexer.next_unignored_token() == bootstrap::TokenInfo::TokenType::EQ)
     TEST_TRUE(lexer.next_unignored_token() == bootstrap::TokenInfo::TokenType::EOL)
     return 0;

@@ -109,6 +109,10 @@ namespace input {
             this->expect(bootstrap::TokenInfo::TokenType::PRODUCTION); // error because no production was given
         }
         parsed.name = std::string(this->consume().identifier);
+        if (this->accept(bootstrap::TokenInfo::TokenType::PRODUCTION_TAG)) {
+            parsed.tag = this->curr_token().identifier.substr(1);
+            this->consume();
+        }
         this->consume(bootstrap::TokenInfo::TokenType::EQ);
         parsed.symbols = this->parse_symbol_sequence();
         this->consume(bootstrap::TokenInfo::TokenType::EOL);

@@ -108,6 +108,17 @@ namespace bootstrap {
             this->advance_regex_token();
         } else if (next == (utf8::Codepoint_t)'<') {
             this->advance_priority_token();
+        } else if (next == (utf8::Codepoint_t)'#') {
+            this->advance_codepoints(1); // skip #
+            this->advance_while(
+                [](const utf8::Codepoint_t to_check) -> bool {
+                    return to_check <= LAST_UNSIGNED_CHAR && (
+                           std::islower((int)to_check) || 
+                           std::isdigit((int)to_check) || 
+                           to_check == (utf8::Codepoint_t)'_');
+                }
+            );
+            this->current_token.type = TokenInfo::TokenType::PRODUCTION_TAG;
         } else {
             // Undefined token, advance by 1
             this->advance_codepoints(1);

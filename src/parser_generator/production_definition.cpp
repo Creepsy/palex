@@ -5,6 +5,10 @@ namespace parser_generator {
         return this->name == ENTRY_PRODUCTION_NAME;
     }
 
+    std::string Production::get_representation() const {
+        return this->tag.empty() ? this->name : this->name + "_" + this->tag;
+    }
+
     bool operator<(const Symbol& first, const Symbol& second) {
         if (first.type != second.type) return first.type < second.type;
         return first.identifier < second.identifier;
@@ -39,7 +43,11 @@ namespace parser_generator {
     }
 
     std::ostream& operator<<(std::ostream& output, const Production& to_print) {
-        output << to_print.name << " =";
+        output << to_print.name;
+        if (!to_print.tag.empty()) {
+            output << "#" << to_print.tag;
+        }
+        output << " =";
         for (const Symbol& sym : to_print.symbols) {
             output << " " << sym;
         }
