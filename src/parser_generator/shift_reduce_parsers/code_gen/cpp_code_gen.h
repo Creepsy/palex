@@ -18,6 +18,7 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
     );
     void generate_parser_header(
         const std::string& unit_name,
+        const std::vector<Production>& productions,
         const input::PalexConfig& config
     );
     void generate_parser_source(
@@ -26,13 +27,9 @@ namespace parser_generator::shift_reduce_parsers::code_gen::cpp {
         const ParserTable& parser_table,
         const input::PalexConfig& config
     );
-    void generate_types_header(
+    void generate_ast_builder_header(
         const std::string& unit_name,
         const std::vector<Production>& productions,
-        const input::PalexConfig& config
-    );
-    void generate_types_source(
-        const std::string& unit_name,
         const input::PalexConfig& config
     );
 }

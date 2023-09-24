@@ -11,8 +11,9 @@ set(GENERATED_FILES
     ${CMAKE_CURRENT_BINARY_DIR}/ExampleLexer.h
     ${CMAKE_CURRENT_BINARY_DIR}/ExampleParser.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ExampleParser.h
-    ${CMAKE_CURRENT_BINARY_DIR}/ExampleTypes.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/ExampleTypes.h
+    ${CMAKE_CURRENT_BINARY_DIR}/ExampleToken.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/ExampleToken.h
+    ${CMAKE_CURRENT_BINARY_DIR}/ExampleASTBuilderBase.h
     ${CMAKE_CURRENT_BINARY_DIR}/utf8.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/utf8.h
 )

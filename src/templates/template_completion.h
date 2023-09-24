@@ -13,6 +13,7 @@ namespace templates {
 
     TemplateCompleter_t constant_completer(const std::string& completer_output);
     TemplateCompleter_t conditional_completer(const bool enable_flag, const std::string& completer_output);
+    TemplateCompleter_t choice_completer(const bool toggle_flag, const std::string& on_true, const std::string& on_false);
     void write_template_to_stream(
         const char* const to_write, 
         std::ostream& output, 

@@ -1,72 +1,134 @@
 #include "%UNIT_NAME%Parser.h"
 
-#include <map>
-#include <array>
 #include <cassert>
+#include <sstream>
+#include <iomanip>
+#include <string>
 #include <stdexcept>
 #include <sstream>
+%LOOKAHEAD_INCLUDES%
+
+#include <utf8.h>
 
 constexpr size_t ERROR_STATE = (size_t)-1;
-constexpr size_t LOOKAHEAD = %LOOKAHEAD_COUNT%;
+constexpr size_t NONTERMINAL_SYMBOL_TYPE_FLAG = 1;
+constexpr size_t TERMINAL_SYMBOL_TYPE_FLAG = 0;
 
-%MODULE_NAMESPACE%::%UNIT_NAME%Parser::%UNIT_NAME%Parser(%UNIT_NAME%Lexer& lexer) : lexer{lexer} {
-    this->init_lookahead();
+// helper function
+const char* advance_to_position(const char* current, const %MODULE_NAMESPACE%::FilePosition target_position, const char* const end);
+std::string_view to_end_of_line(const char* const span_begin, const char* const end);
+std::string lookahead_to_string(const %LOOKAHEAD_TYPE_OUTSIDE_NAMESPACE%& lookahead);
+
+const char* advance_to_position(const char* current, const %MODULE_NAMESPACE%::FilePosition target_position, const char* const end) {
+    %MODULE_NAMESPACE%::FilePosition current_position{};
+    utf8::Codepoint_t current_codepoint = 0;
+    while (current_position.line < target_position.line || (current_position.line == target_position.line && current_position.column < target_position.column)) {
+        current = utf8::advance_codepoint(current, end, &current_codepoint);
+        current_position.advance(current_codepoint);
+    }
+    return current;
 }
 
-std::unique_ptr<%MODULE_NAMESPACE%::AstNode> %MODULE_NAMESPACE%::%UNIT_NAME%Parser::parse() {
-    while (true) {
-        switch (this->get_current_state()) {
+std::string_view to_end_of_line(const char* const span_begin, const char* const end) {
+    utf8::Codepoint_t current_codepoint = 0;
+    const char* current = span_begin;
+    do {
+        current = utf8::advance_codepoint(current, end, &current_codepoint);
+    } while (current < end && current_codepoint != (utf8::Codepoint_t)'\n');
+    if (current < end) {
+        current--; // undo the current char (the \n) so that it doesn't get included
+    }
+    return std::string_view(span_begin, (size_t)(current - span_begin));
+}
+
+std::string lookahead_to_string(const %LOOKAHEAD_TYPE_OUTSIDE_NAMESPACE%& lookahead) {
+    std::stringstream string_repr;
+%LOOKAHEAD_TO_STRING_FUNCTION%
+    return string_repr.str();
+}
+
+namespace %MODULE_NAMESPACE% {
+    %UNIT_NAME%Parser::%UNIT_NAME%Parser(
+        %UNIT_NAME%ASTBuilderBase& ast_builder, 
+        const NextTokenFunc_t& next_token, 
+        const CurrentTokenFunc_t& current_token,
+        const HandleParseErrorFunc_t& handle_parse_error
+        ) : ast_builder{ast_builder}, next_token{next_token}, current_token{current_token}, handle_parse_error{handle_parse_error} {
+        this->init_lookahead();
+    }
+
+    void %UNIT_NAME%Parser::parse() {
+        while (true) {
+            switch(this->get_current_state()) {
 %PARSER_TABLE%
-            case ERROR_STATE:
-            default:
-                throw std::runtime_error("Invalid parser state! This is (probably) a bug. Please create an issue on GitHub.");
+                case ERROR_STATE:
+                default:
+                    assert(false && "Invalid parser state. This is (probably) a bug. Please create an issue on GitHub.");
+                    break;
+            }
         }
     }
-    return nullptr; // just to make sure that the compiler is happy
-}
 
-void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::init_lookahead() {
+    void %UNIT_NAME%Parser::init_lookahead() {
 %INIT_LOOKAHEAD%
-}
+    }
 
-void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::shift(const StateID_t next_state) {
+    void %UNIT_NAME%Parser::shift(const StateID_t next_state) {
 %SHIFT_FUNCTION%
-}
-
-std::vector<std::unique_ptr<%MODULE_NAMESPACE%::AstNode>> %MODULE_NAMESPACE%::%UNIT_NAME%Parser::collect_n(const size_t n) {
-    std::vector<std::unique_ptr<AstNode>> collection(n);
-    assert(this->parser_stack.size() >= n && "BUG: Parser stack doesn't contain enough elements!");
-    for (size_t i = 0; i < n; i++) {
-        collection[n - i - 1] = std::move(this->parser_stack.top().first);
-        this->parser_stack.pop();
     }
-    return std::move(collection);
-}
 
-void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::reduce_n(const size_t n, const NonterminalType reduced_production) {
-    std::vector<std::unique_ptr<AstNode>> collection = this->collect_n(n);
-    std::unique_ptr<AstNode> collection_ptr = std::move(std::make_unique<CollectionAstNode>(reduced_production, collection));
-    this->parser_stack.push(std::make_pair(std::move(collection_ptr), this->get_goto_state(reduced_production)));
-}
-
-%MODULE_NAMESPACE%::%UNIT_NAME%Parser::StateID_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_current_state() const {
-    return this->parser_stack.empty() ? 0 : this->parser_stack.top().second;
-}
-
-%MODULE_NAMESPACE%::%UNIT_NAME%Parser::StateID_t %MODULE_NAMESPACE%::%UNIT_NAME%Parser::get_goto_state(const NonterminalType reduced_production) const {
-    switch (this->get_current_state()) {
-%GOTO_STATES%       default:
-            return ERROR_STATE;
+    size_t %UNIT_NAME%Parser::pop_many(size_t count) {
+        while (!this->parser_stack.empty() && count > 0) {
+            this->parser_stack.pop();
+            count--;
+        }
+        return count;
     }
-    return ERROR_STATE; // just to make sure that the compiler is happy
-}
 
-void %MODULE_NAMESPACE%::%UNIT_NAME%Parser::throw_invalid_lookahead_error(const std::string& error_message) {
-    std::stringstream error_message_stream{};
-    error_message_stream << %POSITION_PRINTER% << " Invalid lookahead [";
-%LOOKAHEAD_PRINTER%
-    error_message_stream << "]! " << error_message;
-    throw std::runtime_error(error_message_stream.str()); 
-}
+    void %UNIT_NAME%Parser::reduce_stack(const %UNIT_NAME%NonterminalType reduced, const size_t count) {
+        assert(this->parser_stack.size() >= count && "Bug: tried to pop more items than there are on the parser stack! Please report this issue on GitHub.");
+        this->pop_many(count);
+        this->parser_stack.push(ParserStackInfo{this->get_goto_state(reduced), (((size_t)reduced) << 1) | NONTERMINAL_SYMBOL_TYPE_FLAG});
+    }
+
+    %UNIT_NAME%Parser::StateID_t %UNIT_NAME%Parser::get_current_state() const {
+            return this->parser_stack.empty() ? 0 : this->parser_stack.top().symbol_state;
+    }
+
+    %UNIT_NAME%Parser::StateID_t %UNIT_NAME%Parser::get_goto_state(const %UNIT_NAME%NonterminalType reduced_production) const {
+        switch (this->get_current_state()) {
+%GOTO_STATES%       
+            default:
+                return ERROR_STATE;
+        }
+        return ERROR_STATE;
+    }
+
+    void %UNIT_NAME%Parser::call_error_handler(const std::string_view error_message, const std::set<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD_TOKEN_COUNT>>& expected_tokens) {
+        this->handle_parse_error(error_message, expected_tokens, this->lookahead);
+        %REFILL_QUEUE%
+    }
 
 %LOOKAHEAD_FUNCTION%
+
+    void default_handle_parse_error(
+        const std::string_view input_file_path,
+        const std::string_view input,
+        const std::string_view error_message,
+        const std::set<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD_TOKEN_COUNT>>& expected_tokens,
+        %LOOKAHEAD_TYPE%& lookahead
+    ) {
+        std::stringstream error_report;
+        const std::string_view line = to_end_of_line(advance_to_position(input.begin(), FilePosition{%ERROR_REPORT_BEGIN%.line, 1}, input.end()), input.end());
+        error_report << "[" << input_file_path << ":" << %ERROR_REPORT_BEGIN%.line << ":" << %ERROR_REPORT_BEGIN%.column
+                     << "] Error: " << error_message << "\n";
+        error_report << std::setfill(' ') << std::setw(5) << %ERROR_REPORT_BEGIN%.line << " | " << line << "\n";
+        error_report << "      | " << std::string(%ERROR_REPORT_BEGIN%.column - 1, ' ') << std::string(std::max(%ERROR_REPORT_END%.column - %ERROR_REPORT_BEGIN%.column, (size_t)1), '~') << "\n";
+        throw std::runtime_error(error_report.str());
+    }
+
+    %UNIT_NAME%Parser::HandleParseErrorFunc_t make_default_parse_error_handler(const std::string_view input_file_path, const std::string_view input) {
+        using namespace std::placeholders;
+        return std::bind(default_handle_parse_error, input_file_path, input, _1, _2, _3);
+    }
+}

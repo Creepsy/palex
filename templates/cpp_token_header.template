@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string_view>
+#include <functional>
 
 #include <utf8.h>
 
@@ -26,6 +27,9 @@ namespace %MODULE_NAME% {
 
         bool is_ignored() const;
     };
+
+    using NextTokenFunc_t = std::function<%UNIT_NAME%Token::TokenType()>;
+    using CurrentTokenFunc_t = std::function<const %UNIT_NAME%Token&()>;
 
     std::ostream& operator<<(std::ostream& output, const FilePosition& to_print);
     std::ostream& operator<<(std::ostream& output, const %UNIT_NAME%Token& to_print);

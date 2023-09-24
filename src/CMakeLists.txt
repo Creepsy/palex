@@ -71,6 +71,7 @@ set(PROJECT_HEADERS
     ${CMAKE_BINARY_DIR}/cpp_types_source.h
     ${CMAKE_BINARY_DIR}/cpp_token_header.h
     ${CMAKE_BINARY_DIR}/cpp_token_source.h
+    ${CMAKE_BINARY_DIR}/cpp_ast_builder_header.h
     
     parser_generator/validation.h
     parser_generator/production_definition.h

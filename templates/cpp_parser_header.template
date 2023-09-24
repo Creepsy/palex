@@ -1,36 +1,72 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <string>
 #include <stack>
-#include <deque>
 #include <cstddef>
-#include <utility>
+#include <functional>
+#include <string_view>
+#include <set>
+#include <array>
+#include <algorithm>
+%LOOKAHEAD_INCLUDES%
 
-#include "%UNIT_NAME%Types.h"
-#include "%UNIT_NAME%Lexer.h"
+#include "%UNIT_NAME%ASTBuilderBase.h"
+#include "%UNIT_NAME%Token.h"
 
 namespace %MODULE_NAMESPACE% {
+    constexpr size_t LOOKAHEAD = %LOOKAHEAD_COUNT%;
+    constexpr size_t LOOKAHEAD_TOKEN_COUNT = std::max(LOOKAHEAD, (size_t)1); // 1 for k = 0, because there is still a token needed for shift; used for error handler
+
+    enum class %UNIT_NAME%NonterminalType {
+%NONTERMINAL_TYPES%
+    };
+
     class %UNIT_NAME%Parser {
         public:
-            %UNIT_NAME%Parser(%UNIT_NAME%Lexer& lexer);
-            std::unique_ptr<AstNode> parse();
-            ~%UNIT_NAME%Parser() = default;
+            using HandleParseErrorFunc_t = std::function<void(
+                const std::string_view,
+                const std::set<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD_TOKEN_COUNT>>&,
+                %LOOKAHEAD_TYPE%&
+            )>;
+
+            %UNIT_NAME%Parser(
+                %UNIT_NAME%ASTBuilderBase& ast_builder, 
+                const NextTokenFunc_t& next_token, 
+                const CurrentTokenFunc_t& current_token,
+                const HandleParseErrorFunc_t& handle_parse_error
+            );
+            void parse();
         private:
             using StateID_t = size_t;
+            using SymbolType_t = size_t; 
 
-            %UNIT_NAME%Lexer& lexer;
-            %LOOKAHEAD_TYPE%
-            std::stack<std::pair<std::unique_ptr<AstNode>, StateID_t>> parser_stack;
+            struct ParserStackInfo {
+                const StateID_t symbol_state;
+                const SymbolType_t type;
+            };
+
+            %UNIT_NAME%ASTBuilderBase& ast_builder;
+            const NextTokenFunc_t next_token;
+            const CurrentTokenFunc_t current_token;
+            const HandleParseErrorFunc_t handle_parse_error;
+            std::stack<ParserStackInfo> parser_stack;
+            %LOOKAHEAD_TYPE% lookahead;
 
             void init_lookahead();
             void shift(const StateID_t next_state);
-            std::vector<std::unique_ptr<AstNode>> collect_n(const size_t n);
-            void reduce_n(const size_t n, const NonterminalType reduced_production);
+            size_t pop_many(size_t count);
+            void reduce_stack(const %UNIT_NAME%NonterminalType reduced, const size_t count);
             StateID_t get_current_state() const;
-            StateID_t get_goto_state(const NonterminalType reduced_production) const;
-            void throw_invalid_lookahead_error(const std::string& error_message);
+            StateID_t get_goto_state(const %UNIT_NAME%NonterminalType reduced_production) const;
+            void call_error_handler(const std::string_view error_message, const std::set<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD_TOKEN_COUNT>>& expected_tokens);
             %LOOKAHEAD_FUNCTION%
     };
+
+    void default_handle_parse_error(
+        const std::string_view input_file_path,
+        const std::string_view input,
+        const std::string_view error_message,
+        const std::set<std::array<%UNIT_NAME%Token::TokenType, LOOKAHEAD_TOKEN_COUNT>>& expected_tokens,
+        %LOOKAHEAD_TYPE%& lookahead
+    );
+    %UNIT_NAME%Parser::HandleParseErrorFunc_t make_default_parse_error_handler(const std::string_view input_file_path, const std::string_view input);
 }
