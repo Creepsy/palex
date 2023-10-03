@@ -77,10 +77,13 @@ Running the command should result in a folder structure similar to this:
   - **YourRuleFileLexer.cpp**
   - **YourRuleFileParser.h**
   - **YourRuleFileParser.cpp**
+  - **YourRuleFileASTBuilderBase.h**
+  - **YourRuleFileASTBuilderBase.cpp**
   - **utf8.h**          
   - **utf8.cpp**   
-  - **YourRuleFileTypes.h**   
-  - **YourRuleFileTypes.cpp**  
+  - **YourRuleFileToken.h**   
+  - **YourRuleFileToken.cpp**  
+  
 You can continue from here by using the generated files in your project or by integrating the generator in your build process (An example for CMake can be found in the example folder).
 Congrats! You just created your first project with Palex!
 
@@ -104,10 +107,11 @@ As the lexer isn't able to skip characters, all characters from the input stream
 Some token names are reserved by the generator itself, and therefore can't be used. These are: UNDEFINED, END_OF_FILE
 
 ### Regex limitations
-This generator supports most of the commonly used regex features. Please note however, that the following widely used features are currently not supported:
+This generator supports most of the commonly used regex features. Please note however, that the following (widely used) features are currently not supported:
 - anchors
 - backreferences
 - lookaheads
+
 If you want to extend the functionality of the regex parser, feel free to do so. For more information on how to make a contribution to the project visit the corresponding [section](#contributing).
 
 ### Token ignore list
@@ -115,7 +119,7 @@ This feature is intended to be used for seperation tokens like whitespace. By pu
 ```
 !WSPACE = "\s+";
 ```
-Ignored tokens are still being returned by the method `next_token()` while they are skipped by the method `next_unignored_token()`.
+Ignored tokens are still being processed by the method `next_token()` while they are skipped by the method `next_unignored_token()`.
 
 ### Special tokens
 When an invalid input sequence is recognized by the lexer, a token with the type of UNDEFINED is returned by the lexer. The invalid tokens get consumed which allows the user to continue with parsing tokens from the input stream. A token of the type END_OF_FILE is returned when the input stream contains no more characters to read.
@@ -160,7 +164,7 @@ Every production starts with the resulting nonterminal on the left, immediately 
 addition = addition ADD number;
 addition = number;
 ```
-As seen above, Productions can also recursively contain themselves.
+As seen above, productions can also recursively contain themselves.
 Further, empty productions are also allowed. These are mostly useful for termination of a recursive production:
 ```
 program = program statement;
@@ -177,10 +181,10 @@ addition = addition ADD number;
 addition = number;
 number = INTEGER;
 ```
-Note that the entry production can not recurse on itself. We therefore need another production (program) to do that for us.
+Note that the entry production can not recurse on itself. We therefore need another production (program) to do that for us. An input sequence that can't be reduced by an entry production is considered invalid by the parser.
 
 ### Production tags
-By default, all productions that produce the same nonterminal type have a shared reduce method. In case you want to split the into multiple ones, you can use tags:
+By default, all productions that produce the same nonterminal type have the same reduce method. In case you want to split it into multiple ones, you can use tags:
 ```
 $S = addition;
 addition#recursive_case = addition ADD number;
@@ -194,6 +198,7 @@ binary_expr#recursive = binary_expr ADD number;
 binary_expr#recursive = binary_expr SUB number;
 number = INTEGER;
 ```
+You can also reuse the same tag for different nonterminals / productions.
 
 ## Command line arguments
 Palex expects a sequence of rule files as arguments. In addition, the following arguments that can also be passed to Palex:
