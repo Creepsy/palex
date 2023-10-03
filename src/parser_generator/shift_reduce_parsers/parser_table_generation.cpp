@@ -127,8 +127,9 @@ namespace parser_generator::shift_reduce_parsers {
         }
         const std::string nonterminal_name = to_expand.get_current_symbol().value().identifier;
         assert(nonterminal_mappings.find(nonterminal_name) != nonterminal_mappings.end() && "BUG: nonterminal mappings are incomplete!");
+        const std::set<Lookahead_t> follow_set = follow_terminals(to_expand.get_current_symbol().value(), target, first_set, lookahead);
         for (const Production& expansion : nonterminal_mappings.at(nonterminal_name)) {
-            for (const Lookahead_t& expansion_lookahead : follow_terminals(to_expand.get_current_symbol().value(), target, first_set, lookahead)) {
+            for (const Lookahead_t& expansion_lookahead : follow_set) {
                 expand_production_state(ProductionState(expansion, expansion_lookahead), target, first_set, nonterminal_mappings, lookahead);  
             }
         }
