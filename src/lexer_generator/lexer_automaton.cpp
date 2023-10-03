@@ -43,6 +43,7 @@ void lexer_generator::resolve_connection_collisions(
             continue;
         }
         if (intersection != (*iter).first) {
+            iter->first = iter->first - intersection;
             iter = dfa_connections.insert(iter, std::make_pair(intersection, (*iter).second));
         }
         (*iter).second.insert(to_add.target);
