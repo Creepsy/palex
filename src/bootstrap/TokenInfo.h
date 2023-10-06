@@ -19,7 +19,8 @@ namespace bootstrap {
             UNDEFINED,
             END_OF_FILE,
             IGNORE,
-            REGEX,
+            RESULTS_IN,
+            STRING,
             PRIORITY_TAG,
             ENTRY_PRODUCTION,
             PRODUCTION,
@@ -27,6 +28,7 @@ namespace bootstrap {
             EQ,
             EOL,
             PRODUCTION_TAG,
+            ERROR_KW,
             WSPACE
         };
 

@@ -31,6 +31,7 @@ namespace input {
             CurrTokenFunc_t curr_token;
 
             std::vector<parser_generator::Symbol> parse_symbol_sequence();
+            parser_generator::ProductionResult_t parse_production_result();
             
             void expect(const bootstrap::TokenInfo::TokenType to_expect) const;
             bool accept(const bootstrap::TokenInfo::TokenType to_check) const;

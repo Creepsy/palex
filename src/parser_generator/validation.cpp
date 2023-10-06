@@ -4,8 +4,12 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <variant>
+#include <optional>
+#include <map>
 
 #include "util/palex_except.h"
+#include "util/Visitor.h"
 
 struct TaggedProductionName {
     std::string production_name;
@@ -20,35 +24,45 @@ struct TaggedProductionName {
     }
 };
 
-// helper functions
-std::set<std::string> collect_production_names(const std::vector<parser_generator::Production>& productions);
-std::set<TaggedProductionName> collect_tagged_productions(const std::vector<parser_generator::Production>& productions);
+using MethodName_t = std::string;
+using ProductionName_t = std::string;
 
-std::set<std::string> collect_production_names(const std::vector<parser_generator::Production>& productions) {
-    std::set<std::string> production_names;
+// helper functions
+std::set<ProductionName_t> collect_production_names(const std::vector<parser_generator::Production>& productions);
+// it is not guaranteed that all productions are present in this lookup map in case of conflicting method names.
+std::map<MethodName_t, ProductionName_t> collect_astbuilder_method_names(const std::vector<parser_generator::Production>& productions);
+
+std::set<ProductionName_t> collect_production_names(const std::vector<parser_generator::Production>& productions) {
+    std::set<ProductionName_t> production_names;
     for (const parser_generator::Production& production : productions) {
         production_names.insert(production.name);
     }
     return production_names;
 }
 
-std::set<TaggedProductionName> collect_tagged_productions(const std::vector<parser_generator::Production>& productions) {
-    std::set<TaggedProductionName> tagged_production_names;
+std::map<MethodName_t, ProductionName_t> collect_astbuilder_method_names(const std::vector<parser_generator::Production>& productions) {
+    std::map<MethodName_t, ProductionName_t> method_names;
     for (const parser_generator::Production& production : productions) {
-        tagged_production_names.insert(TaggedProductionName{production.name, production.tag});
+        if (!production.is_entry()) {
+            const std::optional<std::string> method_name = production.get_astbuilder_method_name();
+            if (!method_name.has_value()) {
+                continue;
+            }
+            method_names.insert(std::make_pair(method_name.value(), production.name));
+        }
     }
-    return tagged_production_names;
+    return method_names;
 }
 
 void parser_generator::validate_productions(const std::vector<Production>& to_check) {
     check_for_missing_productions(to_check);
     check_for_duplicate_productions(to_check);
     check_for_entry(to_check);
-    check_for_tag_conflicts(to_check);
+    check_for_astbuilder_method_conflicts(to_check);
 }
 
 void parser_generator::check_for_missing_productions(const std::vector<Production>& to_check) {
-    const std::set<std::string> production_names = collect_production_names(to_check);
+    const std::set<ProductionName_t> production_names = collect_production_names(to_check);
 
     for (const Production& prod : to_check) {
         assert(production_names.find(prod.name) != production_names.end() && "Production name missing in collected names!");
@@ -83,13 +97,18 @@ void parser_generator::check_for_entry(const std::vector<Production>& to_check) 
     throw palex_except::ValidationError("No entry production found!");
 }
 
-void parser_generator::check_for_tag_conflicts(const std::vector<Production>& to_check) {
-    const std::set<TaggedProductionName> tagged_production_names = collect_tagged_productions(to_check);
+void parser_generator::check_for_astbuilder_method_conflicts(const std::vector<Production>& to_check) {
+    const std::map<MethodName_t, ProductionName_t> method_names = collect_astbuilder_method_names(to_check);
     for (const Production& production : to_check) {
-        const auto match = tagged_production_names.find(TaggedProductionName{production.name, production.tag});
-        if (match != tagged_production_names.end() && match->production_name != production.name) {
+        const std::optional<std::string> method_name = production.get_astbuilder_method_name();
+        if (!method_name.has_value()) {
+            continue;
+        }
+        const auto match = method_names.find(method_name.value());
+        if (match != method_names.end() && match->second != production.name) {
             throw palex_except::ValidationError(
-                "The productions '" + match->production_name + "' and '" + production.name + "lead to a conflict because the have the same tagged name!"
+                "The productions '" + match->second + "' and '" + production.name + 
+                "lead to a conflict because they both need the method " + method_name.value() + "!"
             );
         }
     }

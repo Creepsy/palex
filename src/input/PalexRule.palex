@@ -1,5 +1,6 @@
 IGNORE = "!";
-REGEX = "\"([^\n\"\\]|(\\.))*\"";
+RESULTS_IN = "->";
+STRING = "\"([^\n\"\\]|(\\.))*\"";
 PRIORITY_TAG = "<[0-9]+>";
 ENTRY_PRODUCTION = "$S";
 PRODUCTION = "[a-z][a-z0-9_]*";
@@ -7,4 +8,5 @@ TOKEN = "[A-Z][A-Z0-9_]*";
 EQ = "=";
 EOL = ";";
 PRODUCTION_TAG = "#[a-z][a-z0-9_]*";
+ERROR_KW = "error";
 !WSPACE = "\s+";

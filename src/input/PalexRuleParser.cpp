@@ -72,7 +72,7 @@ namespace input {
         parsed.name = this->consume().identifier;
         this->consume(bootstrap::TokenInfo::TokenType::EQ);
 
-        this->expect(bootstrap::TokenInfo::TokenType::REGEX);
+        this->expect(bootstrap::TokenInfo::TokenType::STRING);
         const std::string_view regex = strip_ends(this->curr_token().identifier); // remove "" of regex
         try {
             parsed.token_regex = regex::RegexParser(regex).parse_regex();
@@ -115,6 +115,12 @@ namespace input {
         }
         this->consume(bootstrap::TokenInfo::TokenType::EQ);
         parsed.symbols = this->parse_symbol_sequence();
+        // entry rules can't have error results
+        if (!parsed.is_entry()) {
+            parsed.result = this->parse_production_result(); // TODO: fully remove entry rule
+        } else {
+            parsed.result = std::monostate{};
+        }
         this->consume(bootstrap::TokenInfo::TokenType::EOL);
         return parsed;
     }
@@ -136,6 +142,20 @@ namespace input {
             this->consume();
         }
         return symbol_sequence;
+    }
+
+    parser_generator::ProductionResult_t PalexRuleParser::parse_production_result() {
+        if (!this->accept(bootstrap::TokenInfo::TokenType::RESULTS_IN)) {
+            return parser_generator::ReductionResult_t{};
+        }
+        this->consume();
+        this->consume(bootstrap::TokenInfo::TokenType::ERROR_KW);
+        if (this->accept(bootstrap::TokenInfo::TokenType::STRING)) {
+            const std::string error_message = std::string(strip_ends(this->curr_token().identifier)); // remove "" of string
+            this->consume();
+            return parser_generator::ErrorResult_t(error_message);
+        }
+        return parser_generator::ErrorResult_t{};
     }
 
     void PalexRuleParser::expect(const bootstrap::TokenInfo::TokenType to_expect) const {

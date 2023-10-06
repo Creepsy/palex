@@ -75,6 +75,12 @@ namespace bootstrap {
         if (this->try_ascii_constant("$S", TokenInfo::TokenType::ENTRY_PRODUCTION)) {
             return;
         }
+        if (this->try_ascii_constant("error", TokenInfo::TokenType::ERROR_KW)) {
+            return;
+        }
+        if (this->try_ascii_constant("->", TokenInfo::TokenType::RESULTS_IN)) {
+            return;
+        }
 
         const utf8::Codepoint_t next = utf8::get_next_codepoint(this->position, this->input.end());
         if (std::isspace((int)next)) {
@@ -156,7 +162,7 @@ namespace bootstrap {
             return; // Undefined token, missing closing tag
         }
         this->advance_codepoints(1);
-        this->current_token.type = TokenInfo::TokenType::REGEX;
+        this->current_token.type = TokenInfo::TokenType::STRING;
     }
 
     bool BootstrapLexer::advance_while(bool (*predicate)(const utf8::Codepoint_t)) {

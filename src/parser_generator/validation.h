@@ -10,5 +10,5 @@ namespace parser_generator {
     void check_for_missing_productions(const std::vector<Production>& to_check);
     void check_for_duplicate_productions(const std::vector<Production>& to_check);
     void check_for_entry(const std::vector<Production>& to_check);
-    void check_for_tag_conflicts(const std::vector<Production>& to_check);
+    void check_for_astbuilder_method_conflicts(const std::vector<Production>& to_check);
 }

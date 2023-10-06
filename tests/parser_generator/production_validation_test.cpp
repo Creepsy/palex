@@ -19,10 +19,12 @@ int main() {
     const std::vector<TestCase> TEST_CASES = {
         {"$S = addition; addition = addition ADD number; number = INT;", false},
         {"$S = addition; addition#some_tag = addition ADD number; addition#another_tag = number; number = INT;", false},
+        {"$S = addition; add#ition = addition ADD number -> error; addition = number; number = INT;", false},
         {"addition = addition ADD number; number = INT;", true},
         {"$S = addition; addition = addition ADD unknown; number = INT;", true},
         {"$S = addition; addition = addition ADD number; number = INT; number = INT;", true},
-        {"$S = addition; add#ition = addition ADD number; addtion = number;", true}
+        {"$S = addition; add#ition = addition ADD number; add_ition = number; number = INT;", true},
+        {"$S = add_ition; add#ition = addition ADD number -> error; add_ition = number; number = INT;", true}
     };
 
     for (const TestCase& test : TEST_CASES) {
@@ -33,6 +35,7 @@ int main() {
         ); 
 
         if (test.should_fail) {
+            std::cout << test.input << std::endl;
             TEST_EXCEPT(parser_generator::validate_productions(parser.parse_all_productions()), palex_except::ValidationError);
         } else {
             parser_generator::validate_productions(parser.parse_all_productions());
